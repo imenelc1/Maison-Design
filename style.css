@@ -1,0 +1,84 @@
+:root{
+    --primary-color:#EEE7DE;
+    --secondary-color:#D6C9B6;
+    --background-color:#F5F5F5;
+    --text-color:#3D3D3D;
+    --text-color-light:#F5F5F5;
+    --accent:#8E9675;
+    --highlight: #A67B5B;
+}
+body{
+    padding: 0;
+    margin: 0;
+}
+.home{
+    height: 100vh;
+    width: 100%;
+  }
+img{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .home-img{
+    height: 100%;
+    width: 100%;
+  }
+  .home-img {
+    position: relative;
+    height: 100vh; 
+    background-image: url('images/acceuil.jpg'); 
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+  .home-img::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4); 
+
+}
+.home-details{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index:10;
+    transform: translate(-50%, -50%);
+    display: grid;
+    justify-items: center;
+    width: 100%;
+    row-gap: 4rem;
+  }
+  
+
+  .homeTitle{
+    text-align: center;
+    font-size: 2rem;
+    color: var(--text-color-light);
+    font-weight: 600;
+  }
+  .button {
+    display: inline-block;
+    padding: 12px 30px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text-color-light);
+    background: var(--accent);
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.3s ease-in-out;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.button:hover {
+    background: var(--highlight); 
+    transform: translateY(-3px);
+
+}
+
