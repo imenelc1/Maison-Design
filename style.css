@@ -1,67 +1,189 @@
-:root{
-    --primary-color:#EEE7DE;
-    --secondary-color:#D6C9B6;
-    --background-color:#F5F5F5;
-    --text-color:#3D3D3D;
-    --text-color-light:#F5F5F5;
-    --accent:#8E9675;
-    --highlight: #A67B5B;
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+SC:wght@300;400;500;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Rubik:ital,wght@0,300..900;1,300..900&display=swap');
+
+@font-face {
+    font-family: "Frunchy";
+    src: url("font/FrunchySage/Frunchy.woff2") format("woff2"),
+         url("font/FrunchySage/Frunchy.woff") format("woff"),
+         url("font/FrunchySage/Frunchy.otf") format("opentype");
 }
-body{
-    padding: 0;
+
+:root {
+    --primary-color: #EEE7DE;
+    --secondary-color: #D6C9B6;
+    --background-color: #F5F5F5;
+    --text-color: #3D3D3D;
+    --text-color-light: #F5F5F5;
+    --accent: #8E9675;
+}
+
+* {
     margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
-.home{
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--background-color);
+}
+
+.header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 5rem;
+    background: rgba(255, 255, 255, 0.5);
+    -webkit-backdrop-filter: blur(3px);
+    backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.container {
+    width: 90%;
+    max-width: 1200px;
+}
+
+.nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.logo-content img {
+    width: 200px;
+    height: auto;
+    margin-top: -55px;
+}
+
+.menu-list {
+    display: flex;
+    gap: 2rem;
+    list-style: none;
+}
+
+.menu-list li {
+    list-style: none;
+}
+
+.nav-link {
+    text-decoration: none;
+    color: var(--text-color);
+    font-weight: 400;
+    font-size: 1.2rem;
+    transition: color 0.3s;
+}
+
+.nav-link:hover {
+    color: var(--accent);
+}
+.search-bar {
+  display: flex;
+  align-items: center;
+  background-color: var(--primary-color);
+  border-radius: 30px;
+  padding: 0.5rem 1rem;
+  margin-right: 1rem;
+}
+.search-input {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 1rem;
+  width: 150px;
+  transition: width 0.3s ease;
+}
+.search-input:focus {
+  width: 200px;
+}
+
+.search-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-color);
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.3s;
+}
+.search-button:hover {
+  color: var(--accent);
+}
+.cote-droit {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 1.2rem;
+    color: var(--text-color);
+}
+
+.cote-droit .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.user-icon,
+.cart-icon{
+  font-size: 2rem;
+}
+.home {
     height: 100vh;
     width: 100%;
-  }
-img{
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-  .home-img{
-    height: 100%;
-    width: 100%;
-  }
-  .home-img {
     position: relative;
-    height: 100vh; 
-    background-image: url('images/acceuil.jpg'); 
+}
+
+.home-img {
+    position: relative;
+    height: 100vh;
+    background-image: url('images/acceuil.jpg');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-  }
-  .home-img::before {
+}
+
+.home-img::before {
     content: "";
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.4); 
-
+    background-color: rgba(0, 0, 0, 0.4);
 }
-.home-details{
+
+.home-details {
     position: absolute;
     top: 50%;
     left: 50%;
-    z-index:10;
     transform: translate(-50%, -50%);
-    display: grid;
-    justify-items: center;
-    width: 100%;
-    row-gap: 4rem;
-  }
-  
-
-  .homeTitle{
     text-align: center;
+    color: white;
+}
+
+.logo img {
+    max-width: 150px;
+    height: auto;
+}
+
+.titre {
+    font-family: "Frunchy", serif;
+    font-size: 60px;
+    line-height: 1;
+}
+
+.homeTitle {
+    font-family: "Cormorant SC", serif;
     font-size: 2rem;
-    color: var(--text-color-light);
     font-weight: 600;
-  }
-  .button {
+}
+
+.button {
     display: inline-block;
     padding: 12px 30px;
     font-size: 1.2rem;
@@ -74,11 +196,9 @@ img{
     text-decoration: none;
     transition: all 0.3s ease-in-out;
     box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    margin-top: 1rem;
 }
 
 .button:hover {
-    background: var(--highlight); 
     transform: translateY(-3px);
-
 }
-

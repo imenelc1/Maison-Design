@@ -4,29 +4,62 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home Design</title>
+    <title>Maison Design</title>
+    <link href="https://unpkg.com/boxicons@2.1.2/css/boxicons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-    <header>
 
-    </header>
-    <main>
-        <section class="home">
-            <div class="home-img">
+<header class="header">
+    <div class="container">
+        <nav class="nav">
+            <a href="#" class="logo-content">
+                <img src="images/Logo3.png" alt="Logo Maison Design">
+            </a>
+
+            <ul class="menu-list">
+                <li><a href="#home" class="nav-link active-navlink">Accueil</a></li>
+                <li><a href="#categories" class="nav-link">Catégories</a></li>
+                <li><a href="#contact" class="nav-link">Contact</a></li>
+                
+            </ul>
+            <div class="search-bar">
+                <input type="text" placeholder="Rechercher un produit..." class="search-input">
+                <button class="search-button" title="Rechercher">
+                    <i class='bx bx-search '></i>
+                </button>
+            </div>
+
+            <div class="cote-droit">
+                <a href="#connexion" class="nav-link" title="Connexion">
+                    <i class='bx bx-user user-icon'></i>
+                </a>
+                <a href="#panier" class="nav-link" title="Panier">
+                    <i class='bx bx-cart cart-icon'></i>
+                </a>
+            </div>
+        </nav>
+    </div>
+</header>
+
+<main>
+    <section class="home" id="home">
+        <div class="home-img">
             <div class="home-details">
+                <div class="logo"><img src="images/mdblanc.png" alt="Logo"></div>
+                <div class="titre">M A I S O N . D E S I G N</div>
                 <div class="home-text">
                     <h2 class="homeTitle">Transformez votre intérieur avec élégance</h2>
                 </div>
-
-                <button class="button">Decouvrir</button>
-        </div>
+                <a href="#decouvrir" class="button">Découvrir</a>
             </div>
+        </div>
+    </section>
 
-        </section>
-        <section>
-            <p>kjkjij</p>
-        </section>
-    </main>
+    <section>
+        <p>kjkjijkkk</p>
+    </section>
+</main>
+
 </body>
 </html>
