@@ -1,5 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+SC:wght@300;400;500;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Rubik:ital,wght@0,300..900;1,300..900&display=swap');
-
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+SC:wght@300;400;500;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Rubik:ital,wght@0,300..900;1,300..900&display=swap');
 @font-face {
     font-family: "Frunchy";
     src: url("font/FrunchySage/Frunchy.woff2") format("woff2"),
@@ -23,8 +23,10 @@
 }
 
 body {
-    font-family: 'Poppins', sans-serif;
+    font-family: "Cormorant", serif;
+    text-transform: none;
     background-color: var(--background-color);
+
 }
 
 .header {
@@ -57,17 +59,53 @@ body {
 .logo-content img {
     width: 200px;
     height: auto;
-    margin-top: -55px;
+    margin-top: -60px;
 }
 
 .menu-list {
+    position: relative;
     display: flex;
     gap: 2rem;
     list-style: none;
 }
 
-.menu-list li {
+.menu-list > li {
+    position: relative;
+}
+
+.menu-list ul {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: white;
     list-style: none;
+    padding: 10px 0;
+    margin: 0;
+    min-width: 100px;
+    border-radius: 8px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+}
+
+.menu-list ul li {
+    padding: 10px 20px;
+}
+
+.menu-list ul li a {
+    text-decoration: none;
+    color: var(--text-color);
+    font-size: 1rem;
+    display: block;
+
+}
+
+.menu-list ul li:hover {
+    background: var(--secondary-color);
+}
+
+.menu-list li:hover > ul {
+    display: block;
 }
 
 .nav-link {
@@ -201,4 +239,160 @@ body {
 
 .button:hover {
     transform: translateY(-3px);
+}
+
+.about-us {
+    padding: 4rem 10%;
+    background: var(--background-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.about-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 3rem;
+    max-width: 1200px;
+    width: 100%;
+}
+
+.about-text {
+    flex: 1;
+    text-align: left;
+}
+
+.about-text h2 {
+    font-size: 2.5rem;
+    color: var(--text-color);
+    margin-bottom: 1rem;
+    font-family: "Frunchy", serif;
+}
+
+.about-text h2 span {
+    color: var(--accent);
+}
+
+.about-text p {
+    font-size: 1.4rem;
+    color: var(--text-color);
+    line-height: 1.6;
+    margin-bottom: 2rem;
+}
+
+.about-values {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.value-box {
+    text-align: center;
+    flex: 1;
+    padding: 1rem;
+    background: var(--primary-color);
+    border-radius: 15px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.value-box i {
+    font-size: 2rem;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+}
+
+.value-box h3 {
+    font-size: 1.3rem;
+    color: var(--text-color);
+}
+
+.value-box p {
+    font-size: 1.1rem;
+    color: var(--text-color);
+}
+
+.about-image img {
+    height: 30rem;
+    width: 100%;
+    max-width: 500px;
+    border-radius: 15px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+}
+footer {
+    background: var(--secondary-color);
+    color: var(--text-color);
+    padding: 40px 0;
+    text-align: center;
+}
+
+.footer-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    padding: 20px;
+    max-width: 1200px;
+    margin: auto;
+}
+
+.footer-section {
+    flex: 1;
+    min-width: 250px;
+    margin: 10px;
+}
+
+.footer-section h3 {
+    font-size: 1.5rem;
+    color: var(--accent);
+    margin-bottom: 15px;
+    font-family: "Frunchy", serif;
+}
+
+.footer-section p {
+    font-size: 1.1rem;
+    color: var(--text-color);
+}
+
+.footer-section ul {
+    list-style: none;
+    padding: 0;
+}
+
+.footer-section ul li {
+    margin: 8px 0;
+}
+
+.footer-section ul li a {
+    color: var(--text-color);
+    text-decoration: none;
+    font-size: 1.1rem;
+    transition: color 0.3s;
+}
+
+.footer-section ul li a:hover {
+    color: var(--accent);
+}
+
+.social-icons {
+    margin-top: 10px;
+}
+
+.social-icons a {
+    color: var(--accent);
+    font-size: 1.8rem;
+    margin: 0 10px;
+    transition: 0.3s;
+}
+
+.social-icons a:hover {
+    color: var(--text-color);
+}
+
+.footer-bottom {
+    margin-top: 20px;
+    padding: 15px;
+    background: var(--primary-color);
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-color);
 }
