@@ -20,16 +20,16 @@
             </a>
 
             <ul class="menu-list">
-                <li><a href="index.html" class="nav-link active-navlink">Accueil</a></li>
+                <li><a href="#home" class="nav-link active-navlink">Accueil</a></li>
+                <li><a href="#apropos" class="nav-link">A propos</a></li>
+
                 <li><a href="#categories" class="nav-link">Catégories</a>
                     <ul>
                         <li><a href="#">Lits</a></li>
                         <li><a href="#">Chaises</a></li>
                         <li><a href="#">Tables</a></li>
                         <li><a href="#">Canapés</a></li>
-                        <li><a href="#">Miroires</a></li>
                         <li><a href="#">Armoires</a></li>
-                        <li><a href="#">Décorations</a></li>
 
                     </ul>
                 
@@ -65,15 +65,20 @@
                 <div class="home-text">
                     <h2 class="homeTitle">Transformez votre intérieur avec élégance</h2>
                 </div>
-                <a href="#decouvrir" class="button">Découvrir</a>
+                <a href="#categories" class="button">Découvrir</a>
             </div>
         </div>
     </section>
 
-    <section id="about" class="about-us">
+    <section id="apropos" class="about-us">
         <div class="about-container">
+
+            <div class="about-image">
+                <img src="images/about-us.jpg" alt="deco">
+            </div>
             <div class="about-text">
                 <h2>À propos de <span>Maison Design</span></h2>
+                
                 <p>
                     Chez <strong>Maison Design</strong>, nous croyons que chaque intérieur mérite une touche d'élégance et d'harmonie.  
                     Notre mission est de vous offrir des meubles et des décorations uniques, alliant style moderne et qualité artisanale.
@@ -95,14 +100,74 @@
                         <p>Par carte ou en espèces à la livraison.</p>
                     </div>
                 </div>
-                <a href="#contact" class="button">Voir nos produits </a>
             </div>
-            <div class="about-image">
-                <img src="images/about-us2.jpg" alt="deco">
-            </div>
+           
+           
         </div>
     </section>
-    
+    <section id="categories" class="categories-section">
+        <div class="categories-container">
+            <div class="categories-text">
+                <div class="category-description active" data-category="chaise">
+                    <h3>Chaises</h3>
+                    <p>Découvrez notre collection exclusive de chaises. Un mélange parfait de confort et d'élégance pour votre intérieur.</p>
+                    <a href="#" class="discover-btn">Découvrir</a>
+                </div>
+                <div class="category-description" data-category="lit">
+                    <h3>Lits</h3>
+                    <p>Une collection de lits élégants pour transformer votre chambre en un havre de paix luxueux.</p>
+                    <a href="#" class="discover-btn">Découvrir</a>
+                </div>
+                <div class="category-description" data-category="table">
+                    <h3>Tables</h3>
+                    <p>Des tables au design raffiné qui sublimeront vos espaces de vie et de réception.</p>
+                    <a href="#" class="discover-btn">Découvrir</a>
+                </div>
+                <div class="category-description" data-category="canapé">
+                    <h3>Canapés</h3>
+                    <p>Des canapés modernes et confortables qui allient style et confort pour votre salon.</p>
+                    <a href="#" class="discover-btn">Découvrir</a>
+                </div>
+                <div class="category-description" data-category="armoire">
+                    <h3>Armoires</h3>
+                    <p>Des armoires élégantes offrant des solutions de rangement pratiques et esthétiques.</p>
+                    <a href="#" class="discover-btn">Découvrir</a>
+                </div>
+            </div>
+            <div class="categories-slider">
+                <button class="slider-arrow prev-arrow" title="Précédent"> 
+                    <i class='bx bx-chevron-left'></i>
+                </button>
+                <button class="slider-arrow next-arrow" title="Suivant">
+                    <i class='bx bx-chevron-right'></i>
+                </button>
+                <div class="slider-container">
+                    <div class="slides-wrapper">
+                        <div class="slide" data-index="0">
+                            <img src="images/chaise1.jpg" alt="Chaise design">
+                            <span class="slide-title">Chaise</span>
+                        </div>
+                        <div class="slide" data-index="1">
+                            <img src="images/lit.jpg" alt="Lit design">
+                            <span class="slide-title">Lit</span>
+                        </div>
+                        <div class="slide" data-index="2">
+                            <img src="images/table.jpg" alt="Table design">
+                            <span class="slide-title">Table</span>
+                        </div>
+                        <div class="slide" data-index="3">
+                            <img src="images/canape.jpg" alt="Canapé design">
+                            <span class="slide-title">Canapé</span>
+                        </div>
+                        <div class="slide" data-index="4">
+                            <img src="images/armoire.jpg" alt="Armoire design">
+                            <span class="slide-title">Armoire</span>
+                        </div>
+                    </div>
+                </div>
+        </div>
+        </div>
+    </section>
 </main>
 <footer>
     <div class="footer-container">
@@ -113,14 +178,20 @@
         <div class="footer-section">
             <h3>Liens</h3>
             <ul>
-                <li><a href="#">Accueil</a></li>
-                <li><a href="#">Catégories</a></li>
-                <li><a href="#">Contact</a></li>
+                <li><a href="#home">Accueil</a></li>
+                <li><a href="#apropos">A propos</a></li>
+                <li><a href="#categories">Catégories</a></li>
                 <li><a href="#connexion">Connexion</a></li> 
             </ul>
         </div>
         <div class="footer-section">
             <h3>Contact</h3>
+            <form action="#" method="POST" class="contact-form">
+                <input type="text" name="nom" placeholder="Votre Nom" required>
+                <input type="email" name="email" placeholder="Votre Email" required>
+                <textarea name="message" placeholder="Votre Message" required></textarea>
+                <button type="submit">Envoyer</button>
+            </form>
             <p>Email: contact@maisondesign.com</p>
             <p>Téléphone: +213 555 123 456</p>
         </div>
@@ -137,6 +208,6 @@
     </div>
 </footer>
 
-
+<script src="script.js"></script>
 </body>
 </html>
