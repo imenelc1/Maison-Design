@@ -326,6 +326,7 @@ body {
     display: flex;
     align-items: center;
 }
+
 .categories-section h2 {
     font-size: 2.5rem;
     color: var(--text-color);
