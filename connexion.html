@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion - Maison Design</title>
+    <link href="https://unpkg.com/boxicons@2.1.2/css/boxicons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="connexion.css">
+    <link rel="stylesheet" href="style.css">
+
+</head>
+<body>
+    <!--header -->
+    <header class="header">
+        <div class="container">
+            <nav class="nav">
+                <button id="open-menu" class="menu-toggle" title="ouvrir menu">
+                    <i class='bx bx-menu'></i>
+                </button>
+                <div class="header-content mobile-hidden">
+                <button id="close-menu" class="menu-toggle" title="fermer menu">
+                    <i class='bx bx-x'></i>
+                </button>
+                <a href="index.html" class="logo-content">
+                    <img src="images/Logo3.png" alt="Logo Maison Design">
+                </a>
+    
+                <ul class="menu-list">
+                    <li><a href="#home" class="nav-link active-navlink">Accueil</a></li>
+                    <li><a href="#apropos" class="nav-link">A propos</a></li>
+    
+                    <li><a href="#categories" class="nav-link">Catégories</a>
+                        <ul>
+                            <li><a href="#">Lits</a></li>
+                            <li><a href="#">Chaises</a></li>
+                            <li><a href="#">Tables</a></li>
+                            <li><a href="#">Canapés</a></li>
+                            <li><a href="#">Armoires</a></li>
+    
+                        </ul>
+                    
+                    </li>
+                    <li><a href="#contact" class="nav-link">Contact</a></li>
+                    
+                </ul>
+                <div class="search-bar">
+                    <input type="text" placeholder="Rechercher un produit..." class="search-input">
+                    <button class="search-button" title="Rechercher">
+                        <i class='bx bx-search '></i>
+                    </button>
+                </div>
+    
+                <div class="cote-droit">
+                    <a href="connexion.html" class="nav-link" title="Connexion">
+                        <i class='bx bx-user user-icon'></i>
+                    </a>
+                    <a href="#panier" class="nav-link" title="Panier">
+                        <i class='bx bx-cart cart-icon'></i>
+                    </a>
+                </div>
+            </div>
+            </nav>
+        </div>
+    </header>
+
+    <main class="login-main">
+        <div class="login-container">
+            <div class="login-box">
+                <h2>Connexion</h2>
+                <form class="login-form">
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <div class="input-with-icon">
+                            <i class='bx bx-envelope'></i>
+                            <input type="email" id="email" name="email" required placeholder="Votre email">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Mot de passe</label>
+                        <div class="input-with-icon">
+                            <i class='bx bx-lock-alt'></i>
+                            <input type="password" id="password" name="password" required placeholder="Votre mot de passe">
+                        </div>
+                    </div>
+                    <div class="form-options">
+                        <label class="remember-me">
+                            <input type="checkbox" name="remember">
+                            <span>Se souvenir de moi</span>
+                        </label>
+                        <a href="#" class="forgot-password">Mot de passe oublié ?</a>
+                    </div>
+                    <button type="submit" class="login-button">Se connecter</button>
+                    <div class="register-link">
+                        Pas encore de compte ? <a href="inscription.html">S'inscrire</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- footer -->
+    <footer>
+        <div class="footer-container">
+            <div class="footer-section">
+                <h3>Maison Design</h3>
+                <p>Découvrez des meubles élégants et raffinés pour votre intérieur.</p>
+            </div>
+            <div class="footer-section">
+                <h3>Liens</h3>
+                <ul>
+                    <li><a href="#home">Accueil</a></li>
+                    <li><a href="#apropos">A propos</a></li>
+                    <li><a href="#categories">Catégories</a></li>
+                    <li><a href="#connexion">Connexion</a></li> 
+                </ul>
+            </div>
+            <div id="contact" class="footer-section">
+                <h3>Contact</h3>
+                <form action="#" method="POST" class="contact-form">
+                    <input type="text" name="nom" placeholder="Votre Nom" required>
+                    <input type="email" name="email" placeholder="Votre Email" required>
+                    <textarea name="message" placeholder="Votre Message" required></textarea>
+                    <button type="submit">Envoyer</button>
+                </form>
+                <p>Email: contact@maisondesign.com</p>
+                <p>Téléphone: +213 555 123 456</p>
+            </div>
+            <div class="footer-section">
+                <h3>Suivez-nous</h3>
+                <div class="social-icons">
+                    <a href="https://www.facebook.com/?locale=fr_FR" target="_blank" rel="noopener"><i class="fab fa-facebook"></i></a>
+                    <a href="https://www.instagram.com/" target="_blank" rel="noopener"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 Maison Design - Tous droits réservés.</p>
+        </div>
+    </footer>
+    <script src="script.js"></script>
+</body>
+</html>
