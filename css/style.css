@@ -3,9 +3,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+SC:wght@300;400;500;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Rubik:ital,wght@0,300..900;1,300..900&display=swap');
 @font-face {
     font-family: "Frunchy";
-    src: url("font/FrunchySage/Frunchy.woff2") format("woff2"),
-         url("font/FrunchySage/Frunchy.woff") format("woff"),
-         url("font/FrunchySage/Frunchy.otf") format("opentype");
+    src: url("../font/FrunchySage/Frunchy.woff2") format("woff2"),
+         url("../font/FrunchySage/Frunchy.woff") format("woff"),
+         url("../font/FrunchySage/Frunchy.otf") format("opentype");
 }
 :root {
     --primary-color: #EEE7DE;
@@ -173,7 +173,7 @@ body {
 .home-img {
     position: relative;
     height: 100vh;
-    background-image: url('images/acceuil.jpg');
+    background-image: url('../images/acceuil.jpg');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
@@ -202,7 +202,7 @@ body {
     height: auto;
 }
 .titre {
-    font-family: "Frunchy", serif;
+    font-family: "Frunchy", serif ;
     font-size: 60px;
     line-height: 1;
 }
@@ -774,3 +774,11 @@ footer {
     
    
   }
+  .error-message {
+    color: #e74c3c;
+    background-color: #fdecea;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+    display: none;
+}

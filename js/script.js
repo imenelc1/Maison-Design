@@ -150,7 +150,6 @@ document.addEventListener("DOMContentLoaded", () => {
   
     if (loginForm) {
       loginForm.addEventListener("submit", (e) => {
-        e.preventDefault()
         // Ajoutez ici la logique de connexion
         console.log("Tentative de connexion")
       })
@@ -158,11 +157,24 @@ document.addEventListener("DOMContentLoaded", () => {
   
     if (registerForm) {
       registerForm.addEventListener("submit", (e) => {
-        e.preventDefault()
         // Ajoutez ici la logique d'inscription
         console.log("Tentative d'inscription")
       })
     }
   })
     
-  
+  document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const error = urlParams.get('error');
+    const errorMessage = document.getElementById('error-message');
+    
+    if (error) {
+        errorMessage.style.display = 'block';
+        
+        if (error === 'invalid') {
+            errorMessage.textContent = 'Email ou mot de passe incorrect.';
+        } else if (error === 'empty') {
+            errorMessage.textContent = 'Veuillez remplir tous les champs.';
+        }
+    }
+});

@@ -1,0 +1,13 @@
+# Activer la réécriture d'URL
+RewriteEngine On
+
+# Corriger le problème des chemins (accès aux images et fonts)
+RewriteBase /HomeDesign/
+
+# Autoriser l'accès aux fichiers
+<FilesMatch "\.(jpg|jpeg|png|gif|css|js|woff|woff2|ttf|otf)$">
+    Allow from all
+</FilesMatch>
+
+# Empêcher les erreurs 404 pour les fichiers
+Options -Indexes
