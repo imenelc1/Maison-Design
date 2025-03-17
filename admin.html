@@ -21,38 +21,131 @@
                     <i class='bx bx-menu'></i>
                 </button>
                 <div class="header-content mobile-hidden">
-                <button id="close-menu" class="menu-toggle" title="fermer menu">
-                    <i class='bx bx-x'></i>
-                </button>
-                <a href="index.html" class="logo-content">
-                    <img src="images/Logo3.png" alt="Logo Maison Design">
-                </a>
-    
-                <ul class="menu-list">
-                    <li><a href="#home" class="nav-link active-navlink">Clients</a></li>
-                    <li><a href="#apropos" class="nav-link">Produits</a></li>
-    
-                    <li><a href="#categories" class="nav-link">Commandes</a></li>
-                    
-                </ul>
-                <div class="search-bar">
-                    <input type="text" placeholder="Rechercher un produit..." class="search-input">
-                    <button class="search-button" title="Rechercher">
-                        <i class='bx bx-search '></i>
+                    <button id="close-menu" class="menu-toggle" title="fermer menu">
+                        <i class='bx bx-x'></i>
                     </button>
-                </div>
-    
-                <div class="cote-droit">
-                    <a href="index.html" class="nav-link" title="Déconnexion">
-                        <i class='bx bx-user user-icon'></i>
+                    <a href="index.html" class="logo-content">
+                        <img src="images/Logo3.png" alt="Logo Maison Design">
                     </a>
-                    
+
+                    <ul class="menu-list">
+                        <li><a href="#clients" class="nav-link active-navlink">Clients</a></li>
+                        <li><a href="#produits" class="nav-link">Produits</a></li>
+                        <li><a href="#commandes" class="nav-link">Commandes</a></li>
+                    </ul>
+
+                    <div class="search-bar">
+                        <input type="text" placeholder="Rechercher un produit..." class="search-input">
+                        <button class="search-button" title="Rechercher">
+                            <i class='bx bx-search'></i>
+                        </button>
+                    </div>
+
+                    <div class="cote-droit">
+                        <a href="index.html" class="nav-link" title="Déconnexion">
+                            <i class='bx bx-user user-icon'></i>
+                        </a>
+                    </div>
                 </div>
-            </div>
             </nav>
         </div>
     </header>
-    
+
+    <main class="container">
+        <!-- Section Clients -->
+        <section id="clients">
+            <h2>Clients</h2>
+            <button class="btn-ajouter">Ajouter un client</button>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nom</th>
+                        <th>Email</th>
+                        <th>Téléphone</th>
+                        <th>Adresse</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>Imen</td>
+                        <td>imen@example.com</td>
+                        <td>+213 555 123 456</td>
+                        <td>Alger, Algérie</td>
+                        <td>
+                            <button class="btn-modifier">Modifier</button>
+                            <button class="btn-supprimer">Supprimer</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Section Produits -->
+        <section id="produits">
+            <h2>Produits</h2>
+            <button class="btn-ajouter">Ajouter un produit</button>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nom</th>
+                        <th>Catégorie</th>
+                        <th>Prix</th>
+                        <th>Stock</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>101</td>
+                        <td>Chaise Moderne</td>
+                        <td>Chaises</td>
+                        <td>4500 DA</td>
+                        <td>15</td>
+                        <td>
+                            <button class="btn-modifier">Modifier</button>
+                            <button class="btn-supprimer">Supprimer</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Section Commandes -->
+        <section id="commandes">
+            <h2>Commandes</h2>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID Commande</th>
+                        <th>Client</th>
+                        <th>Date</th>
+                        <th>Statut</th>
+                        <th>Total</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>5001</td>
+                        <td>Imen</td>
+                        <td>2025-03-10</td>
+                        <td>En cours</td>
+                        <td>8500 DA</td>
+                        <td>
+                            <button class="btn-details">Voir détails</button>
+                            <button class="btn-statut">Changer statut</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <script src="js/admin.js"></script>
 </body>
 
 </html>
