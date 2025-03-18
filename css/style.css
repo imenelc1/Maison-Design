@@ -20,7 +20,7 @@
     display: block;
 }
 
-/* Correction des styles pour les descriptions de catégories */
+/* Styles pour les descriptions de catégories */
 .category-description {
     position: absolute;
     opacity: 0;
@@ -39,7 +39,7 @@
     position: relative;
 }
 
-/* Styles pour le slider avec plusieurs slides visibles */
+/* Styles pour le slider */
 .slides-wrapper {
     display: flex;
     transition: transform 0.5s ease-in-out;
@@ -50,36 +50,11 @@
     position: relative;
 }
 
-/* Styles pour la barre de recherche améliorée */
-#search-dropdown {
-    display: none;
-    opacity: 0;
-    transform: translateY(-10px);
-    transition: opacity 0.3s ease, transform 0.3s ease;
-}
-
+/* Styles pour la recherche */
 #search-dropdown.active {
     display: block !important;
     opacity: 1 !important;
     transform: translateY(0) !important;
-}
-
-/* Styles pour le modal de recherche mobile */
-.search-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.8);
-    z-index: 1000;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    padding-top: 100px;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
 }
 
 .search-modal.active {
@@ -87,41 +62,8 @@
     visibility: visible;
 }
 
-.search-modal-content {
-    width: 90%;
-    max-width: 500px;
-    background-color: white;
-    border-radius: 10px;
-    padding: 20px;
-    transform: translateY(-20px);
-    transition: transform 0.3s ease;
-}
-
 .search-modal.active .search-modal-content {
     transform: translateY(0);
-}
-
-/* Responsive pour le slider et les descriptions */
-@media (max-width: 768px) {
-    .categories-container {
-        flex-direction: column;
-    }
-
-    .categories-text, .categories-slider {
-        width: 100%;
-    }
-
-    .slide {
-        width: 85% !important;
-        min-width: 250px !important;
-    }
-}
-
-@media (min-width: 769px) and (max-width: 1024px) {
-    .slide {
-        width: 45% !important;
-        min-width: 200px !important;
-    }
 }
 
 @media screen and (max-width: 768px) {
@@ -129,4 +71,7 @@
         left: -250px;
         transition: left 0.3s ease;
     }
+}
+html {
+    scroll-behavior: smooth;
 }

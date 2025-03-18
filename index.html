@@ -19,7 +19,7 @@
                 <!-- Côté gauche -->
                 <div class="flex items-center gap-4">
                     <!-- Icône hamburger uniquement sur mobile -->
-                    <button id="open-menu" class="md:hidden bg-transparent border-none text-2xl cursor-pointer text-textColor" title="ouvrir menu">
+                    <button id="open-menu" class="md:hidden bg-transparent border-none text-2xl cursor-pointer text-textColor hover:text-accent transition-colors" title="ouvrir menu">
                         <i class='bx bx-menu'></i>
                     </button>
                     
@@ -43,7 +43,7 @@
 
                 <!-- Logo centré -->
                 <a href="index.html" class="logo-content absolute left-1/2 transform -translate-x-1/2">
-                    <img src="images/Logo3.png" alt="Logo Maison Design" class="w-[200px] h-auto -mt-[60px]">
+                    <img src="images/Logo3.png" alt="Logo Maison Design" class="w-[150px] md:w-[200px] h-auto -mt-[40px] md:-mt-[60px]">
                 </a>
 
                 <!-- Côté droit -->
@@ -54,7 +54,7 @@
                             <i class='bx bx-search'></i>
                         </button>
                         <!-- Dropdown pour desktop -->
-                        <div id="search-dropdown" class="absolute right-0 top-full mt-2 bg-white rounded-lg shadow-lg p-3 w-[300px] z-50">
+                        <div id="search-dropdown" class="absolute right-0 top-full mt-2 bg-white rounded-lg shadow-lg p-3 w-[300px] z-50 hidden opacity-0 -translate-y-2.5 transition-all duration-300">
                             <div class="search-bar flex items-center bg-primary/20 rounded-full px-4 py-2 border border-accent/20 focus-within:border-accent transition-all duration-300">
                                 <input type="text" placeholder="Rechercher un produit..." class="border-none outline-none bg-transparent text-base w-full">
                                 <button class="search-button bg-transparent border-none cursor-pointer text-accent text-lg flex items-center justify-center hover:text-accent/70 transition-colors" title="Rechercher">
@@ -84,24 +84,27 @@
 
                 <!-- Menu mobile à gauche -->
                 <div class="header-content mobile-hidden md:hidden fixed -left-[250px] top-0 bg-primary p-6 z-[1000] h-screen w-[250px] transition-all duration-300">
-                    <button id="close-menu" class="absolute top-4 right-4 bg-transparent border-none text-2xl cursor-pointer text-textColor" title="fermer menu">
+                    <button id="close-menu" class="absolute top-4 right-4 bg-transparent border-none text-2xl cursor-pointer text-textColor hover:text-accent transition-colors" title="fermer menu">
                         <i class='bx bx-x'></i>
                     </button>
 
                     <ul class="menu-list flex flex-col items-start gap-8 w-full mt-16">
-                        <li class="relative w-full"><a href="#home" class="text-white font-normal text-lg hover:text-accent transition-colors">Accueil</a></li>
-                        <li class="relative w-full"><a href="#apropos" class="text-white font-normal text-lg hover:text-accent transition-colors">A propos</a></li>
-                        <li class="relative w-full">
-                            <a href="#categories" class="text-white font-normal text-lg hover:text-accent transition-colors">Catégories</a>
-                            <ul class="bg-white list-none py-2.5 px-0 m-0 min-w-[100px] rounded-lg shadow-md hidden">
-                                <li class="px-5 py-2.5 hover:bg-secondary"><a href="#" class="no-underline text-textColor text-base block">Lits</a></li>
-                                <li class="px-5 py-2.5 hover:bg-secondary"><a href="#" class="no-underline text-textColor text-base block">Chaises</a></li>
-                                <li class="px-5 py-2.5 hover:bg-secondary"><a href="#" class="no-underline text-textColor text-base block">Tables</a></li>
-                                <li class="px-5 py-2.5 hover:bg-secondary"><a href="#" class="no-underline text-textColor text-base block">Canapés</a></li>
-                                <li class="px-5 py-2.5 hover:bg-secondary"><a href="#" class="no-underline text-textColor text-base block">Armoires</a></li>
+                        <li class="relative w-full"><a href="#home" class="text-textColor font-normal text-lg hover:text-accent transition-colors">Accueil</a></li>
+                        <li class="relative w-full"><a href="#apropos" class="text-textColor font-normal text-lg hover:text-accent transition-colors">A propos</a></li>
+                        <li class="relative w-full mobile-dropdown">
+                            <a href="#categories" class="text-textColor font-normal text-lg hover:text-accent transition-colors flex justify-between items-center">
+                                Catégories
+                                <i class='bx bx-chevron-down text-lg'></i>
+                            </a>
+                            <ul class="bg-white/10 list-none py-2 px-0 m-0 rounded-lg mt-2 hidden mobile-submenu">
+                                <li class="px-5 py-2 hover:bg-white/20"><a href="#" class="no-underline text-textColor text-base block">Lits</a></li>
+                                <li class="px-5 py-2 hover:bg-white/20"><a href="#" class="no-underline text-textColor text-base block">Chaises</a></li>
+                                <li class="px-5 py-2 hover:bg-white/20"><a href="#" class="no-underline text-textColor text-base block">Tables</a></li>
+                                <li class="px-5 py-2 hover:bg-white/20"><a href="#" class="no-underline text-textColor text-base block">Canapés</a></li>
+                                <li class="px-5 py-2 hover:bg-white/20"><a href="#" class="no-underline text-textColor text-base block">Armoires</a></li>
                             </ul>
                         </li>
-                        <li class="relative w-full"><a href="#contact" class="text-white font-normal text-lg hover:text-accent transition-colors">Contact</a></li>
+                        <li class="relative w-full"><a href="#contact" class="text-textColor font-normal text-lg hover:text-accent transition-colors">Contact</a></li>
                     </ul>
                 </div>
             </nav>
@@ -109,8 +112,8 @@
     </header>
 
     <!-- Modal de recherche pour mobile -->
-    <div id="search-modal" class="search-modal">
-        <div class="search-modal-content">
+    <div id="search-modal" class="search-modal fixed inset-0 bg-black/50 z-[1001] flex items-center justify-center p-4 hidden opacity-0 invisible transition-all duration-300">
+        <div class="search-modal-content bg-white rounded-xl w-full max-w-md p-5 transform -translate-y-5 transition-transform duration-300">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-medium text-textColor">Rechercher</h3>
                 <button id="close-search-modal" class="text-2xl text-textColor hover:text-accent">
@@ -138,128 +141,138 @@
     <main>
         <section class="home h-screen w-full relative" id="home">
             <div class="home-img relative h-screen bg-[url('images/acceuil.jpg')] bg-cover bg-center bg-no-repeat before:content-[''] before:absolute before:top-0 before:left-0 before:w-full before:h-full before:bg-black/40">
-                <div class="home-details absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center text-white justify-items-center w-full">
-                    <div class="logo"><img src="images/mdblanc.png" alt="Logo" class="max-w-[150px] h-auto mx-auto"></div>
-                    <div class="titre font-frunchy text-[60px] leading-none">M A I S O N . D E S I G N</div>
+                <div class="home-details absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center text-white justify-items-center w-full px-4">
+                    <div class="logo"><img src="images/mdblanc.png" alt="Logo" class="max-w-[100px] md:max-w-[150px] h-auto mx-auto"></div>
+                    <div class="titre font-frunchy text-[40px] md:text-[60px] leading-none">M A I S O N . D E S I G N</div>
                     <div class="home-text">
-                        <h2 class="homeTitle font-cormorant text-2xl font-semibold uppercase text-textColorLight">Transformez votre intérieur avec élégance</h2>
+                        <h2 class="homeTitle font-cormorant text-xl md:text-2xl font-semibold uppercase text-textColorLight mt-4">Transformez votre intérieur avec élégance</h2>
                     </div>
-                    <a href="#categories" class="button inline-block px-[30px] py-3 text-lg font-semibold text-textColorLight bg-accent border-none rounded-full cursor-pointer no-underline transition-all duration-300 ease-in-out shadow-md hover:translate-y-[-3px] mt-4">Découvrir</a>
+                    <a href="#categories" class="button inline-block px-[20px] md:px-[30px] py-2 md:py-3 text-base md:text-lg font-semibold text-textColorLight bg-accent border-none rounded-full cursor-pointer no-underline transition-all duration-300 ease-in-out shadow-md hover:translate-y-[-3px] mt-6 md:mt-4">Découvrir</a>
                 </div>
             </div>
         </section>
 
-        <section id="apropos" class="about-us py-16 px-[10%] bg-background flex justify-center items-center">
-            <div class="about-container flex items-center justify-between gap-12 max-w-[1200px] w-full md:flex-row flex-col">
-                <div class="about-image md:order-1 order-2">
-                    <img src="images/about-us.jpg" alt="deco" class="h-[30rem] w-full max-w-[500px] rounded-[15px] shadow-md">
+        <section id="apropos" class="about-us py-12 md:py-16 px-4 md:px-[10%] bg-background flex justify-center items-center">
+            <div class="about-container flex items-center justify-between gap-8 md:gap-12 max-w-[1200px] w-full md:flex-row flex-col">
+                <div class="about-image md:order-1 order-2 w-full md:w-auto">
+                    <img src="images/about-us.jpg" alt="deco" class="h-auto md:h-[30rem] w-full max-w-[500px] rounded-[15px] shadow-md mx-auto">
                 </div>
                 <div class="about-text flex-1 text-left md:order-2 order-1">
-                    <h2 class="text-[2.5rem] text-textColor mb-4 font-frunchy">À propos de <span class="text-accent">Maison Design</span></h2>
-                    <p class="text-[1.4rem] text-textColor leading-relaxed mb-8">
+                    <h2 class="text-[2rem] md:text-[2.5rem] text-textColor mb-4 font-frunchy text-center md:text-left">À propos de <span class="text-accent">Maison Design</span></h2>
+                    <p class="text-[1.1rem] md:text-[1.4rem] text-textColor leading-relaxed mb-6 md:mb-8">
                         Chez <strong>Maison Design</strong>, nous croyons que chaque intérieur mérite une touche d'élégance et d'harmonie.  
                         Notre mission est de vous offrir des meubles et des décorations uniques, alliant style moderne et qualité artisanale.
                     </p>
-                    <div class="about-values flex gap-8 mb-8 md:flex-row flex-col">
-                        <div class="value-box text-center flex-1 p-4 bg-primary rounded-[15px] shadow-md">
-                            <i class='bx bxs-truck text-2xl text-accent mb-2'></i>
-                            <h3 class="text-[1.3rem] text-textColor">Livraison Rapide</h3>
-                            <p class="text-[1.1rem] text-textColor">Des meubles livrés chez vous, en toute sécurité.</p>
+                    <div class="about-values flex gap-4 md:gap-8 mb-6 md:mb-8 flex-col sm:flex-row">
+                        <div class="value-box text-center flex-1 p-3 md:p-4 bg-primary rounded-[15px] shadow-md">
+                            <i class='bx bxs-truck text-xl md:text-2xl text-accent mb-1 md:mb-2'></i>
+                            <h3 class="text-[1.1rem] md:text-[1.3rem] text-textColor">Livraison Rapide</h3>
+                            <p class="text-[0.9rem] md:text-[1.1rem] text-textColor">Des meubles livrés chez vous, en toute sécurité.</p>
                         </div>
-                        <div class="value-box text-center flex-1 p-4 bg-primary rounded-[15px] shadow-md">
-                            <i class='bx bxs-phone text-2xl text-accent mb-2'></i>
-                            <h3 class="text-[1.3rem] text-textColor">Service Client</h3>
-                            <p class="text-[1.1rem] text-textColor">Disponible pour répondre à toutes vos questions.</p>
+                        <div class="value-box text-center flex-1 p-3 md:p-4 bg-primary rounded-[15px] shadow-md">
+                            <i class='bx bxs-phone text-xl md:text-2xl text-accent mb-1 md:mb-2'></i>
+                            <h3 class="text-[1.1rem] md:text-[1.3rem] text-textColor">Service Client</h3>
+                            <p class="text-[0.9rem] md:text-[1.1rem] text-textColor">Disponible pour répondre à toutes vos questions.</p>
                         </div>
-                        <div class="value-box text-center flex-1 p-4 bg-primary rounded-[15px] shadow-md">
-                            <i class='bx bxs-wallet text-2xl text-accent mb-2'></i>
-                            <h3 class="text-[1.3rem] text-textColor">Paiement Sécurisé </h3>
-                            <p class="text-[1.1rem] text-textColor">Par carte ou en espèces à la livraison.</p>
+                        <div class="value-box text-center flex-1 p-3 md:p-4 bg-primary rounded-[15px] shadow-md">
+                            <i class='bx bxs-wallet text-xl md:text-2xl text-accent mb-1 md:mb-2'></i>
+                            <h3 class="text-[1.1rem] md:text-[1.3rem] text-textColor">Paiement Sécurisé </h3>
+                            <p class="text-[0.9rem] md:text-[1.1rem] text-textColor">Par carte ou en espèces à la livraison.</p>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <section id="categories" class="categories-section py-16 bg-background min-h-screen flex items-center">
-            <div class="categories-container w-[95%] max-w-[1400px] mx-auto flex flex-row gap-8 items-center">
+        <section id="categories" class="categories-section py-12 md:py-16 bg-background min-h-screen flex items-center">
+            <div class="categories-container w-[95%] max-w-[1400px] mx-auto flex flex-col md:flex-row gap-8 items-center">
                 <!-- Partie texte à gauche -->
-                <div class="categories-text w-[30%] min-w-[250px]">
+                <div class="categories-text w-full md:w-[30%] min-w-[250px] order-2 md:order-1 relative">
                     <!-- Descriptions de catégories -->
                     <div class="category-description active" data-category="chaise">
-                        <h3 class="text-xl sm:text-2xl mb-4 text-accent">Chaises</h3>
-                        <p class="text-base sm:text-lg leading-relaxed mb-8 text-textColor">Découvrez notre collection exclusive de chaises. Un mélange parfait de confort et d'élégance pour votre intérieur.</p>
-                        <a href="#" class="discover-btn inline-block px-[20px] sm:px-[30px] py-2 sm:py-3 bg-accent text-white no-underline rounded-full transition-transform duration-300 hover:translate-y-[-3px] text-sm sm:text-base">Découvrir</a>
+                        <h3 class="text-xl sm:text-2xl mb-4 text-accent text-center md:text-left">Chaises</h3>
+                        <p class="text-base sm:text-lg leading-relaxed mb-6 md:mb-8 text-textColor text-center md:text-left">Découvrez notre collection exclusive de chaises. Un mélange parfait de confort et d'élégance pour votre intérieur.</p>
+                        <div class="text-center md:text-left">
+                            <a href="#" class="discover-btn inline-block px-[20px] sm:px-[30px] py-2 sm:py-3 bg-accent text-white no-underline rounded-full transition-transform duration-300 hover:translate-y-[-3px] text-sm sm:text-base">Découvrir</a>
+                        </div>
                     </div>
                     <div class="category-description" data-category="lit">
-                        <h3 class="text-xl sm:text-2xl mb-4 text-accent">Lits</h3>
-                        <p class="text-base sm:text-lg leading-relaxed mb-8 text-textColor">Une collection de lits élégants pour transformer votre chambre en un havre de paix luxueux.</p>
-                        <a href="#" class="discover-btn inline-block px-[20px] sm:px-[30px] py-2 sm:py-3 bg-accent text-white no-underline rounded-full transition-transform duration-300 hover:translate-y-[-3px] text-sm sm:text-base">Découvrir</a>
+                        <h3 class="text-xl sm:text-2xl mb-4 text-accent text-center md:text-left">Lits</h3>
+                        <p class="text-base sm:text-lg leading-relaxed mb-6 md:mb-8 text-textColor text-center md:text-left">Une collection de lits élégants pour transformer votre chambre en un havre de paix luxueux.</p>
+                        <div class="text-center md:text-left">
+                            <a href="#" class="discover-btn inline-block px-[20px] sm:px-[30px] py-2 sm:py-3 bg-accent text-white no-underline rounded-full transition-transform duration-300 hover:translate-y-[-3px] text-sm sm:text-base">Découvrir</a>
+                        </div>
                     </div>
                     <div class="category-description" data-category="table">
-                        <h3 class="text-xl sm:text-2xl mb-4 text-accent">Tables</h3>
-                        <p class="text-base sm:text-lg leading-relaxed mb-8 text-textColor">Des tables au design raffiné qui sublimeront vos espaces de vie et de réception.</p>
-                        <a href="#" class="discover-btn inline-block px-[20px] sm:px-[30px] py-2 sm:py-3 bg-accent text-white no-underline rounded-full transition-transform duration-300 hover:translate-y-[-3px] text-sm sm:text-base">Découvrir</a>
+                        <h3 class="text-xl sm:text-2xl mb-4 text-accent text-center md:text-left">Tables</h3>
+                        <p class="text-base sm:text-lg leading-relaxed mb-6 md:mb-8 text-textColor text-center md:text-left">Des tables au design raffiné qui sublimeront vos espaces de vie et de réception.</p>
+                        <div class="text-center md:text-left">
+                            <a href="#" class="discover-btn inline-block px-[20px] sm:px-[30px] py-2 sm:py-3 bg-accent text-white no-underline rounded-full transition-transform duration-300 hover:translate-y-[-3px] text-sm sm:text-base">Découvrir</a>
+                        </div>
                     </div>
                     <div class="category-description" data-category="canapé">
-                        <h3 class="text-xl sm:text-2xl mb-4 text-accent">Canapés</h3>
-                        <p class="text-base sm:text-lg leading-relaxed mb-8 text-textColor">Des canapés modernes et confortables qui allient style et confort pour votre salon.</p>
-                        <a href="#" class="discover-btn inline-block px-[20px] sm:px-[30px] py-2 sm:py-3 bg-accent text-white no-underline rounded-full transition-transform duration-300 hover:translate-y-[-3px] text-sm sm:text-base">Découvrir</a>
+                        <h3 class="text-xl sm:text-2xl mb-4 text-accent text-center md:text-left">Canapés</h3>
+                        <p class="text-base sm:text-lg leading-relaxed mb-6 md:mb-8 text-textColor text-center md:text-left">Des canapés modernes et confortables qui allient style et confort pour votre salon.</p>
+                        <div class="text-center md:text-left">
+                            <a href="#" class="discover-btn inline-block px-[20px] sm:px-[30px] py-2 sm:py-3 bg-accent text-white no-underline rounded-full transition-transform duration-300 hover:translate-y-[-3px] text-sm sm:text-base">Découvrir</a>
+                        </div>
                     </div>
                     <div class="category-description" data-category="armoire">
-                        <h3 class="text-xl sm:text-2xl mb-4 text-accent">Armoires</h3>
-                        <p class="text-base sm:text-lg leading-relaxed mb-8 text-textColor">Des armoires élégantes offrant des solutions de rangement pratiques et esthétiques.</p>
-                        <a href="#" class="discover-btn inline-block px-[20px] sm:px-[30px] py-2 sm:py-3 bg-accent text-white no-underline rounded-full transition-transform duration-300 hover:translate-y-[-3px] text-sm sm:text-base">Découvrir</a>
+                        <h3 class="text-xl sm:text-2xl mb-4 text-accent text-center md:text-left">Armoires</h3>
+                        <p class="text-base sm:text-lg leading-relaxed mb-6 md:mb-8 text-textColor text-center md:text-left">Des armoires élégantes offrant des solutions de rangement pratiques et esthétiques.</p>
+                        <div class="text-center md:text-left">
+                            <a href="#" class="discover-btn inline-block px-[20px] sm:px-[30px] py-2 sm:py-3 bg-accent text-white no-underline rounded-full transition-transform duration-300 hover:translate-y-[-3px] text-sm sm:text-base">Découvrir</a>
+                        </div>
                     </div>
                 </div>
                 
                 <!-- Partie slider à droite -->
-                <div class="categories-slider relative w-[70%] overflow-hidden">
-                    <button class="slider-arrow prev-arrow absolute top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-accent/70 border-none text-white cursor-pointer flex items-center justify-center z-10 transition-all duration-300 hover:bg-accent left-2" aria-label="Précédent"> 
+                <div class="categories-slider relative w-full md:w-[70%] overflow-hidden order-1 md:order-2">
+                    <button class="slider-arrow prev-arrow absolute top-1/2 -translate-y-1/2 w-8 h-8 md:w-10 md:h-10 rounded-full bg-accent/70 border-none text-white cursor-pointer flex items-center justify-center z-10 transition-all duration-300 hover:bg-accent left-2" aria-label="Précédent"> 
                         <i class='bx bx-chevron-left text-xl'></i>
                     </button>
-                    <button class="slider-arrow next-arrow absolute top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-accent/70 border-none text-white cursor-pointer flex items-center justify-center z-10 transition-all duration-300 hover:bg-accent right-2" aria-label="Suivant">
+                    <button class="slider-arrow next-arrow absolute top-1/2 -translate-y-1/2 w-8 h-8 md:w-10 md:h-10 rounded-full bg-accent/70 border-none text-white cursor-pointer flex items-center justify-center z-10 transition-all duration-300 hover:bg-accent right-2" aria-label="Suivant">
                         <i class='bx bx-chevron-right text-xl'></i>
                     </button>
                     
                     <!-- Conteneur du slider avec plusieurs slides visibles -->
                     <div class="slider-container overflow-visible relative w-full px-4">
                         <div class="slides-wrapper flex gap-4">
-                            <div class="slide flex-shrink-0 w-[calc(33.333%-16px)] min-w-[200px]" data-category="chaise">
+                            <div class="slide flex-shrink-0 w-full sm:w-[calc(50%-8px)] md:w-[calc(33.333%-16px)] min-w-[200px]" data-category="chaise">
                                 <div class="relative h-full rounded-xl overflow-hidden">
-                                    <img src="images/chaise.jpeg" alt="Chaise design" class="w-full h-[400px] object-cover">
+                                    <img src="images/chaise.jpeg" alt="Chaise design" class="w-full h-[300px] md:h-[400px] object-cover">
                                     <div class="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black/70 to-transparent">
                                         <span class="text-white text-xl font-medium">Chaise</span>
                                     </div>
                                 </div>
                             </div>
-                            <div class="slide flex-shrink-0 w-[calc(33.333%-16px)] min-w-[200px]" data-category="lit">
+                            <div class="slide flex-shrink-0 w-full sm:w-[calc(50%-8px)] md:w-[calc(33.333%-16px)] min-w-[200px]" data-category="lit">
                                 <div class="relative h-full rounded-xl overflow-hidden">
-                                    <img src="images/lit.jpeg" alt="Lit design" class="w-full h-[400px] object-cover">
+                                    <img src="images/lit.jpeg" alt="Lit design" class="w-full h-[300px] md:h-[400px] object-cover">
                                     <div class="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black/70 to-transparent">
                                         <span class="text-white text-xl font-medium">Lit</span>
                                     </div>
                                 </div>
                             </div>
-                            <div class="slide flex-shrink-0 w-[calc(33.333%-16px)] min-w-[200px]" data-category="table">
+                            <div class="slide flex-shrink-0 w-full sm:w-[calc(50%-8px)] md:w-[calc(33.333%-16px)] min-w-[200px]" data-category="table">
                                 <div class="relative h-full rounded-xl overflow-hidden">
-                                    <img src="images/table.jpeg" alt="Table design" class="w-full h-[400px] object-cover">
+                                    <img src="images/table.jpeg" alt="Table design" class="w-full h-[300px] md:h-[400px] object-cover">
                                     <div class="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black/70 to-transparent">
                                         <span class="text-white text-xl font-medium">Table</span>
                                     </div>
                                 </div>
                             </div>
-                            <div class="slide flex-shrink-0 w-[calc(33.333%-16px)] min-w-[200px]" data-category="canapé">
+                            <div class="slide flex-shrink-0 w-full sm:w-[calc(50%-8px)] md:w-[calc(33.333%-16px)] min-w-[200px]" data-category="canapé">
                                 <div class="relative h-full rounded-xl overflow-hidden">
-                                    <img src="images/canape.jpeg" alt="Canapé design" class="w-full h-[400px] object-cover">
+                                    <img src="images/canape.jpeg" alt="Canapé design" class="w-full h-[300px] md:h-[400px] object-cover">
                                     <div class="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black/70 to-transparent">
                                         <span class="text-white text-xl font-medium">Canapé</span>
                                     </div>
                                 </div>
                             </div>
-                            <div class="slide flex-shrink-0 w-[calc(33.333%-16px)] min-w-[200px]" data-category="armoire">
+                            <div class="slide flex-shrink-0 w-full sm:w-[calc(50%-8px)] md:w-[calc(33.333%-16px)] min-w-[200px]" data-category="armoire">
                                 <div class="relative h-full rounded-xl overflow-hidden">
-                                    <img src="images/armoire.jpeg" alt="Armoire design" class="w-full h-[400px] object-cover">
+                                    <img src="images/armoire.jpeg" alt="Armoire design" class="w-full h-[300px] md:h-[400px] object-cover">
                                     <div class="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black/70 to-transparent">
                                         <span class="text-white text-xl font-medium">Armoire</span>
                                     </div>
@@ -271,41 +284,72 @@
             </div>
         </section>
     </main>
-    <footer class="bg-secondary text-textColor py-10 text-center">
-        <div class="footer-container flex flex-wrap justify-around p-5 max-w-[1200px] mx-auto md:flex-row flex-col">
-            <div class="footer-section flex-1 min-w-[250px] m-2.5">
-                <h3 class="text-[1.5rem] text-accent mb-4 font-frunchy">Maison Design</h3>
-                <p class="text-[1.1rem] text-textColor">Découvrez des meubles élégants et raffinés pour votre intérieur.</p>
+    <footer class="bg-primary text-textColor">
+        <div class="container mx-auto px-4 py-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div>
+                <h3 class="text-[1.3rem] md:text-[1.5rem] text-accent mb-4 font-frunchy">Maison Design</h3>
+                <p>Découvrez des meubles élégants et raffinés pour votre intérieur.</p>
             </div>
-            <div class="footer-section flex-1 min-w-[250px] m-2.5">
-                <h3 class="text-[1.5rem] text-accent mb-4 font-frunchy">Liens</h3>
-                <ul class="list-none p-0">
-                    <li class="my-2"><a href="#home" class="text-textColor no-underline text-[1.1rem] transition-colors duration-300 hover:text-accent">Accueil</a></li>
-                    <li class="my-2"><a href="#apropos" class="text-textColor no-underline text-[1.1rem] transition-colors duration-300 hover:text-accent">A propos</a></li>
-                    <li class="my-2"><a href="#categories" class="text-textColor no-underline text-[1.1rem] transition-colors duration-300 hover:text-accent">Catégories</a></li>
-                    <li class="my-2"><a href="#connexion" class="text-textColor no-underline text-[1.1rem] transition-colors duration-300 hover:text-accent">Connexion</a></li> 
+            
+            <div>
+                <h3 class="text-[1.3rem] md:text-[1.5rem] text-accent mb-4 font-frunchy">Liens</h3>
+                <ul class="space-y-2">
+                    <li><a href="#home" class="hover:text-accent">Accueil</a></li>
+                    <li><a href="#apropos" class="hover:text-accent">A propos</a></li>
+                    <li><a href="#categories" class="hover:text-accent">Catégories</a></li>
+                    <li><a href="connexion.html" class="hover:text-accent">Connexion</a></li>
                 </ul>
             </div>
-            <div id="contact" class="footer-section flex-1 min-w-[250px] m-2.5">
-                <h3 class="text-[1.5rem] text-accent mb-4 font-frunchy">Contact</h3>
-                <form action="#" method="POST" class="contact-form flex flex-col gap-2.5">
-                    <input type="text" name="nom" placeholder="Votre Nom" required class="w-full p-2.5 border border-textColor rounded-md text-base">
-                    <input type="email" name="email" placeholder="Votre Email" required class="w-full p-2.5 border border-textColor rounded-md text-base">
-                    <textarea name="message" placeholder="Votre Message" required class="w-full p-2.5 border border-textColor rounded-md text-base resize-none h-[100px]"></textarea>
-                    <button type="submit" class="bg-accent text-white border-none p-2.5 cursor-pointer text-base rounded-md transition-colors duration-300 hover:bg-primary">Envoyer</button>
+            
+            <div id="contact">
+                <h3 class="text-[1.3rem] md:text-[1.5rem] text-accent mb-4 font-frunchy">Contact</h3>
+                <form action="#" method="POST" class="space-y-3">
+                    <input 
+                        type="text" 
+                        name="nom" 
+                        placeholder="Votre Nom" 
+                        required 
+                        class="w-full px-4 py-2 rounded-md border border-secondary focus:outline-none focus:ring-2 focus:ring-accent"
+                    >
+                    <input 
+                        type="email" 
+                        name="email" 
+                        placeholder="Votre Email" 
+                        required 
+                        class="w-full px-4 py-2 rounded-md border border-secondary focus:outline-none focus:ring-2 focus:ring-accent"
+                    >
+                    <textarea 
+                        name="message" 
+                        placeholder="Votre Message" 
+                        required 
+                        class="w-full px-4 py-2 rounded-md border border-secondary focus:outline-none focus:ring-2 focus:ring-accent"
+                        rows="3"
+                    ></textarea>
+                    <button 
+                        type="submit" 
+                        class="px-6 py-2 bg-accent text-white rounded-md hover:shadow-md transition"
+                    >
+                        Envoyer
+                    </button>
                 </form>
-                <p class="text-[1.1rem] text-textColor">Email: contact@maisondesign.com</p>
-                <p class="text-[1.1rem] text-textColor">Téléphone: +213 555 123 456</p>
+                <p class="mt-3">Email: contact@maisondesign.com</p>
+                <p>Téléphone: +213 555 123 456</p>
             </div>
-            <div class="footer-section flex-1 min-w-[250px] m-2.5">
-                <h3 class="text-[1.5rem] text-accent mb-4 font-frunchy">Suivez-nous</h3>
-                <div class="social-icons mt-2.5">
-                    <a href="https://www.facebook.com/?locale=fr_FR" target="_blank" rel="noopener" class="text-accent text-[1.8rem] mx-2.5 transition-colors duration-300 hover:text-textColor"><i class="fab fa-facebook"></i></a>
-                    <a href="https://www.instagram.com/" target="_blank" rel="noopener" class="text-accent text-[1.8rem] mx-2.5 transition-colors duration-300 hover:text-textColor"><i class="fab fa-instagram"></i></a>
+            
+            <div>
+                <h3 class="text-[1.3rem] md:text-[1.5rem] text-accent mb-4 font-frunchy">Suivez-nous</h3>
+                <div class="flex space-x-4">
+                    <a href="https://www.facebook.com/?locale=fr_FR" target="_blank" rel="noopener" class="text-accent hover:text-textColor">
+                        <i class="bx bxl-facebook text-2xl"></i>
+                    </a>
+                    <a href="https://www.instagram.com/" target="_blank" rel="noopener" class="text-accent hover:text-textColor">
+                        <i class="bx bxl-instagram text-2xl"></i>
+                    </a>
                 </div>
             </div>
         </div>
-        <div class="footer-bottom mt-5 py-4 bg-primary text-base font-medium text-textColor">
+        
+        <div class="py-4 text-center border-t border-secondary">
             <p>&copy; 2025 Maison Design - Tous droits réservés.</p>
         </div>
     </footer>

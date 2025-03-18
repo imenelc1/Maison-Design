@@ -6,170 +6,347 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inscription - Maison Design</title>
     <link href="https://unpkg.com/boxicons@2.1.2/css/boxicons.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="tailwind.config.js"></script>
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/connexion.css">
 </head>
-<body>
+<body class="bg-background text-textColor">
     <!-- Header -->
-    <header class="header">
-        <div class="container">
-            <nav class="nav">
-                <button id="open-menu" class="menu-toggle" title="ouvrir menu">
-                    <i class='bx bx-menu'></i>
-                </button>
-                <div class="header-content mobile-hidden">
-                <button id="close-menu" class="menu-toggle" title="fermer menu">
-                    <i class='bx bx-x'></i>
-                </button>
-                <a href="index.html" class="logo-content">
-                    <img src="images/Logo3.png" alt="Logo Maison Design">
-                </a>
-    
-                <ul class="menu-list">
-                    <li><a href="#home" class="nav-link active-navlink">Accueil</a></li>
-                    <li><a href="#apropos" class="nav-link">A propos</a></li>
-    
-                    <li><a href="#categories" class="nav-link">Catégories</a>
-                        <ul>
-                            <li><a href="#">Lits</a></li>
-                            <li><a href="#">Chaises</a></li>
-                            <li><a href="#">Tables</a></li>
-                            <li><a href="#">Canapés</a></li>
-                            <li><a href="#">Armoires</a></li>
-    
-                        </ul>
-                    
-                    </li>
-                    <li><a href="#contact" class="nav-link">Contact</a></li>
-                    
-                </ul>
-                <div class="search-bar">
-                    <input type="text" placeholder="Rechercher un produit..." class="search-input">
-                    <button class="search-button" title="Rechercher">
-                        <i class='bx bx-search '></i>
+    <header class="fixed top-0 left-0 w-full h-20 bg-white/50 backdrop-blur-sm flex items-center justify-center z-50 shadow-md">
+        <div class="w-[90%] max-w-[1200px]">
+            <nav class="flex items-center justify-between">
+                <!-- Côté gauche -->
+                <div class="flex items-center gap-4">
+                    <!-- Icône hamburger uniquement sur mobile -->
+                    <button id="open-menu" class="md:hidden bg-transparent border-none text-2xl cursor-pointer text-textColor hover:text-accent transition-colors" title="ouvrir menu">
+                        <i class='bx bx-menu'></i>
                     </button>
+                    
+                    <!-- Menu desktop visible uniquement sur desktop -->
+                    <ul class="hidden md:flex flex-row gap-8">
+                        <li class="relative"><a href="index.html#home" class="text-textColor font-normal text-lg hover:text-accent transition-colors">Accueil</a></li>
+                        <li class="relative"><a href="index.html#apropos" class="text-textColor font-normal text-lg hover:text-accent transition-colors">A propos</a></li>
+                        <li class="relative group">
+                            <a href="#categories" class="text-textColor font-normal text-lg hover:text-accent transition-colors">Catégories</a>
+                            <ul class="absolute top-full left-0 bg-white list-none py-2.5 px-0 m-0 min-w-[100px] rounded-lg shadow-md z-10 hidden group-hover:block">
+                                <li class="px-5 py-2.5 hover:bg-secondary"><a href="#" class="no-underline text-textColor text-base block">Lits</a></li>
+                                <li class="px-5 py-2.5 hover:bg-secondary"><a href="#" class="no-underline text-textColor text-base block">Chaises</a></li>
+                                <li class="px-5 py-2.5 hover:bg-secondary"><a href="#" class="no-underline text-textColor text-base block">Tables</a></li>
+                                <li class="px-5 py-2.5 hover:bg-secondary"><a href="#" class="no-underline text-textColor text-base block">Canapés</a></li>
+                                <li class="px-5 py-2.5 hover:bg-secondary"><a href="#" class="no-underline text-textColor text-base block">Armoires</a></li>
+                            </ul>
+                        </li>
+                        <li class="relative"><a href="index.html#contact" class="text-textColor font-normal text-lg hover:text-accent transition-colors">Contact</a></li>
+                    </ul>
                 </div>
-    
-                <div class="cote-droit">
-                    <a href="connexion.html" class="nav-link" title="Connexion">
-                        <i class='bx bx-user user-icon'></i>
-                    </a>
-                    <a href="#panier" class="nav-link" title="Panier">
-                        <i class='bx bx-cart cart-icon'></i>
-                    </a>
+
+                <!-- Logo centré -->
+                <a href="index.html" class="logo-content absolute left-1/2 transform -translate-x-1/2">
+                    <img src="images/Logo3.png" alt="Logo Maison Design" class="w-[150px] md:w-[200px] h-auto -mt-[40px] md:-mt-[60px]">
+                </a>
+
+                <!-- Côté droit -->
+                <div class="flex items-center gap-4">
+                    <!-- Nouvelle barre de recherche améliorée sur desktop et mobile -->
+                    <div class="search-container relative">
+                        <button id="search-toggle" class="search-toggle-btn bg-transparent border-none cursor-pointer text-textColor text-2xl flex items-center justify-center hover:text-accent transition-colors p-2 rounded-full hover:bg-primary/30" title="Rechercher">
+                            <i class='bx bx-search'></i>
+                        </button>
+                        <!-- Dropdown pour desktop -->
+                        <div id="search-dropdown" class="absolute right-0 top-full mt-2 bg-white rounded-lg shadow-lg p-3 w-[300px] z-50 hidden opacity-0 -translate-y-2.5 transition-all duration-300">
+                            <div class="search-bar flex items-center bg-primary/20 rounded-full px-4 py-2 border border-accent/20 focus-within:border-accent transition-all duration-300">
+                                <input type="text" placeholder="Rechercher un produit..." class="border-none outline-none bg-transparent text-base w-full">
+                                <button class="search-button bg-transparent border-none cursor-pointer text-accent text-lg flex items-center justify-center hover:text-accent/70 transition-colors" title="Rechercher">
+                                    <i class='bx bx-search'></i>
+                                </button>
+                            </div>
+                            <div class="search-suggestions mt-3">
+                                <p class="text-sm text-textColor/70 mb-2">Suggestions populaires :</p>
+                                <div class="flex flex-wrap gap-2">
+                                    <a href="#" class="text-xs bg-primary/20 px-2 py-1 rounded-full text-textColor hover:bg-accent hover:text-white transition-colors">Chaises design</a>
+                                    <a href="#" class="text-xs bg-primary/20 px-2 py-1 rounded-full text-textColor hover:bg-accent hover:text-white transition-colors">Tables basses</a>
+                                    <a href="#" class="text-xs bg-primary/20 px-2 py-1 rounded-full text-textColor hover:bg-accent hover:text-white transition-colors">Canapés d'angle</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="cote-droit flex items-center gap-4 text-lg text-textColor">
+                        <a href="connexion.html" class="flex items-center gap-2 text-textColor hover:text-accent transition-colors" title="Connexion">
+                            <i class='bx bx-user text-2xl'></i>
+                        </a>
+                        <a href="#panier" class="flex items-center gap-2 text-textColor hover:text-accent transition-colors" title="Panier">
+                            <i class='bx bx-cart text-2xl'></i>
+                        </a>
+                    </div>
                 </div>
-            </div>
+
+                <!-- Menu mobile à gauche -->
+                <div class="header-content mobile-hidden md:hidden fixed -left-[250px] top-0 bg-primary p-6 z-[1000] h-screen w-[250px] transition-all duration-300">
+                    <button id="close-menu" class="absolute top-4 right-4 bg-transparent border-none text-2xl cursor-pointer text-textColor hover:text-accent transition-colors" title="fermer menu">
+                        <i class='bx bx-x'></i>
+                    </button>
+
+                    <ul class="menu-list flex flex-col items-start gap-8 w-full mt-16">
+                        <li class="relative w-full"><a href="index.html#home" class="text-textColor font-normal text-lg hover:text-accent transition-colors">Accueil</a></li>
+                        <li class="relative w-full"><a href="index.html#apropos" class="text-textColor font-normal text-lg hover:text-accent transition-colors">A propos</a></li>
+                        <li class="relative w-full mobile-dropdown">
+                            <a href="#categories" class="text-textColor font-normal text-lg hover:text-accent transition-colors flex justify-between items-center">
+                                Catégories
+                                <i class='bx bx-chevron-down text-lg'></i>
+                            </a>
+                            <ul class="bg-white/10 list-none py-2 px-0 m-0 rounded-lg mt-2 hidden mobile-submenu">
+                                <li class="px-5 py-2 hover:bg-white/20"><a href="#" class="no-underline text-textColor text-base block">Lits</a></li>
+                                <li class="px-5 py-2 hover:bg-white/20"><a href="#" class="no-underline text-textColor text-base block">Chaises</a></li>
+                                <li class="px-5 py-2 hover:bg-white/20"><a href="#" class="no-underline text-textColor text-base block">Tables</a></li>
+                                <li class="px-5 py-2 hover:bg-white/20"><a href="#" class="no-underline text-textColor text-base block">Canapés</a></li>
+                                <li class="px-5 py-2 hover:bg-white/20"><a href="#" class="no-underline text-textColor text-base block">Armoires</a></li>
+                            </ul>
+                        </li>
+                        <li class="relative w-full"><a href="index.html#contact" class="text-textColor font-normal text-lg hover:text-accent transition-colors">Contact</a></li>
+                    </ul>
+                </div>
             </nav>
         </div>
     </header>
-    <main class="register-main">
-        <div class="register-container">
-            <div class="register-box">
-                <h2>Inscription</h2>
-                <form class="register-form" action="php/inscription.php" method="POST">
-                    <div class="form-info">
-                        <label for="nom">Nom</label>
-                        <div class="input-with-icon">
-                            <i class='bx bx-user'></i>
-                            <input type="text" id="nom" name="nom" required placeholder="Votre nom">
+
+    <!-- Modal de recherche pour mobile -->
+    <div id="search-modal" class="search-modal fixed inset-0 bg-black/50 z-[1001] flex items-center justify-center p-4 hidden opacity-0 invisible transition-all duration-300">
+        <div class="search-modal-content bg-white rounded-xl w-full max-w-md p-5 transform -translate-y-5 transition-transform duration-300">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-medium text-textColor">Rechercher</h3>
+                <button id="close-search-modal" class="text-2xl text-textColor hover:text-accent">
+                    <i class='bx bx-x'></i>
+                </button>
+            </div>
+            <div class="search-bar flex items-center bg-primary/20 rounded-lg px-4 py-3 border border-accent/20 focus-within:border-accent transition-all duration-300 mb-4">
+                <input type="text" placeholder="Rechercher un produit..." class="border-none outline-none bg-transparent text-base w-full">
+                <button class="search-button bg-accent rounded-full w-8 h-8 border-none cursor-pointer text-white text-lg flex items-center justify-center hover:bg-accent/80 transition-colors" title="Rechercher">
+                    <i class='bx bx-search'></i>
+                </button>
+            </div>
+            <div class="search-suggestions">
+                <p class="text-sm text-textColor/70 mb-2">Suggestions populaires :</p>
+                <div class="flex flex-wrap gap-2">
+                    <a href="#" class="text-xs bg-primary/20 px-2 py-1 rounded-full text-textColor hover:bg-accent hover:text-white transition-colors">Chaises</a>
+                    <a href="#" class="text-xs bg-primary/20 px-2 py-1 rounded-full text-textColor hover:bg-accent hover:text-white transition-colors">Tables</a>
+                    <a href="#" class="text-xs bg-primary/20 px-2 py-1 rounded-full text-textColor hover:bg-accent hover:text-white transition-colors">Canapés</a>
+                    <a href="#" class="text-xs bg-primary/20 px-2 py-1 rounded-full text-textColor hover:bg-accent hover:text-white transition-colors">Lits</a>
+                    <a href="#" class="text-xs bg-primary/20 px-2 py-1 rounded-full text-textColor hover:bg-accent hover:text-white transition-colors">Armoires</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <main class="min-h-screen py-24 px-4 bg-background flex items-center justify-center">
+        <div class="w-full max-w-md">
+            <div class="bg-white rounded-3xl shadow-lg p-8">
+                <h2 class="text-3xl font-frunchy text-textColor mb-8 text-center">Inscription</h2>
+                
+                <form class="space-y-6" action="php/inscription.php" method="POST">
+                    <div class="space-y-2">
+                        <label for="nom" class="block text-textColor">Nom</label>
+                        <div class="relative">
+                            <i class='bx bx-user absolute left-4 top-1/2 transform -translate-y-1/2 text-accent text-xl'></i>
+                            <input 
+                                type="text" 
+                                id="nom" 
+                                name="nom" 
+                                required 
+                                placeholder="Votre nom" 
+                                class="w-full pl-12 pr-4 py-3 rounded-full border border-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition"
+                            >
                         </div>
                     </div>
-                    <div class="form-info">
-                        <label for="prenom">Prénom</label>
-                        <div class="input-with-icon">
-                            <i class='bx bx-user'></i>
-                            <input type="text" id="prenom" name="prenom" required placeholder="Votre prénom">
+                    
+                    <div class="space-y-2">
+                        <label for="prenom" class="block text-textColor">Prénom</label>
+                        <div class="relative">
+                            <i class='bx bx-user absolute left-4 top-1/2 transform -translate-y-1/2 text-accent text-xl'></i>
+                            <input 
+                                type="text" 
+                                id="prenom" 
+                                name="prenom" 
+                                required 
+                                placeholder="Votre prénom" 
+                                class="w-full pl-12 pr-4 py-3 rounded-full border border-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition"
+                            >
                         </div>
                     </div>
-                    <div class="form-info">
-                        <label for="email">Email</label>
-                        <div class="input-with-icon">
-                            <i class='bx bx-envelope'></i>
-                            <input type="email" id="email" name="email" required placeholder="Votre email">
+                    
+                    <div class="space-y-2">
+                        <label for="email" class="block text-textColor">Email</label>
+                        <div class="relative">
+                            <i class='bx bx-envelope absolute left-4 top-1/2 transform -translate-y-1/2 text-accent text-xl'></i>
+                            <input 
+                                type="email" 
+                                id="email" 
+                                name="email" 
+                                required 
+                                placeholder="Votre email" 
+                                class="w-full pl-12 pr-4 py-3 rounded-full border border-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition"
+                            >
                         </div>
                     </div>
-                    <div class="form-info">
-                        <label for="numtel">Numéro de téléphone</label>
-                        <div class="input-with-icon">
-                            <i class='bx bx-phone'></i>
-                            <input type="tel" id="numtel" name="numtel" required placeholder="Votre numéro de téléphone">
+                    
+                    <div class="space-y-2">
+                        <label for="numtel" class="block text-textColor">Numéro de téléphone</label>
+                        <div class="relative">
+                            <i class='bx bx-phone absolute left-4 top-1/2 transform -translate-y-1/2 text-accent text-xl'></i>
+                            <input 
+                                type="tel" 
+                                id="numtel" 
+                                name="numtel" 
+                                required 
+                                placeholder="Votre numéro de téléphone" 
+                                class="w-full pl-12 pr-4 py-3 rounded-full border border-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition"
+                            >
                         </div>
                     </div>
-                    <div class="form-info">
-                        <label for="adresse">Adresse</label>
-                        <div class="input-with-icon">
-                            <i class='bx bx-home'></i>
-                            <input type="text" id="adresse" name="adresse" required placeholder="Votre adresse">
+                    
+                    <div class="space-y-2">
+                        <label for="adresse" class="block text-textColor">Adresse</label>
+                        <div class="relative">
+                            <i class='bx bx-home absolute left-4 top-1/2 transform -translate-y-1/2 text-accent text-xl'></i>
+                            <input 
+                                type="text" 
+                                id="adresse" 
+                                name="adresse" 
+                                required 
+                                placeholder="Votre adresse" 
+                                class="w-full pl-12 pr-4 py-3 rounded-full border border-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition"
+                            >
                         </div>
                     </div>
-                    <div class="form-info">
-                        <label for="password">Mot de passe</label>
-                        <div class="input-with-icon">
-                            <i class='bx bx-lock-alt'></i>
-                            <input type="password" id="password" name="password" required placeholder="Choisissez un mot de passe">
+                    
+                    <div class="space-y-2">
+                        <label for="password" class="block text-textColor">Mot de passe</label>
+                        <div class="relative">
+                            <i class='bx bx-lock-alt absolute left-4 top-1/2 transform -translate-y-1/2 text-accent text-xl'></i>
+                            <input 
+                                type="password" 
+                                id="password" 
+                                name="password" 
+                                required 
+                                placeholder="Choisissez un mot de passe" 
+                                class="w-full pl-12 pr-4 py-3 rounded-full border border-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition"
+                            >
                         </div>
                     </div>
-                    <div class="form-info">
-                        <label for="confirm-password">Confirmer le mot de passe</label>
-                        <div class="input-with-icon">
-                            <i class='bx bx-lock-alt'></i>
-                            <input type="password" id="confirm-password" name="confirm-password" required placeholder="Confirmez votre mot de passe">
+                    
+                    <div class="space-y-2">
+                        <label for="confirm-password" class="block text-textColor">Confirmer le mot de passe</label>
+                        <div class="relative">
+                            <i class='bx bx-lock-alt absolute left-4 top-1/2 transform -translate-y-1/2 text-accent text-xl'></i>
+                            <input 
+                                type="password" 
+                                id="confirm-password" 
+                                name="confirm-password" 
+                                required 
+                                placeholder="Confirmez votre mot de passe" 
+                                class="w-full pl-12 pr-4 py-3 rounded-full border border-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition"
+                            >
                         </div>
                     </div>
-                    <div class="form-options">
-                        <label class="terms-conditions">
-                            <input type="checkbox" name="terms" required>
-                            <span>J'accepte les <a href="#">termes et conditions</a></span>
+                    
+                    <div class="flex items-start space-x-2">
+                        <input 
+                            type="checkbox" 
+                            id="terms" 
+                            name="terms" 
+                            required 
+                            class="mt-1 rounded text-accent focus:ring-accent"
+                        >
+                        <label for="terms" class="text-sm text-textColor">
+                            J'accepte les <a href="#" class="text-accent hover:underline">termes et conditions</a>
                         </label>
                     </div>
-                    <button type="submit" class="register-button">S'inscrire</button>
-                    <div class="login-link">
-                        Déjà un compte ? <a href="connexion.html">Se connecter</a>
+                    
+                    <button 
+                        type="submit" 
+                        class="w-full py-3 bg-accent text-white rounded-full hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
+                    >
+                        S'inscrire
+                    </button>
+                    
+                    <div class="text-center text-sm text-textColor">
+                        Déjà un compte ? <a href="connexion.html" class="text-accent font-semibold hover:underline">Se connecter</a>
                     </div>
                 </form>
             </div>
         </div>
     </main>
-<!--footer-->
-    <footer>
-        <div class="footer-container">
-            <div class="footer-section">
-                <h3>Maison Design</h3>
+
+    <!--footer-->
+    <footer class="bg-primary text-textColor">
+        <div class="container mx-auto px-4 py-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div>
+                <h3 class="text-[1.3rem] md:text-[1.5rem] text-accent mb-4 font-frunchy">Maison Design</h3>
                 <p>Découvrez des meubles élégants et raffinés pour votre intérieur.</p>
             </div>
-            <div class="footer-section">
-                <h3>Liens</h3>
-                <ul>
-                    <li><a href="#home">Accueil</a></li>
-                    <li><a href="#apropos">A propos</a></li>
-                    <li><a href="#categories">Catégories</a></li>
-                    <li><a href="#connexion">Connexion</a></li> 
+            
+            <div>
+                <h3 class="text-[1.3rem] md:text-[1.5rem] text-accent mb-4 font-frunchy">Liens</h3>
+                <ul class="space-y-2">
+                    <li><a href="index.html#home" class="hover:text-accent">Accueil</a></li>
+                    <li><a href="index.html#apropos" class="hover:text-accent">A propos</a></li>
+                    <li><a href="#categories" class="hover:text-accent">Catégories</a></li>
+                    <li><a href="connexion.html" class="hover:text-accent">Connexion</a></li>
                 </ul>
             </div>
-            <div id="contact" class="footer-section">
-                <h3>Contact</h3>
-                <form action="#" method="POST" class="contact-form">
-                    <input type="text" name="nom" placeholder="Votre Nom" required>
-                    <input type="email" name="email" placeholder="Votre Email" required>
-                    <textarea name="message" placeholder="Votre Message" required></textarea>
-                    <button type="submit">Envoyer</button>
+            
+            <div id="contact">
+                <h3 class="text-[1.3rem] md:text-[1.5rem] text-accent mb-4 font-frunchy">Contact</h3>
+                <form action="#" method="POST" class="space-y-3">
+                    <input 
+                        type="text" 
+                        name="nom" 
+                        placeholder="Votre Nom" 
+                        required 
+                        class="w-full px-4 py-2 rounded-md border border-secondary focus:outline-none focus:ring-2 focus:ring-accent"
+                    >
+                    <input 
+                        type="email" 
+                        name="email" 
+                        placeholder="Votre Email" 
+                        required 
+                        class="w-full px-4 py-2 rounded-md border border-secondary focus:outline-none focus:ring-2 focus:ring-accent"
+                    >
+                    <textarea 
+                        name="message" 
+                        placeholder="Votre Message" 
+                        required 
+                        class="w-full px-4 py-2 rounded-md border border-secondary focus:outline-none focus:ring-2 focus:ring-accent"
+                        rows="3"
+                    ></textarea>
+                    <button 
+                        type="submit" 
+                        class="px-6 py-2 bg-accent text-white rounded-md hover:shadow-md transition"
+                    >
+                        Envoyer
+                    </button>
                 </form>
-                <p>Email: contact@maisondesign.com</p>
+                <p class="mt-3">Email: contact@maisondesign.com</p>
                 <p>Téléphone: +213 555 123 456</p>
             </div>
-            <div class="footer-section">
-                <h3>Suivez-nous</h3>
-                <div class="social-icons">
-                    <a href="https://www.facebook.com/?locale=fr_FR" target="_blank" rel="noopener"><i class="fab fa-facebook"></i></a>
-                    <a href="https://www.instagram.com/" target="_blank" rel="noopener"><i class="fab fa-instagram"></i></a>
+            
+            <div>
+                <h3 class="text-[1.3rem] md:text-[1.5rem] text-accent mb-4 font-frunchy">Suivez-nous</h3>
+                <div class="flex space-x-4">
+                    <a href="https://www.facebook.com/?locale=fr_FR" target="_blank" rel="noopener" class="text-accent hover:text-textColor">
+                        <i class="bx bxl-facebook text-2xl"></i>
+                    </a>
+                    <a href="https://www.instagram.com/" target="_blank" rel="noopener" class="text-accent hover:text-textColor">
+                        <i class="bx bxl-instagram text-2xl"></i>
+                    </a>
                 </div>
             </div>
         </div>
-        <div class="footer-bottom">
+        
+        <div class="py-4 text-center border-t border-secondary">
             <p>&copy; 2025 Maison Design - Tous droits réservés.</p>
         </div>
     </footer>
     <script src="js/script.js"></script>
-
 </body>
 </html>
