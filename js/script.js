@@ -4,435 +4,378 @@
  */
 
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("DOM chargé, initialisation du script...");
+  // MENU MOBILE
+  initMobileMenu()
 
-  // ======= MENU MOBILE =======
-  initMobileMenu();
+  // SLIDER CATÉGORIES
+  initCategorySlider()
 
-  // ======= SLIDER CATÉGORIES =======
-  initCategorySlider();
+  //  BARRE DE RECHERCHE
+  initSearchBar()
 
-  // ======= BARRE DE RECHERCHE AMÉLIORÉE =======
-  initSearchBar();
+  // FORMULAIRES
+  initForms()
 
-  // ======= FORMULAIRES =======
-  initForms();
+  // GESTION DES ERREURS
+  handleUrlErrors()
+})
 
-  // ======= GESTION DES ERREURS =======
-  handleUrlErrors();
-});
-
-/**
- * Initialise le menu mobile
- */
+//   le menu mobile
 function initMobileMenu() {
-  const openMenuBtn = document.getElementById("open-menu");
-  const closeMenuBtn = document.getElementById("close-menu");
-  const mobileMenu = document.querySelector(".header-content");
-
+  const openMenuBtn = document.getElementById("open-menu")
+  const closeMenuBtn = document.getElementById("close-menu")
+  const mobileMenu = document.getElementById("mobile-menu") // Utiliser l'ID au lieu de la classe
+  
+  // Créer un overlay pour l'arrière-plan
+  const overlay = document.createElement("div")
+  overlay.className = "menu-overlay"
+  document.body.appendChild(overlay)
+  
+  // Vérifier si les éléments existent
   if (!openMenuBtn || !closeMenuBtn || !mobileMenu) {
-    console.error("Éléments du menu mobile non trouvés");
-    return;
+    console.error("Éléments du menu mobile non trouvés")
+    return
   }
 
+  // Fonction pour ouvrir le menu
   function openMenu() {
-    mobileMenu.style.left = "0"; // Utilise left au lieu de right
-    document.body.classList.add("overflow-hidden");
+    mobileMenu.classList.add("active")
+    overlay.classList.add("active")
+    document.body.classList.add("overflow-hidden")
+    console.log("Menu ouvert")
+    
+    // Vérification visuelle
+    console.log("Position du menu:", mobileMenu.getBoundingClientRect())
+    console.log("Classes:", mobileMenu.className)
   }
 
+  // Fonction pour fermer le menu
   function closeMenu() {
-    mobileMenu.style.left = "-250px"; // Utilise left au lieu de right
-    document.body.classList.remove("overflow-hidden");
+    mobileMenu.classList.remove("active")
+    overlay.classList.remove("active")
+    document.body.classList.remove("overflow-hidden")
+    console.log("Menu fermé")
   }
 
-  openMenuBtn.addEventListener("click", function (e) {
-    e.stopPropagation();
-    openMenu();
-    console.log("Menu ouvert");
-  });
+  // Écouteurs d'événements
+  openMenuBtn.addEventListener("click", (e) => {
+    e.stopPropagation()
+    openMenu()
+  })
 
-  closeMenuBtn.addEventListener("click", function (e) {
-    e.stopPropagation();
-    closeMenu();
-    console.log("Menu fermé");
-  });
+  closeMenuBtn.addEventListener("click", (e) => {
+    e.stopPropagation()
+    closeMenu()
+  })
+
+  overlay.addEventListener("click", closeMenu)
 
   // Fermer le menu si on clique sur un lien
-  const menuLinks = mobileMenu.querySelectorAll("a");
+  const menuLinks = mobileMenu.querySelectorAll("a")
   menuLinks.forEach((link) => {
     link.addEventListener("click", () => {
       if (window.innerWidth < 768) {
-        closeMenu();
+        closeMenu()
       }
-    });
-  });
-
-  // Fermer le menu si on clique en dehors
-  document.addEventListener("click", (e) => {
-    if (
-      window.innerWidth < 768 &&
-      mobileMenu.style.left === "0px" && // Utilise left au lieu de right
-      !mobileMenu.contains(e.target) &&
-      e.target !== openMenuBtn
-    ) {
-      closeMenu();
-    }
-  });
+    })
+  })
 
   // Gérer le redimensionnement de la fenêtre
   window.addEventListener("resize", () => {
     if (window.innerWidth >= 768) {
-      mobileMenu.style.left = ""; // Réinitialiser sur grand écran
-    } else {
-      mobileMenu.style.left = "-250px"; // Cacher sur mobile
+      closeMenu()
     }
-  });
+  })
 }
 
-/**
- * Initialise la barre de recherche améliorée
- */
+//  barre de recherche
+
 function initSearchBar() {
-  const searchToggle = document.getElementById("search-toggle");
-  const searchDropdown = document.getElementById("search-dropdown");
-  const searchModal = document.getElementById("search-modal");
-  const closeSearchModal = document.getElementById("close-search-modal");
-  
+  const searchToggle = document.getElementById("search-toggle")
+  const searchDropdown = document.getElementById("search-dropdown")
+  const searchModal = document.getElementById("search-modal")
+  const closeSearchModal = document.getElementById("close-search-modal")
+  // vérifier si l'élément existe
   if (!searchToggle) {
-    console.log("Élément de recherche non trouvé");
-    return;
+    console.log("Élément de recherche non trouvé")
+    return
   }
-  
-  // Fonction pour ouvrir le dropdown sur desktop ou le modal sur mobile
-  searchToggle.addEventListener("click", function(e) {
-    e.stopPropagation();
-    console.log("Bouton de recherche cliqué");
-    
-    // Sur mobile, ouvrir le modal
+
+  // fonction pour ouvrir/fermer le dropdown desktop
+  function toggleDesktopSearch() {
+    if (searchDropdown) {
+      searchDropdown.classList.toggle("hidden") //affiche/cache le dropdown
+      //animation pour l'apparition
+      searchDropdown.classList.toggle("opacity-0")
+      searchDropdown.classList.toggle("-translate-y-2.5")
+    }
+  }
+
+  // fonction pour ouvrir le modal mobile
+  function openMobileSearch() {
+    if (searchModal) {
+      searchModal.classList.remove("hidden", "opacity-0", "invisible") //affiche le modal
+      document.body.classList.add("overflow-hidden") //bloque le defilement
+      // faire focus sur l'input
+      const searchInput = searchModal.querySelector("input")
+      if (searchInput) searchInput.focus()
+    }
+  }
+
+  // fonction pour fermer le modal mobile
+  function closeMobileSearch() {
+    if (searchModal) {
+      searchModal.classList.add("hidden", "opacity-0", "invisible") //cache le modal
+      document.body.classList.remove("overflow-hidden") //retabli le defilement
+    }
+  }
+
+  // gestion du clic sur l'icône de recherche
+  searchToggle.addEventListener("click", (e) => {
+    e.stopPropagation()
+
     if (window.innerWidth < 768) {
-      if (searchModal) {
-        searchModal.classList.add("active");
-        // Focus sur l'input quand le modal est ouvert
-        const searchInput = searchModal.querySelector("input");
-        if (searchInput) {
-          setTimeout(() => {
-            searchInput.focus();
-          }, 300);
-        }
-        // Empêcher le défilement du body
-        document.body.classList.add("overflow-hidden");
-      }
-    } 
-    // Sur desktop, ouvrir le dropdown
-    else {
-      if (searchDropdown) {
-        console.log("Toggle dropdown de recherche");
-        searchDropdown.classList.toggle("active");
-        
-        if (searchDropdown.classList.contains("active")) {
-          // Focus sur l'input quand le dropdown est ouvert
-          const searchInput = searchDropdown.querySelector("input");
-          if (searchInput) {
-            setTimeout(() => {
-              searchInput.focus();
-            }, 300);
-          }
-        }
-      }
+      openMobileSearch() //mobile
+    } else {
+      toggleDesktopSearch() //desktop
     }
-  });
-  
-  // Fermer le modal de recherche mobile
+  })
+
+  // fermeture du modal mobile
   if (closeSearchModal) {
-    closeSearchModal.addEventListener("click", () => {
-      if (searchModal) {
-        searchModal.classList.remove("active");
-        document.body.classList.remove("overflow-hidden");
-      }
-    });
+    closeSearchModal.addEventListener("click", closeMobileSearch)
   }
-  
-  // Fermer le dropdown si on clique en dehors (desktop)
+
+  // fermer le dropdown/modal si clic en dehors
   document.addEventListener("click", (e) => {
-    if (
-      searchDropdown && 
-      searchDropdown.classList.contains("active") &&
-      !searchDropdown.contains(e.target) &&
-      e.target !== searchToggle
-    ) {
-      searchDropdown.classList.remove("active");
+    // pour le dropdown desktop
+    if (searchDropdown && !searchDropdown.contains(e.target) && e.target !== searchToggle) {
+      searchDropdown.classList.add("hidden", "opacity-0", "-translate-y-2.5")
     }
-  });
-  
-  // Fermer le modal si on clique en dehors du contenu (mobile)
-  if (searchModal) {
-    searchModal.addEventListener("click", (e) => {
-      if (e.target === searchModal) {
-        searchModal.classList.remove("active");
-        document.body.classList.remove("overflow-hidden");
-      }
-    });
-  }
-  
-  // Empêcher la fermeture du dropdown quand on clique dedans
+
+    // pour le modal mobile
+    if (searchModal && e.target === searchModal) {
+      closeMobileSearch()
+    }
+  })
+
+  // empêcher la fermeture accidentelle(par exemple, si on clique sur le dropdown)
   if (searchDropdown) {
-    searchDropdown.addEventListener("click", (e) => {
-      e.stopPropagation();
-    });
+    searchDropdown.addEventListener("click", (e) => e.stopPropagation())
   }
-  
-  // Gérer la soumission du formulaire de recherche
-  const searchForms = document.querySelectorAll(".search-bar");
-  searchForms.forEach((form) => {
-    form.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const input = form.querySelector("input");
-      if (input && input.value.trim()) {
-        console.log("Recherche soumise:", input.value);
-        // Ici, vous pouvez ajouter votre logique de recherche
-        alert(`Recherche en cours pour: ${input.value}`);
-        
-        // Fermer le dropdown ou le modal après la recherche
-        if (searchDropdown) searchDropdown.classList.remove("active");
-        if (searchModal) searchModal.classList.remove("active");
-      }
-    });
-  });
-  
-  // Gérer le redimensionnement de la fenêtre
-  window.addEventListener("resize", () => {
-    // Fermer le dropdown sur mobile
-    if (window.innerWidth < 768 && searchDropdown) {
-      searchDropdown.classList.remove("active");
-    }
-    // Fermer le modal sur desktop
-    if (window.innerWidth >= 768 && searchModal) {
-      searchModal.classList.remove("active");
-      document.body.classList.remove("overflow-hidden");
-    }
-  });
 }
+// initialise le slider de catégories
 
-/**
- * Initialise le slider de catégories
- * Correction complète pour faire fonctionner le slider
- */
 function initCategorySlider() {
-  const slidesWrapper = document.querySelector(".slides-wrapper");
+  const slidesWrapper = document.querySelector(".slides-wrapper")
   if (!slidesWrapper) {
-    console.log("Slider non trouvé sur cette page");
-    return;
+    console.log("Slider non trouvé sur cette page")
+    return
   }
 
-  const slides = document.querySelectorAll(".slide");
-  const prevButton = document.querySelector(".prev-arrow");
-  const nextButton = document.querySelector(".next-arrow");
-  const descriptions = document.querySelectorAll(".category-description");
-  
+  const slides = document.querySelectorAll(".slide")
+  const prevButton = document.querySelector(".prev-arrow")
+  const nextButton = document.querySelector(".next-arrow")
+  const descriptions = document.querySelectorAll(".category-description")
+  // vérifier si les éléments existent
   if (!slides.length || !prevButton || !nextButton || !descriptions.length) {
-    console.error("Éléments du slider non trouvés");
-    return;
+    console.error("Éléments du slider non trouvés")
+    return
   }
 
-  let currentIndex = 0;
-  const slideCount = slides.length;
+  let currentIndex = 0 //index du slide active
+  const slideCount = slides.length //nombre total de slides
 
-  // Fonction pour mettre à jour l'affichage du slider
+  // fonction pour mettre à jour l'affichage du slider
   function updateSlider() {
     // Mettre à jour les états actifs et les transformations
     slides.forEach((slide, index) => {
       if (index === currentIndex) {
-        slide.classList.add("active");
-        slide.style.opacity = "1";
-        slide.style.transform = "scale(1)";
+        slide.classList.add("active") //slide active
+        slide.style.opacity = "1" //visible
+        slide.style.transform = "scale(1)" //taille normale
       } else {
-        slide.classList.remove("active");
-        slide.style.opacity = "0.5";
-        slide.style.transform = "scale(0.9)";
+        slide.classList.remove("active") //slide inactive
+        slide.style.opacity = "0.5" //un peu transparent
+        slide.style.transform = "scale(0.9)" //on reduit legerement le slide
       }
-    });
+    })
 
     // Mettre à jour les descriptions
     descriptions.forEach((desc, index) => {
       if (index === currentIndex) {
-        desc.classList.add("active");
+        desc.classList.add("active") //description active
       } else {
-        desc.classList.remove("active");
+        desc.classList.remove("active") //description inactive
       }
-    });
+    })
 
-    // Calculer et appliquer la translation
-    const slideWidth = slides[0].offsetWidth;
-    const gap = 20; // Espacement entre les slides
-    const translation = -(currentIndex * (slideWidth + gap));
-    slidesWrapper.style.transform = `translateX(${translation}px)`;
+    // calculer et appliquer la translation(l'effet de défilement horizontal)
+    const slideWidth = slides[0].offsetWidth // Largeur d'un slide
+    const gap = 20 // Espacement entre les slides
+    const translation = -(currentIndex * (slideWidth + gap)) //calcul du décalage
+    slidesWrapper.style.transform = `translateX(${translation}px)` //déplacement
   }
 
-  // Fonction pour aller à un slide spécifique
+  // fonction pour aller à un slide spécifique
   function goToSlide(index) {
-    currentIndex = (index + slideCount) % slideCount; // Boucle circulaire
-    updateSlider();
+    currentIndex = (index + slideCount) % slideCount // pour boucler
+    updateSlider() //mettre a jour l'affichage
   }
 
   // Écouteurs d'événements
+  //fleche gauche/droite
   prevButton.addEventListener("click", () => {
-    goToSlide(currentIndex - 1);
-  });
-  
+    goToSlide(currentIndex - 1)
+  })
+
   nextButton.addEventListener("click", () => {
-    goToSlide(currentIndex + 1);
-  });
-  
-  // Permettre de cliquer sur un slide pour le sélectionner
+    goToSlide(currentIndex + 1)
+  })
+
+  // permettre de cliquer sur un slide pour le sélectionner
   slides.forEach((slide, index) => {
     slide.addEventListener("click", () => {
-      goToSlide(index);
-    });
-  });
+      goToSlide(index)
+    })
+  })
 
   // Initialiser le slider
-  updateSlider();
+  updateSlider()
 }
 
-/**
- * Initialise les formulaires
- */
+//  les formulaires
 function initForms() {
-  // Formulaire de connexion
-  const loginForm = document.querySelector(".login-form");
+  // formulaire de connexion
+  const loginForm = document.querySelector(".login-form")
   if (loginForm) {
-    console.log("Initialisation du formulaire de connexion");
-    
+    console.log("Initialisation du formulaire de connexion")
+
     loginForm.addEventListener("submit", (e) => {
-      e.preventDefault();
-      console.log("Tentative de connexion");
-      
-      // Récupérer les valeurs du formulaire
-      const email = loginForm.querySelector('input[type="email"]').value;
-      const password = loginForm.querySelector('input[type="password"]').value;
-      
+      e.preventDefault() //empeche le rechargement de la page
+      console.log("Tentative de connexion")
+
+      // récupérer les valeurs du formulaire
+      const email = loginForm.querySelector('input[type="email"]').value
+      const password = loginForm.querySelector('input[type="password"]').value
+
       if (!email || !password) {
-        showError("Veuillez remplir tous les champs.");
-        return;
+        showError("Veuillez remplir tous les champs.")
+        return
       }
-      
-      // Ici, vous pouvez ajouter votre logique de connexion
-      console.log("Email:", email);
-      console.log("Mot de passe:", password.replace(/./g, '*'));
-      
+      console.log("Email:", email)
+      console.log("Mot de passe:", password.replace(/./g, "*")) //masquer le mot de passe
+
       // Simuler une soumission de formulaire
-      loginForm.submit();
-    });
+      loginForm.submit()
+    })
   }
 
-  // Formulaire d'inscription
-  const registerForm = document.querySelector(".register-form");
+  // formulaire d'inscription
+  const registerForm = document.querySelector(".register-form")
   if (registerForm) {
-    console.log("Initialisation du formulaire d'inscription");
-    
+    console.log("Initialisation du formulaire d'inscription")
+
     registerForm.addEventListener("submit", (e) => {
-      e.preventDefault();
-      console.log("Tentative d'inscription");
-      
-      // Récupérer les valeurs du formulaire
-      const name = registerForm.querySelector('input[name="nom"]')?.value;
-      const email = registerForm.querySelector('input[type="email"]').value;
-      const password = registerForm.querySelector('input[type="password"]').value;
-      const confirmPassword = registerForm.querySelector('input[name="confirm-password"]')?.value;
-      
+      e.preventDefault()
+      console.log("Tentative d'inscription")
+
+      // récupérer les valeurs du formulaire
+      const name = registerForm.querySelector('input[name="nom"]')?.value
+      const email = registerForm.querySelector('input[type="email"]').value
+      const password = registerForm.querySelector('input[type="password"]').value
+      const confirmPassword = registerForm.querySelector('input[name="confirm-password"]')?.value
+
       if (!email || !password || (confirmPassword && password !== confirmPassword)) {
-        showError(confirmPassword && password !== confirmPassword 
-          ? "Les mots de passe ne correspondent pas." 
-          : "Veuillez remplir tous les champs.");
-        return;
+        showError(
+          confirmPassword && password !== confirmPassword
+            ? "Les mots de passe ne correspondent pas."
+            : "Veuillez remplir tous les champs.",
+        )
+        return
       }
-      
-      // Ici, vous pouvez ajouter votre logique d'inscription
-      console.log("Nom:", name);
-      console.log("Email:", email);
-      console.log("Mot de passe:", password.replace(/./g, '*'));
-      
+
+      console.log("Nom:", name)
+      console.log("Email:", email)
+      console.log("Mot de passe:", password.replace(/./g, "*"))
+
       // Simuler une soumission de formulaire
-      registerForm.submit();
-    });
+      registerForm.submit()
+    })
   }
 
   // Formulaire de contact
-  const contactForm = document.querySelector(".contact-form");
+  const contactForm = document.querySelector(".contact-form")
   if (contactForm) {
-    console.log("Initialisation du formulaire de contact");
-    
+    console.log("Initialisation du formulaire de contact")
+
     contactForm.addEventListener("submit", (e) => {
-      e.preventDefault();
-      console.log("Tentative d'envoi de message");
-      
+      e.preventDefault()
+      console.log("Tentative d'envoi de message")
+
       // Récupérer les valeurs du formulaire
-      const name = contactForm.querySelector('input[name="nom"]').value;
-      const email = contactForm.querySelector('input[type="email"]').value;
-      const message = contactForm.querySelector('textarea').value;
-      
+      const name = contactForm.querySelector('input[name="nom"]').value
+      const email = contactForm.querySelector('input[type="email"]').value
+      const message = contactForm.querySelector("textarea").value
+
       if (!name || !email || !message) {
-        showError("Veuillez remplir tous les champs.");
-        return;
+        showError("Veuillez remplir tous les champs.")
+        return
       }
-      
-      // Ici, vous pouvez ajouter votre logique d'envoi de message
-      console.log("Nom:", name);
-      console.log("Email:", email);
-      console.log("Message:", message);
-      
+
+      console.log("Nom:", name)
+      console.log("Email:", email)
+      console.log("Message:", message)
+
       // Simuler une soumission de formulaire
-      alert("Votre message a été envoyé avec succès!");
-      contactForm.submit();
-    });
+      alert("Votre message a été envoyé avec succès!")
+      contactForm.submit()
+    })
   }
 }
 
-/**
- * Gère les erreurs dans l'URL
- */
+// Gère les erreurs dans l'URL
+
 function handleUrlErrors() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const error = urlParams.get("error");
-  const errorMessage = document.getElementById("error-message");
+  const urlParams = new URLSearchParams(window.location.search)
+  const error = urlParams.get("error")
+  const errorMessage = document.getElementById("error-message")
 
   if (error && errorMessage) {
-    console.log("Erreur détectée dans l'URL:", error);
-    
-    errorMessage.style.display = "block";
+    console.log("Erreur détectée dans l'URL:", error)
+
+    errorMessage.style.display = "block"
 
     if (error === "invalid") {
-      errorMessage.textContent = "Email ou mot de passe incorrect.";
+      errorMessage.textContent = "Email ou mot de passe incorrect."
     } else if (error === "empty") {
-      errorMessage.textContent = "Veuillez remplir tous les champs.";
+      errorMessage.textContent = "Veuillez remplir tous les champs."
     } else if (error === "password") {
-      errorMessage.textContent = "Les mots de passe ne correspondent pas.";
+      errorMessage.textContent = "Les mots de passe ne correspondent pas."
     } else {
-      errorMessage.textContent = "Une erreur s'est produite. Veuillez réessayer.";
+      errorMessage.textContent = "Une erreur s'est produite. Veuillez réessayer."
     }
   }
 }
 
-/**
- * Affiche un message d'erreur
- */
+//Affiche un message d'erreur
 function showError(message) {
-  let errorMessage = document.getElementById("error-message");
-  
+  let errorMessage = document.getElementById("error-message")
+
   if (!errorMessage) {
-    errorMessage = document.createElement("div");
-    errorMessage.id = "error-message";
-    errorMessage.className = "bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4";
-    
-    const form = document.querySelector("form");
+    errorMessage = document.createElement("div")
+    errorMessage.id = "error-message"
+    errorMessage.className = "bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4"
+
+    const form = document.querySelector("form")
     if (form) {
-      form.insertBefore(errorMessage, form.firstChild);
+      form.insertBefore(errorMessage, form.firstChild)
     }
   }
-  
-  errorMessage.textContent = message;
-  errorMessage.style.display = "block";
-  
-  // Faire défiler jusqu'au message d'erreur
-  errorMessage.scrollIntoView({ behavior: "smooth", block: "start" });
+
+  errorMessage.textContent = message
+  errorMessage.style.display = "block"
+
+  // faire défiler jusqu'au message d'erreur
+  errorMessage.scrollIntoView({ behavior: "smooth", block: "start" })
 }

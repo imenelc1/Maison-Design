@@ -10,49 +10,42 @@
     <script src="tailwind.config.js"></script>
     <link rel="stylesheet" href="css/style.css">
 </head>
-<body class="bg-background text-textColor">
+<body class="font-cormorant bg-background text-textColor">
     <!-- Header -->
     <header class="fixed top-0 left-0 w-full h-20 bg-white/50 backdrop-blur-sm flex items-center justify-center z-50 shadow-md">
         <div class="w-[90%] max-w-[1200px]">
             <nav class="flex items-center justify-between">
-                <!-- Côté gauche -->
-                <div class="flex items-center gap-4">
-                    <!-- Icône hamburger uniquement sur mobile -->
-                    <button id="open-menu" class="md:hidden bg-transparent border-none text-2xl cursor-pointer text-textColor hover:text-accent transition-colors" title="ouvrir menu">
-                        <i class='bx bx-menu'></i>
-                    </button>
-                    
-                    <!-- Menu desktop visible uniquement sur desktop -->
+                <div class="w-[20%] flex items-center">
+                    <a href="index.html" class="logo-content flex items-center">
+                        <img src="images/Logo3_1_1.png" alt="Logo Maison Design" class="w-[60px] md:w-[70px] h-auto">
+                    </a>
+                </div>
+
+                <div class="w-[60%] flex justify-center">
+                    <!-- Menu desktop -->
                     <ul class="hidden md:flex flex-row gap-8">
-                        <li class="relative"><a href="index.html#home" class="text-textColor font-normal text-lg hover:text-accent transition-colors">Accueil</a></li>
-                        <li class="relative"><a href="index.html#apropos" class="text-textColor font-normal text-lg hover:text-accent transition-colors">A propos</a></li>
+                        <li class="relative"><a href="#home" class="text-textColor font-normal text-lg hover:text-accent transition-colors">Accueil</a></li>
+                        <li class="relative"><a href="#apropos" class="text-textColor font-normal text-lg hover:text-accent transition-colors">A propos</a></li>
                         <li class="relative group">
                             <a href="#categories" class="text-textColor font-normal text-lg hover:text-accent transition-colors">Catégories</a>
                             <ul class="absolute top-full left-0 bg-white list-none py-2.5 px-0 m-0 min-w-[100px] rounded-lg shadow-md z-10 hidden group-hover:block">
-                                <li class="px-5 py-2.5 hover:bg-secondary"><a href="#" class="no-underline text-textColor text-base block">Lits</a></li>
-                                <li class="px-5 py-2.5 hover:bg-secondary"><a href="#" class="no-underline text-textColor text-base block">Chaises</a></li>
-                                <li class="px-5 py-2.5 hover:bg-secondary"><a href="#" class="no-underline text-textColor text-base block">Tables</a></li>
-                                <li class="px-5 py-2.5 hover:bg-secondary"><a href="#" class="no-underline text-textColor text-base block">Canapés</a></li>
-                                <li class="px-5 py-2.5 hover:bg-secondary"><a href="#" class="no-underline text-textColor text-base block">Armoires</a></li>
+                                <li class="px-5 py-2.5 hover:bg-secondary"><a href="categories.html?category=lit" class="no-underline text-textColor text-base block">Lits</a></li>
+                                <li class="px-5 py-2.5 hover:bg-secondary"><a href="categories.html?category=chaise" class="no-underline text-textColor text-base block">Chaises</a></li>
+                                <li class="px-5 py-2.5 hover:bg-secondary"><a href="categories.html?category=table" class="no-underline text-textColor text-base block">Tables</a></li>
+                                <li class="px-5 py-2.5 hover:bg-secondary"><a href="categories.html?category=canapé" class="no-underline text-textColor text-base block">Canapés</a></li>
+                                <li class="px-5 py-2.5 hover:bg-secondary"><a href="categories.html?category=armoire" class="no-underline text-textColor text-base block">Armoires</a></li>
                             </ul>
                         </li>
-                        <li class="relative"><a href="index.html#contact" class="text-textColor font-normal text-lg hover:text-accent transition-colors">Contact</a></li>
+                        <li class="relative"><a href="#contact" class="text-textColor font-normal text-lg hover:text-accent transition-colors">Contact</a></li>
                     </ul>
                 </div>
-
-                <!-- Logo centré -->
-                <a href="index.html" class="logo-content absolute left-1/2 transform -translate-x-1/2">
-                    <img src="images/Logo3.png" alt="Logo Maison Design" class="w-[150px] md:w-[200px] h-auto -mt-[40px] md:-mt-[60px]">
-                </a>
-
-                <!-- Côté droit -->
-                <div class="flex items-center gap-4">
-                    <!-- Nouvelle barre de recherche améliorée sur desktop et mobile -->
+                
+                <div class="w-[20%] flex items-center justify-end gap-4">
+                    <!--  barre de recherche  -->
                     <div class="search-container relative">
                         <button id="search-toggle" class="search-toggle-btn bg-transparent border-none cursor-pointer text-textColor text-2xl flex items-center justify-center hover:text-accent transition-colors p-2 rounded-full hover:bg-primary/30" title="Rechercher">
                             <i class='bx bx-search'></i>
                         </button>
-                        <!-- Dropdown pour desktop -->
                         <div id="search-dropdown" class="absolute right-0 top-full mt-2 bg-white rounded-lg shadow-lg p-3 w-[300px] z-50 hidden opacity-0 -translate-y-2.5 transition-all duration-300">
                             <div class="search-bar flex items-center bg-primary/20 rounded-full px-4 py-2 border border-accent/20 focus-within:border-accent transition-all duration-300">
                                 <input type="text" placeholder="Rechercher un produit..." class="border-none outline-none bg-transparent text-base w-full">
@@ -71,40 +64,53 @@
                         </div>
                     </div>
                     
-                    <div class="cote-droit flex items-center gap-4 text-lg text-textColor">
-                        <a href="connexion.html" class="flex items-center gap-2 text-textColor hover:text-accent transition-colors" title="Connexion">
-                            <i class='bx bx-user text-2xl'></i>
-                        </a>
-                        <a href="#panier" class="flex items-center gap-2 text-textColor hover:text-accent transition-colors" title="Panier">
-                            <i class='bx bx-cart text-2xl'></i>
+                    <div class="hidden md:flex cote-droit items-center gap-4 text-lg text-textColor">
+                        <a href="connexion.html" class="flex items-center justify-center px-4 py-1.5 bg-accent text-white rounded-full hover:bg-accent/80 transition-colors text-sm font-medium" title="Connexion">
+                            Se connecter
                         </a>
                     </div>
+                    
+                    <!-- Icône pour ouvrir menu uniquement sur mobile -->
+                    <button id="open-menu" class="md:hidden bg-transparent border-none text-2xl cursor-pointer text-textColor hover:text-accent transition-colors ml-2" title="ouvrir menu">
+                        <i class='bx bx-menu'></i>
+                    </button>
                 </div>
 
-                <!-- Menu mobile à gauche -->
-                <div class="header-content mobile-hidden md:hidden fixed -left-[250px] top-0 bg-primary p-6 z-[1000] h-screen w-[250px] transition-all duration-300">
-                    <button id="close-menu" class="absolute top-4 right-4 bg-transparent border-none text-2xl cursor-pointer text-textColor hover:text-accent transition-colors" title="fermer menu">
-                        <i class='bx bx-x'></i>
-                    </button>
+                <div id="mobile-menu" class="fixed top-0 right-[-250px] md:hidden bg-primary p-6 z-[1000] h-screen w-[250px] transition-all duration-300 shadow-lg">           
+                     <button id="close-menu" class="absolute top-4 left-4 bg-transparent border-none text-2xl cursor-pointer text-textColor hover:text-accent transition-colors" title="fermer menu">
+                    <i class='bx bx-x'></i>
+                </button>
 
-                    <ul class="menu-list flex flex-col items-start gap-8 w-full mt-16">
-                        <li class="relative w-full"><a href="index.html#home" class="text-textColor font-normal text-lg hover:text-accent transition-colors">Accueil</a></li>
-                        <li class="relative w-full"><a href="index.html#apropos" class="text-textColor font-normal text-lg hover:text-accent transition-colors">A propos</a></li>
+                    <!-- Logo dans le menu mobile -->
+                    <div class="flex justify-center mt-4 mb-8">
+                        <img src="images/Logo3_1_1.png" alt="Logo Maison Design" class="w-[60px] h-auto">
+                    </div>
+
+                    <ul class="menu-list flex flex-col items-start gap-8 w-full">
+                        <li class="relative w-full"><a href="#home" class="text-textColor font-normal text-lg hover:text-accent transition-colors">Accueil</a></li>
+                        <li class="relative w-full"><a href="#apropos" class="text-textColor font-normal text-lg hover:text-accent transition-colors">A propos</a></li>
                         <li class="relative w-full mobile-dropdown">
                             <a href="#categories" class="text-textColor font-normal text-lg hover:text-accent transition-colors flex justify-between items-center">
                                 Catégories
                                 <i class='bx bx-chevron-down text-lg'></i>
                             </a>
                             <ul class="bg-white/10 list-none py-2 px-0 m-0 rounded-lg mt-2 hidden mobile-submenu">
-                                <li class="px-5 py-2 hover:bg-white/20"><a href="#" class="no-underline text-textColor text-base block">Lits</a></li>
-                                <li class="px-5 py-2 hover:bg-white/20"><a href="#" class="no-underline text-textColor text-base block">Chaises</a></li>
-                                <li class="px-5 py-2 hover:bg-white/20"><a href="#" class="no-underline text-textColor text-base block">Tables</a></li>
-                                <li class="px-5 py-2 hover:bg-white/20"><a href="#" class="no-underline text-textColor text-base block">Canapés</a></li>
-                                <li class="px-5 py-2 hover:bg-white/20"><a href="#" class="no-underline text-textColor text-base block">Armoires</a></li>
+                                <li class="px-5 py-2 hover:bg-white/20"><a href="categories.html?category=lit" class="no-underline text-textColor text-base block">Lits</a></li>
+                                <li class="px-5 py-2 hover:bg-white/20"><a href="categories.html?category=chaise" class="no-underline text-textColor text-base block">Chaises</a></li>
+                                <li class="px-5 py-2 hover:bg-white/20"><a href="categories.html?category=table" class="no-underline text-textColor text-base block">Tables</a></li>
+                                <li class="px-5 py-2 hover:bg-white/20"><a href="categories.html?category=canapé" class="no-underline text-textColor text-base block">Canapés</a></li>
+                                <li class="px-5 py-2 hover:bg-white/20"><a href="categories.html?category=armoire" class="no-underline text-textColor text-base block">Armoires</a></li>
                             </ul>
                         </li>
-                        <li class="relative w-full"><a href="index.html#contact" class="text-textColor font-normal text-lg hover:text-accent transition-colors">Contact</a></li>
+                        <li class="relative w-full"><a href="#contact" class="text-textColor font-normal text-lg hover:text-accent transition-colors">Contact</a></li>
                     </ul>
+
+                    <!-- Bouton Se connecter dans le menu mobile -->
+                    <div class="mt-8">
+                        <a href="connexion.html" class="flex items-center justify-center w-full px-4 py-2 bg-accent text-white rounded-full hover:bg-accent/80 transition-colors text-base font-medium">
+                            Se connecter
+                        </a>
+                    </div>
                 </div>
             </nav>
         </div>
@@ -115,7 +121,7 @@
         <div class="search-modal-content bg-white rounded-xl w-full max-w-md p-5 transform -translate-y-5 transition-transform duration-300">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-medium text-textColor">Rechercher</h3>
-                <button id="close-search-modal" class="text-2xl text-textColor hover:text-accent">
+                <button id="close-search-modal" class="text-2xl text-textColor hover:text-accent" title="close">
                     <i class='bx bx-x'></i>
                 </button>
             </div>

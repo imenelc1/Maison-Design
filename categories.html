@@ -2,20 +2,17 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Connexion - Maison Design</title>
+    <title>Catégories</title>
     <link href="https://unpkg.com/boxicons@2.1.2/css/boxicons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="tailwind.config.js"></script>
-
+   
     <link rel="stylesheet" href="css/style.css">
-
 </head>
-<body class="font-cormorant bg-background text-textColor">
-    <!--header -->
+<body class="font-cormorant bg-background m-0 p-0 box-border">
     <header class="fixed top-0 left-0 w-full h-20 bg-white/50 backdrop-blur-sm flex items-center justify-center z-50 shadow-md">
         <div class="w-[90%] max-w-[1200px]">
             <nav class="flex items-center justify-between">
@@ -147,67 +144,54 @@
             </div>
         </div>
     </div>
-    <main class="min-h-screen py-24 px-4 bg-background flex items-center justify-center">
-        <div class="w-full max-w-md">
-            <div class="bg-white rounded-3xl shadow-lg p-8 flex flex-col items-center">
-                <h2 class="text-3xl font-frunchy text-textColor mb-8">Connexion</h2>
-                <div id="error-message" class="text-red-500"></div>
-                
-                <form class="w-full space-y-6" action="php/login.php" method="POST">
-                    <div class="space-y-2">
-                        <label for="email" class="block text-textColor">Email</label>
-                        <div class="relative">
-                            <i class='bx bx-envelope absolute left-4 top-1/2 transform -translate-y-1/2 text-accent text-xl'></i>
-                            <input 
-                                type="email" 
-                                id="email" 
-                                name="email" 
-                                required 
-                                placeholder="Votre email" 
-                                class="w-full pl-12 pr-4 py-3 rounded-full border border-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition"
-                            >
-                        </div>
-                    </div>
-                    
-                    <div class="space-y-2">
-                        <label for="password" class="block text-textColor">Mot de passe</label>
-                        <div class="relative">
-                            <i class='bx bx-lock-alt absolute left-4 top-1/2 transform -translate-y-1/2 text-accent text-xl'></i>
-                            <input 
-                                type="password" 
-                                id="password" 
-                                name="password" 
-                                required 
-                                placeholder="Votre mot de passe" 
-                                class="w-full pl-12 pr-4 py-3 rounded-full border border-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition"
-                            >
-                        </div>
-                    </div>
-                    
-                    <div class="flex justify-between items-center text-sm">
-                        <label class="flex items-center space-x-2 cursor-pointer">
-                            <input type="checkbox" name="remember" class="rounded text-accent focus:ring-accent">
-                            <span class="text-textColor">Se souvenir de moi</span>
-                        </label>
-                        <a href="#" class="text-accent hover:underline">Mot de passe oublié ?</a>
-                    </div>
-                    
-                    <button 
-                        type="submit" 
-                        class="w-full py-3 bg-accent text-white rounded-full hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
-                    >
-                        Se connecter
+
+    <main class="min-h-screen pt-28 pb-16 px-4 md:px-[10%] bg-background">
+        <div class="max-w-[1400px] mx-auto">
+            <h1 class="text-3xl md:text-4xl font-frunchy text-center mb-8 text-textColor">Nos Catégories</h1>
+
+            <!-- Filtres de catégories -->
+            <div class="mb-10">
+                <div class="flex flex-wrap justify-center gap-3 md:gap-4">
+                    <button class="category-filter active px-4 py-2 rounded-full bg-primary text-textColor hover:bg-accent hover:text-white transition-all duration-300" data-category="all">
+                        Tous
                     </button>
-                    
-                    <div class="text-center text-sm text-textColor">
-                        Pas encore de compte ? <a href="inscription.html" class="text-accent font-semibold hover:underline">S'inscrire</a>
-                    </div>
-                </form>
+                    <button class="category-filter px-4 py-2 rounded-full bg-primary text-textColor hover:bg-accent hover:text-white transition-all duration-300" data-category="lit">
+                        Lits
+                    </button>
+                    <button class="category-filter px-4 py-2 rounded-full bg-primary text-textColor hover:bg-accent hover:text-white transition-all duration-300" data-category="canapé">
+                        Canapés
+                    </button>
+                    <button class="category-filter px-4 py-2 rounded-full bg-primary text-textColor hover:bg-accent hover:text-white transition-all duration-300" data-category="table">
+                        Tables
+                    </button>
+                    <button class="category-filter px-4 py-2 rounded-full bg-primary text-textColor hover:bg-accent hover:text-white transition-all duration-300" data-category="chaise">
+                        Chaises
+                    </button>
+                    <button class="category-filter px-4 py-2 rounded-full bg-primary text-textColor hover:bg-accent hover:text-white transition-all duration-300" data-category="armoire">
+                        Armoires
+                    </button>
+                </div>
+            </div>
+
+            <!-- Titre de la section des produits -->
+            <h2 class="text-2xl md:text-3xl font-medium text-textColor mb-6" id="products-title">Tous nos produits</h2>
+
+            <!-- Grille de produits -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6" id="products-container">
+                <!-- Les produits seront chargés dynamiquement ici -->
+                <div class="col-span-full text-center py-12">
+                    <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-accent"></div>
+                    <p class="mt-2 text-textColor">Chargement des produits...</p>
+                </div>
+            </div>
+
+            <!-- Message "Aucun produit" -->
+            <div id="no-products" class="text-center py-12 hidden">
+                <p class="text-xl text-textColor/70">Aucun produit trouvé dans cette catégorie.</p>
             </div>
         </div>
     </main>
 
-    <!-- footer -->
     <footer class="bg-primary text-textColor">
         <div class="container mx-auto px-4 py-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div>
@@ -218,9 +202,9 @@
             <div>
                 <h3 class="text-[1.3rem] md:text-[1.5rem] text-accent mb-4 font-frunchy">Liens</h3>
                 <ul class="space-y-2">
-                    <li><a href="index.html#home" class="hover:text-accent">Accueil</a></li>
+                    <li><a href="index.html" class="hover:text-accent">Accueil</a></li>
                     <li><a href="index.html#apropos" class="hover:text-accent">A propos</a></li>
-                    <li><a href="#categories" class="hover:text-accent">Catégories</a></li>
+                    <li><a href="categories.html" class="hover:text-accent">Catégories</a></li>
                     <li><a href="connexion.html" class="hover:text-accent">Connexion</a></li>
                 </ul>
             </div>
@@ -277,6 +261,10 @@
             <p>&copy; 2025 Maison Design - Tous droits réservés.</p>
         </div>
     </footer>
+
+    <!-- Script pour le menu mobile et la recherche -->
     <script src="js/script.js"></script>
+    
+    <script src="js/categories.js"></script>
 </body>
 </html>

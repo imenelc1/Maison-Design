@@ -2,20 +2,17 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Connexion - Maison Design</title>
+    <title>Détail du produit - Maison Design</title>
     <link href="https://unpkg.com/boxicons@2.1.2/css/boxicons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="tailwind.config.js"></script>
-
+   
     <link rel="stylesheet" href="css/style.css">
-
 </head>
-<body class="font-cormorant bg-background text-textColor">
-    <!--header -->
+<body class="font-cormorant bg-background m-0 p-0 box-border">
     <header class="fixed top-0 left-0 w-full h-20 bg-white/50 backdrop-blur-sm flex items-center justify-center z-50 shadow-md">
         <div class="w-[90%] max-w-[1200px]">
             <nav class="flex items-center justify-between">
@@ -135,79 +132,89 @@
                     <i class='bx bx-search'></i>
                 </button>
             </div>
-            <div class="search-suggestions">
-                <p class="text-sm text-textColor/70 mb-2">Suggestions populaires :</p>
-                <div class="flex flex-wrap gap-2">
-                    <a href="#" class="text-xs bg-primary/20 px-2 py-1 rounded-full text-textColor hover:bg-accent hover:text-white transition-colors">Chaises</a>
-                    <a href="#" class="text-xs bg-primary/20 px-2 py-1 rounded-full text-textColor hover:bg-accent hover:text-white transition-colors">Tables</a>
-                    <a href="#" class="text-xs bg-primary/20 px-2 py-1 rounded-full text-textColor hover:bg-accent hover:text-white transition-colors">Canapés</a>
-                    <a href="#" class="text-xs bg-primary/20 px-2 py-1 rounded-full text-textColor hover:bg-accent hover:text-white transition-colors">Lits</a>
-                    <a href="#" class="text-xs bg-primary/20 px-2 py-1 rounded-full text-textColor hover:bg-accent hover:text-white transition-colors">Armoires</a>
-                </div>
-            </div>
         </div>
     </div>
-    <main class="min-h-screen py-24 px-4 bg-background flex items-center justify-center">
-        <div class="w-full max-w-md">
-            <div class="bg-white rounded-3xl shadow-lg p-8 flex flex-col items-center">
-                <h2 class="text-3xl font-frunchy text-textColor mb-8">Connexion</h2>
-                <div id="error-message" class="text-red-500"></div>
-                
-                <form class="w-full space-y-6" action="php/login.php" method="POST">
-                    <div class="space-y-2">
-                        <label for="email" class="block text-textColor">Email</label>
-                        <div class="relative">
-                            <i class='bx bx-envelope absolute left-4 top-1/2 transform -translate-y-1/2 text-accent text-xl'></i>
-                            <input 
-                                type="email" 
-                                id="email" 
-                                name="email" 
-                                required 
-                                placeholder="Votre email" 
-                                class="w-full pl-12 pr-4 py-3 rounded-full border border-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition"
-                            >
+
+    <main class="min-h-screen pt-28 pb-16 px-4 md:px-[10%] bg-background">
+        <div class="max-w-[1200px] mx-auto">
+            <!-- Fil d'Ariane -->
+            <div class="breadcrumbs mb-6 text-sm text-gray-500">
+                <a href="index.html" class="hover:text-accent">Accueil</a> &gt; 
+                <a href="categories.html" class="hover:text-accent">Catégories</a> &gt; 
+                <span id="product-category" class="text-accent">Catégorie</span> &gt; 
+                <span id="product-name-breadcrumb" class="font-medium">Nom du produit</span>
+            </div>
+
+            <!-- Conteneur principal du produit -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+                <!-- Galerie d'images -->
+                <div class="product-gallery">
+                    <div class="main-image-container bg-white rounded-xl overflow-hidden shadow-md mb-4">
+                        <img id="main-product-image" src="images/placeholder.jpeg" alt="Image principale du produit" class="w-full h-[400px] object-cover">
+                    </div>
+                    <div id="product-thumbnails" class="grid grid-cols-4 gap-2">
+                        <!-- Les miniatures seront ajoutées dynamiquement ici -->
+                    </div>
+                </div>
+
+                <!-- Informations du produit -->
+                <div class="product-info">
+                    <h1 id="product-name" class="text-3xl font-medium text-textColor mb-2">Chargement...</h1>
+                    <div class="flex items-center gap-2 mb-4">
+                        <span id="product-category-badge" class="bg-primary/30 text-textColor px-3 py-1 rounded-full text-sm">Catégorie</span>
+                        <span id="product-stock-badge" class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">En stock</span>
+                    </div>
+                    
+                    <div class="price-container mb-6">
+                        <p id="product-price" class="text-3xl font-bold text-accent">0,00 DA</p>
+                    </div>
+                    
+                    <div class="description-container mb-8">
+                        <h2 class="text-xl font-medium text-textColor mb-2">Description</h2>
+                        <p id="product-description" class="text-gray-600">Chargement de la description...</p>
+                    </div>
+                    
+                    <div class="quantity-container mb-6">
+                        <h2 class="text-xl font-medium text-textColor mb-2">Quantité</h2>
+                        <div class="flex items-center">
+                            <button id="decrease-quantity" title="Diminuer" class="w-10 h-10 bg-primary text-textColor rounded-l-lg flex items-center justify-center hover:bg-accent hover:text-white transition-colors">
+                                <i class='bx bx-minus'></i>
+                            </button>
+                            <input type="number" id="quantity"  value="1" min="1" class="w-16 h-10 border-y border-primary bg-white text-center text-textColor" readonly>
+                            <button id="increase-quantity" title="Augmenter" class="w-10 h-10 bg-primary text-textColor rounded-r-lg flex items-center justify-center hover:bg-accent hover:text-white transition-colors">
+                                <i class='bx bx-plus'></i>
+                            </button>
                         </div>
                     </div>
                     
-                    <div class="space-y-2">
-                        <label for="password" class="block text-textColor">Mot de passe</label>
-                        <div class="relative">
-                            <i class='bx bx-lock-alt absolute left-4 top-1/2 transform -translate-y-1/2 text-accent text-xl'></i>
-                            <input 
-                                type="password" 
-                                id="password" 
-                                name="password" 
-                                required 
-                                placeholder="Votre mot de passe" 
-                                class="w-full pl-12 pr-4 py-3 rounded-full border border-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition"
-                            >
-                        </div>
-                    </div>
+                    <div class="buttons-container flex flex-col sm:flex-row gap-4">
+                        <button id="add-to-cart" class="px-6 py-3 bg-accent text-white rounded-full hover:bg-accent/90 transition-colors flex items-center justify-center gap-2">
+                            <i class='bx bx-cart-add text-xl'></i>
+                            Ajouter au panier
+                        </button>
+                        <button id="add-to-wishlist" class="px-6 py-3 bg-primary text-textColor rounded-full hover:bg-primary/80 transition-colors flex items-center justify-center gap-2">
+                            <i class='bx bx-heart text-xl'></i>
+                            Ajouter aux favoris
+                        </button>
                     
-                    <div class="flex justify-between items-center text-sm">
-                        <label class="flex items-center space-x-2 cursor-pointer">
-                            <input type="checkbox" name="remember" class="rounded text-accent focus:ring-accent">
-                            <span class="text-textColor">Se souvenir de moi</span>
-                        </label>
-                        <a href="#" class="text-accent hover:underline">Mot de passe oublié ?</a>
                     </div>
-                    
-                    <button 
-                        type="submit" 
-                        class="w-full py-3 bg-accent text-white rounded-full hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
-                    >
-                        Se connecter
-                    </button>
-                    
-                    <div class="text-center text-sm text-textColor">
-                        Pas encore de compte ? <a href="inscription.html" class="text-accent font-semibold hover:underline">S'inscrire</a>
+                </div>
+            </div>
+
+            <!-- Produits similaires -->
+            <div class="similar-products mt-16">
+                <h2 class="text-2xl font-medium text-textColor mb-6">Produits similaires</h2>
+                <div id="similar-products-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    <!-- Les produits similaires seront ajoutés dynamiquement ici -->
+                    <div class="col-span-full text-center py-12">
+                        <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-accent"></div>
+                        <p class="mt-2 text-textColor">Chargement des produits similaires...</p>
                     </div>
-                </form>
+                </div>
             </div>
         </div>
     </main>
 
-    <!-- footer -->
     <footer class="bg-primary text-textColor">
         <div class="container mx-auto px-4 py-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div>
@@ -218,9 +225,9 @@
             <div>
                 <h3 class="text-[1.3rem] md:text-[1.5rem] text-accent mb-4 font-frunchy">Liens</h3>
                 <ul class="space-y-2">
-                    <li><a href="index.html#home" class="hover:text-accent">Accueil</a></li>
+                    <li><a href="index.html" class="hover:text-accent">Accueil</a></li>
                     <li><a href="index.html#apropos" class="hover:text-accent">A propos</a></li>
-                    <li><a href="#categories" class="hover:text-accent">Catégories</a></li>
+                    <li><a href="categories.html" class="hover:text-accent">Catégories</a></li>
                     <li><a href="connexion.html" class="hover:text-accent">Connexion</a></li>
                 </ul>
             </div>
@@ -277,6 +284,11 @@
             <p>&copy; 2025 Maison Design - Tous droits réservés.</p>
         </div>
     </footer>
+
+    <!-- Script pour le menu mobile et la recherche -->
     <script src="js/script.js"></script>
+    
+    <!-- Script pour la page de produit -->
+    <script src="js/product.js"></script>
 </body>
 </html>

@@ -67,10 +67,29 @@
 }
 
 @media screen and (max-width: 768px) {
-    .header-content {
-        left: -250px;
-        transition: left 0.3s ease;
+    #mobile-menu {
+        right: -250px; /* Position initiale hors écran à droite */
+        left: auto; /* Désactiver le positionnement left */
+        transition: right 0.3s ease;
     }
+    
+    /* Classe active pour le menu mobile */
+    #mobile-menu.active {
+        right: 0 !important;
+        left: auto;
+    }
+}
+/* Overlay pour le menu mobile */
+.menu-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 0;
+    display: none;
+}
+
+.menu-overlay.active {
+    display: block;
 }
 html {
     scroll-behavior: smooth;

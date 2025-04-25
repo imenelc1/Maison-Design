@@ -1,13 +1,14 @@
 <?php
-// Activer l'affichage des erreurs pour le débogage
+// activer l'affichage des erreurs
 ini_set('display_errors', 1);
-error_reporting(E_ALL);
+error_reporting(E_ALL);//montrer tous les types d'erreurs
 
-require_once 'db.php'; // Inclure la connexion à la base de données
+require_once 'db.php'; //inclure la connexion a la bdd
 
-// Vérifier si le formulaire a été soumis
+
+// verifier si le formulaire a été soumis
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Vérifier si les champs sont remplis
+    // verifier si les champs sont remplis
     if (isset($_POST['email'], $_POST['password']) && !empty($_POST['email']) && !empty($_POST['password'])) {
         $email = htmlspecialchars(trim($_POST['email']));
         $password = htmlspecialchars(trim($_POST['password']));
@@ -23,12 +24,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             session_start();
             $_SESSION['user_id'] = $user['IdAdmin'];
             $_SESSION['email'] = $user['Email'];
-            $_SESSION['role'] = 'admin'; // Enregistrer le rôle
+            $_SESSION['role'] = 'admin';
 
             header('Location: ../admin.html');
             exit();
         } else {
-            // Vérifier dans la table client si pas trouvé dans admin
+            // verifier dans la table client 
             $stmt = $pdo->prepare("SELECT * FROM client WHERE Email = :email");
             $stmt->bindParam(':email', $email);
             $stmt->execute();
@@ -39,9 +40,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 session_start();
                 $_SESSION['user_id'] = $client['IdClient'];
                 $_SESSION['email'] = $client['Email'];
-                $_SESSION['role'] = 'client'; // Enregistrer le rôle
+                $_SESSION['role'] = 'client'; 
 
-                header('Location: ../produits.html');
+                header('Location: ../client.html');
                 exit();
             } else {
                 // Redirection avec message d'erreur
