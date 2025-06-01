@@ -1,10 +1,69 @@
+<?php
+// Démarrer la session
+session_start();
+
+// Vérifier si l'utilisateur est déjà connecté
+if (isset($_SESSION['user_id'])) {
+    // Rediriger vers la page appropriée selon le rôle
+    if ($_SESSION['role'] === 'admin') {
+        header('Location: admin.html');
+        exit();
+    } elseif ($_SESSION['role'] === 'client') {
+        header('Location: client.php');
+        exit();
+    }
+}
+
+// Initialiser les variables
+$message = '';
+$messageType = '';
+
+// Traiter le formulaire de récupération de mot de passe
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['email'])) {
+    require_once 'php/db.php';
+    
+    $email = htmlspecialchars(trim($_POST['email']));
+    
+    // Vérifier si l'email existe dans la base de données
+    $stmt = $pdo->prepare("SELECT * FROM client WHERE Email = :email");
+    $stmt->bindParam(':email', $email);
+    $stmt->execute();
+    $client = $stmt->fetch();
+    
+    if ($client) {
+        // Générer un token unique
+        $token = bin2hex(random_bytes(32));
+        $expiry = date('Y-m-d H:i:s', strtotime('+1 hour'));
+        
+        // Stocker le token dans la base de données
+        $stmt = $pdo->prepare("UPDATE client SET reset_token = :token, reset_expiry = :expiry WHERE Email = :email");
+        $stmt->bindParam(':token', $token);
+        $stmt->bindParam(':expiry', $expiry);
+        $stmt->bindParam(':email', $email);
+        $stmt->execute();
+        
+        // Dans un environnement de production, vous enverriez un email avec le lien de réinitialisation
+        // Pour cet exemple, nous affichons simplement un message
+        $resetLink = "http://" . $_SERVER['HTTP_HOST'] . "/reinitialiser-mot-de-passe.php?token=" . $token;
+        
+        $message = "Un lien de réinitialisation a été envoyé à votre adresse email. Veuillez vérifier votre boîte de réception.";
+        $messageType = "success";
+        
+        // Pour le débogage, afficher le lien (à supprimer en production)
+        $debugLink = "<div class='mt-2 p-2 bg-gray-100 rounded text-xs'>Lien de réinitialisation (pour débogage): <a href='$resetLink' class='text-accent'>$resetLink</a></div>";
+    } else {
+        $message = "Aucun compte n'est associé à cette adresse email.";
+        $messageType = "error";
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Connexion - Maison Design</title>
+    <title>Mot de passe oublié - Maison Design</title>
     <link href="https://unpkg.com/boxicons@2.1.2/css/boxicons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
@@ -12,7 +71,6 @@
     <script src="tailwind.config.js"></script>
 
     <link rel="stylesheet" href="css/style.css">
-
 </head>
 <body class="font-cormorant bg-background text-textColor">
     <!--header -->
@@ -28,10 +86,10 @@
                 <div class="w-[60%] flex justify-center">
                     <!-- Menu desktop -->
                     <ul class="hidden md:flex flex-row gap-8">
-                        <li class="relative"><a href="#home" class="text-textColor font-normal text-lg hover:text-accent transition-colors">Accueil</a></li>
-                        <li class="relative"><a href="#apropos" class="text-textColor font-normal text-lg hover:text-accent transition-colors">A propos</a></li>
+                        <li class="relative"><a href="index.html" class="text-textColor font-normal text-lg hover:text-accent transition-colors">Accueil</a></li>
+                        <li class="relative"><a href="index.html#apropos" class="text-textColor font-normal text-lg hover:text-accent transition-colors">A propos</a></li>
                         <li class="relative group">
-                            <a href="#categories" class="text-textColor font-normal text-lg hover:text-accent transition-colors">Catégories</a>
+                            <a href="categories.html" class="text-textColor font-normal text-lg hover:text-accent transition-colors">Catégories</a>
                             <ul class="absolute top-full left-0 bg-white list-none py-2.5 px-0 m-0 min-w-[100px] rounded-lg shadow-md z-10 hidden group-hover:block">
                                 <li class="px-5 py-2.5 hover:bg-secondary"><a href="categories.html?category=lit" class="no-underline text-textColor text-base block">Lits</a></li>
                                 <li class="px-5 py-2.5 hover:bg-secondary"><a href="categories.html?category=chaise" class="no-underline text-textColor text-base block">Chaises</a></li>
@@ -40,7 +98,7 @@
                                 <li class="px-5 py-2.5 hover:bg-secondary"><a href="categories.html?category=armoire" class="no-underline text-textColor text-base block">Armoires</a></li>
                             </ul>
                         </li>
-                        <li class="relative"><a href="#contact" class="text-textColor font-normal text-lg hover:text-accent transition-colors">Contact</a></li>
+                        <li class="relative"><a href="index.html#contact" class="text-textColor font-normal text-lg hover:text-accent transition-colors">Contact</a></li>
                     </ul>
                 </div>
                 
@@ -69,7 +127,7 @@
                     </div>
                     
                     <div class="hidden md:flex cote-droit items-center gap-4 text-lg text-textColor">
-                        <a href="connexion.html" class="flex items-center justify-center px-4 py-1.5 bg-accent text-white rounded-full hover:bg-accent/80 transition-colors text-sm font-medium" title="Connexion">
+                        <a href="connexion.php" class="flex items-center justify-center px-4 py-1.5 bg-accent text-white rounded-full hover:bg-accent/80 transition-colors text-sm font-medium" title="Connexion">
                             Se connecter
                         </a>
                     </div>
@@ -91,10 +149,10 @@
                     </div>
 
                     <ul class="menu-list flex flex-col items-start gap-8 w-full">
-                        <li class="relative w-full"><a href="#home" class="text-textColor font-normal text-lg hover:text-accent transition-colors">Accueil</a></li>
-                        <li class="relative w-full"><a href="#apropos" class="text-textColor font-normal text-lg hover:text-accent transition-colors">A propos</a></li>
+                        <li class="relative w-full"><a href="index.html" class="text-textColor font-normal text-lg hover:text-accent transition-colors">Accueil</a></li>
+                        <li class="relative w-full"><a href="index.html#apropos" class="text-textColor font-normal text-lg hover:text-accent transition-colors">A propos</a></li>
                         <li class="relative w-full mobile-dropdown">
-                            <a href="#categories" class="text-textColor font-normal text-lg hover:text-accent transition-colors flex justify-between items-center">
+                            <a href="categories.html" class="text-textColor font-normal text-lg hover:text-accent transition-colors flex justify-between items-center">
                                 Catégories
                                 <i class='bx bx-chevron-down text-lg'></i>
                             </a>
@@ -106,12 +164,12 @@
                                 <li class="px-5 py-2 hover:bg-white/20"><a href="categories.html?category=armoire" class="no-underline text-textColor text-base block">Armoires</a></li>
                             </ul>
                         </li>
-                        <li class="relative w-full"><a href="#contact" class="text-textColor font-normal text-lg hover:text-accent transition-colors">Contact</a></li>
+                        <li class="relative w-full"><a href="index.html#contact" class="text-textColor font-normal text-lg hover:text-accent transition-colors">Contact</a></li>
                     </ul>
 
                     <!-- Bouton Se connecter dans le menu mobile -->
                     <div class="mt-8">
-                        <a href="connexion.html" class="flex items-center justify-center w-full px-4 py-2 bg-accent text-white rounded-full hover:bg-accent/80 transition-colors text-base font-medium">
+                        <a href="connexion.php" class="flex items-center justify-center w-full px-4 py-2 bg-accent text-white rounded-full hover:bg-accent/80 transition-colors text-base font-medium">
                             Se connecter
                         </a>
                     </div>
@@ -120,40 +178,23 @@
         </div>
     </header>
 
-    <!-- Modal de recherche pour mobile -->
-    <div id="search-modal" class="search-modal fixed inset-0 bg-black/50 z-[1001] flex items-center justify-center p-4 hidden opacity-0 invisible transition-all duration-300">
-        <div class="search-modal-content bg-white rounded-xl w-full max-w-md p-5 transform -translate-y-5 transition-transform duration-300">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-medium text-textColor">Rechercher</h3>
-                <button id="close-search-modal" class="text-2xl text-textColor hover:text-accent" title="close">
-                    <i class='bx bx-x'></i>
-                </button>
-            </div>
-            <div class="search-bar flex items-center bg-primary/20 rounded-lg px-4 py-3 border border-accent/20 focus-within:border-accent transition-all duration-300 mb-4">
-                <input type="text" placeholder="Rechercher un produit..." class="border-none outline-none bg-transparent text-base w-full">
-                <button class="search-button bg-accent rounded-full w-8 h-8 border-none cursor-pointer text-white text-lg flex items-center justify-center hover:bg-accent/80 transition-colors" title="Rechercher">
-                    <i class='bx bx-search'></i>
-                </button>
-            </div>
-            <div class="search-suggestions">
-                <p class="text-sm text-textColor/70 mb-2">Suggestions populaires :</p>
-                <div class="flex flex-wrap gap-2">
-                    <a href="#" class="text-xs bg-primary/20 px-2 py-1 rounded-full text-textColor hover:bg-accent hover:text-white transition-colors">Chaises</a>
-                    <a href="#" class="text-xs bg-primary/20 px-2 py-1 rounded-full text-textColor hover:bg-accent hover:text-white transition-colors">Tables</a>
-                    <a href="#" class="text-xs bg-primary/20 px-2 py-1 rounded-full text-textColor hover:bg-accent hover:text-white transition-colors">Canapés</a>
-                    <a href="#" class="text-xs bg-primary/20 px-2 py-1 rounded-full text-textColor hover:bg-accent hover:text-white transition-colors">Lits</a>
-                    <a href="#" class="text-xs bg-primary/20 px-2 py-1 rounded-full text-textColor hover:bg-accent hover:text-white transition-colors">Armoires</a>
-                </div>
-            </div>
-        </div>
-    </div>
     <main class="min-h-screen py-24 px-4 bg-background flex items-center justify-center">
         <div class="w-full max-w-md">
             <div class="bg-white rounded-3xl shadow-lg p-8 flex flex-col items-center">
-                <h2 class="text-3xl font-frunchy text-textColor mb-8">Connexion</h2>
-                <div id="error-message" class="text-red-500"></div>
+                <h2 class="text-3xl font-frunchy text-textColor mb-8">Mot de passe oublié</h2>
                 
-                <form class="w-full space-y-6" action="php/login.php" method="POST">
+                <?php if (!empty($message)): ?>
+                <div class="w-full mb-4 p-3 <?php echo $messageType === 'success' ? 'bg-green-100 border border-green-400 text-green-700' : 'bg-red-100 border border-red-400 text-red-700'; ?> rounded-lg">
+                    <?php echo $message; ?>
+                    <?php if (isset($debugLink) && $messageType === 'success'): ?>
+                        <?php echo $debugLink; ?>
+                    <?php endif; ?>
+                </div>
+                <?php endif; ?>
+                
+                <p class="text-center text-gray-600 mb-6">Entrez votre adresse email pour recevoir un lien de réinitialisation de mot de passe.</p>
+                
+                <form class="w-full space-y-6" action="mot-de-passe-oublie.php" method="POST">
                     <div class="space-y-2">
                         <label for="email" class="block text-textColor">Email</label>
                         <div class="relative">
@@ -169,38 +210,15 @@
                         </div>
                     </div>
                     
-                    <div class="space-y-2">
-                        <label for="password" class="block text-textColor">Mot de passe</label>
-                        <div class="relative">
-                            <i class='bx bx-lock-alt absolute left-4 top-1/2 transform -translate-y-1/2 text-accent text-xl'></i>
-                            <input 
-                                type="password" 
-                                id="password" 
-                                name="password" 
-                                required 
-                                placeholder="Votre mot de passe" 
-                                class="w-full pl-12 pr-4 py-3 rounded-full border border-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition"
-                            >
-                        </div>
-                    </div>
-                    
-                    <div class="flex justify-between items-center text-sm">
-                        <label class="flex items-center space-x-2 cursor-pointer">
-                            <input type="checkbox" name="remember" class="rounded text-accent focus:ring-accent">
-                            <span class="text-textColor">Se souvenir de moi</span>
-                        </label>
-                        <a href="#" class="text-accent hover:underline">Mot de passe oublié ?</a>
-                    </div>
-                    
                     <button 
                         type="submit" 
                         class="w-full py-3 bg-accent text-white rounded-full hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
                     >
-                        Se connecter
+                        Envoyer le lien
                     </button>
                     
                     <div class="text-center text-sm text-textColor">
-                        Pas encore de compte ? <a href="inscription.html" class="text-accent font-semibold hover:underline">S'inscrire</a>
+                        <a href="connexion.php" class="text-accent hover:underline">Retour à la connexion</a>
                     </div>
                 </form>
             </div>
@@ -220,8 +238,8 @@
                 <ul class="space-y-2">
                     <li><a href="index.html#home" class="hover:text-accent">Accueil</a></li>
                     <li><a href="index.html#apropos" class="hover:text-accent">A propos</a></li>
-                    <li><a href="#categories" class="hover:text-accent">Catégories</a></li>
-                    <li><a href="connexion.html" class="hover:text-accent">Connexion</a></li>
+                    <li><a href="categories.html" class="hover:text-accent">Catégories</a></li>
+                    <li><a href="connexion.php" class="hover:text-accent">Connexion</a></li>
                 </ul>
             </div>
             

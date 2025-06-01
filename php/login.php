@@ -2,9 +2,7 @@
 // activer l'affichage des erreurs
 ini_set('display_errors', 1);
 error_reporting(E_ALL);//montrer tous les types d'erreurs
-
 require_once 'db.php'; //inclure la connexion a la bdd
-
 
 // verifier si le formulaire a été soumis
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -19,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute();
         $user = $stmt->fetch();
 
-        if ($user && $user['MotDePasse'] === $password) {
+        if ($user && password_verify($password, $user['MotDePasse'])) {
             // Utilisateur admin trouvé
             session_start();
             $_SESSION['user_id'] = $user['IdAdmin'];
@@ -35,28 +33,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute();
             $client = $stmt->fetch();
 
-            if ($client && $client['MDP'] === $password) {
+            if ($client && password_verify($password, $client['MDP'])) {
                 // Utilisateur client trouvé
                 session_start();
                 $_SESSION['user_id'] = $client['IdClient'];
                 $_SESSION['email'] = $client['Email'];
+                $_SESSION['prenom'] = $client['PrenomClient'];
+                $_SESSION['nom'] = $client['NomClient'];
                 $_SESSION['role'] = 'client'; 
 
-                header('Location: ../client.html');
+                header('Location: ../client.php');
                 exit();
             } else {
                 // Redirection avec message d'erreur
-                header('Location: ../connexion.html?error=invalid');
+                header('Location: ../connexion.php?error=invalid&email=' . urlencode($email));
                 exit();
             }
         }
     } else {
         // Redirection avec message d'erreur pour champs vides
-        header('Location: ../connexion.html?error=empty');
+        header('Location: ../connexion.php?error=empty');
         exit();
     }
 } else {
     // Redirection si accès direct à login.php
-    header('Location: ../connexion.html');
+    header('Location: ../connexion.php');
     exit();
 }
+?>

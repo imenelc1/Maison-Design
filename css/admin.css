@@ -20,14 +20,7 @@ body {
     color: var(--text-color);
     margin-top: 6rem;
     padding: 0 2rem;
-}
-
-h2 {
-    font-family: "Cormorant SC", serif;
-    font-size: 2.5rem;
-    margin-bottom: 1rem;
-    color: var(--accent);
-    text-align: center;
+    padding-top: 4rem;
 }
 
 /* Style des sections */
@@ -37,7 +30,9 @@ section {
     padding: 2rem;
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+   
 }
+
 
 /* Style des tableaux */
 table {
@@ -48,32 +43,48 @@ table {
     border-radius: 8px;
     overflow: hidden;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-}
-
-table th, table td {
-    padding: 0.8rem;
-    text-align: left;
-    border-bottom: 1px solid var(--secondary-color);
+    
 }
 
 table th {
-    background-color: var(--accent);
-    color: var(--text-color-light);
+    background-color: var(--secondary-color); 
+    color: var(--text-color-light); 
     font-weight: 600;
+    padding: 0.8rem;
+    text-align: left;
 }
 
-table tr:nth-child(even) {
-    background-color: var(--primary-color);
+table tr {
+    border-bottom: 1px solid var(--secondary-color);
+  
 }
+
+table td, table th {
+    padding: 0.8rem;
+    text-align: left;
+    vertical-align: top; 
+}
+
+
+table td:nth-child(2) { 
+    word-break: break-word;
+    max-width: 200px; 
+}
+
+
+table tr:last-child {
+    border-bottom: none;
+}
+
 
 table tr:hover {
-    background-color: var(--highlight);
+    background-color: var(--background-color);
     transition: background-color 0.3s ease-in-out;
 }
 
 /* Style des boutons */
-.btn-ajouter, .btn-modifier, .btn-supprimer, .btn-details, .btn-statut {
-    background-color: var(--btn-color);
+.btn-ajouter, .btn-modifier, .btn-supprimer, .btn-details, .btn-statut, .btn-fermer {
+    background-color: var(--secondary-color);
     color: var(--text-color-light);
     border: none;
     padding: 0.5rem 1rem;
@@ -84,7 +95,7 @@ table tr:hover {
 }
 
 .btn-ajouter {
-    background-color: var(--highlight);
+    background-color: var(--secondary-color);
     margin-bottom: 1rem;
 }
 
@@ -92,48 +103,202 @@ table tr:hover {
 .btn-modifier:hover, 
 .btn-supprimer:hover, 
 .btn-details:hover, 
-.btn-statut:hover {
+.btn-statut:hover,
+.btn-fermer:hover
+{
     background-color: var(--btn-hover-color);
 }
 
-/* Style pour l'input de recherche */
-.search-bar {
-    display: flex;
-    align-items: center;
-    margin-bottom: 1.5rem;
-    gap: 0.5rem;
-}
-
-.search-input {
-    padding: 0.5rem;
-    border: 1px solid var(--secondary-color);
-    border-radius: 5px;
-    outline: none;
-    width: 250px;
-    transition: all 0.3s ease-in-out;
-}
-
-.search-input:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 5px var(--accent);
-}
-
-.search-button {
-    background-color: var(--btn-color);
-    border: none;
-    color: #fff;
-    padding: 0.5rem 1rem;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-.search-button:hover {
-    background-color: var(--btn-hover-color);
-}
 
 /* Effets de transition */
-.btn-ajouter, .btn-modifier, .btn-supprimer, .btn-details, .btn-statut, .search-button {
+.btn-ajouter, .btn-modifier, .btn-supprimer, .btn-details, .btn-statut, .btn-fermer{
     transition: all 0.3s ease-in-out;
 }
 
+/* Styles pour les modals */
+.modal {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease;
+}
+
+.modal.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal-content {
+  transition: transform 0.3s ease;
+  transform: scale(0.95);
+}
+
+.modal.show .modal-content {
+  transform: scale(1);
+}
+
+/* Styles pour les badges de statut */
+.status-badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  display: inline-block;
+}
+
+.status-pending {
+  background-color: #fbbf24;
+  color: #78350f;
+}
+
+.status-processing {
+  background-color: var(--accent);
+  color: var(--text-color-light);
+}
+
+.status-delivered {
+  background-color: var(--highlight);
+  color: var(--text-color-light);
+}
+
+.status-cancelled {
+  background-color: #ef4444;
+  color: white;
+}
+
+/* Toast animation */
+#toast {
+  transition: all 0.3s ease;
+  transform: translateY(100px);
+  opacity: 0;
+  background-color: var(--accent);
+  color: var(--text-color-light);
+}
+
+#toast.show {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+td img {
+  display: block;
+}
+td.flex {
+  align-items: center;
+}
+
+/*HEADER STYLES*/
+header {
+    backdrop-filter: blur(10px);
+}
+
+
+.logo-content {
+    display: flex;
+    align-items: center;
+    margin-right: auto; 
+}
+
+.logo-content img {
+    width: 200px !important; 
+    height: auto !important;
+    object-fit: contain;
+    margin-top: -50px;
+    margin-left: -40px; 
+    transition: transform 0.3s ease;
+}
+
+.logo-content:hover img {
+    transform: scale(1.05); 
+}
+
+@media (max-width: 768px) {
+    .logo-content img {
+        width: 180px !important;
+        margin-left: -50px;
+        margin-top: -30px;
+    }
+}
+
+/* Style des boutons onglets */
+header nav {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 1.5rem; 
+} 
+
+.tab-trigger {
+    position: relative;
+    transition: all 0.3s ease;
+    font-family: "cormorant", serif;
+    font-weight: 500;
+    font-size: 1.25rem;
+    color: var(--text-color);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem 0;
+}
+
+.tab-trigger.active {
+    color: var(--secondary-color);
+    font-weight: 600;
+}
+
+.tab-trigger.active::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60%;
+    height: 3px;
+    background-color: var(--secondary-color);
+    border-radius: 3px;
+}
+
+/* Contenu des onglets */
+.tab-content h2 {
+    font-family: "Cormorant";
+    font-weight: 600; 
+    font-size: 1.75rem; 
+    color: var(--text-color); 
+    margin-bottom: 1rem;
+}
+
+.tab-content {
+    display: none;
+    animation: fadeIn 0.5s ease;
+   
+}
+
+.tab-content.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Menu profil */
+.profile-btn {
+    transition: all 0.3s ease;
+}
+
+.profile-btn:hover {
+    color: var(--accent);
+}
+
+.profile-dropdown {
+    transition: all 0.3s ease;
+    opacity: 0;
+    transform: translateY(-10px);
+}
+
+.profile-dropdown.show {
+    opacity: 1;
+    transform: translateY(0);
+    display: block;
+}

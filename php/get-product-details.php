@@ -86,7 +86,7 @@ try {
     
     // Si aucune image n'est trouvée, ajouter une image par défaut
     if (empty($images)) {
-        $images[] = 'images/placeholder.jpeg';
+        $images[] = '../images/placeholder.jpeg';
     }
     
     // Récupérer des produits similaires (même catégorie)
@@ -145,7 +145,7 @@ try {
             }
         } else {
             // Image par défaut si aucune image n'est trouvée
-            $imageUrl = 'images/placeholder.jpeg';
+            $imageUrl = '../images/placeholder.jpeg';
         }
         
         $similarProducts[] = [

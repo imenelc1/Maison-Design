@@ -27,7 +27,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit();
         }
 
-        $passwordHash = $password;
+        $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+
 
         // Vérifier si l'email existe déjà
         $stmt = $pdo->prepare("SELECT COUNT(*) FROM client WHERE Email = :email");
@@ -49,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->bindParam(':numtel', $numtel);
 
             if ($stmt->execute()) {
-                header('Location: ../client.html');
+                header('Location: ../client.php');
                 exit();
             } else {
                 header('Location: ../inscription.html?error=insert_failed');
