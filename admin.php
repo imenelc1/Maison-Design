@@ -1,3 +1,12 @@
+<?php
+session_start();
+
+// Vérification de l'authentification (optionnel)
+// if (!isset($_SESSION['admin_logged_in'])) {
+//     header('Location: php/connexion.php');
+//     exit();
+// }
+?>
 <!DOCTYPE html>
 <html lang="fr">
 
@@ -17,7 +26,7 @@
         <div class="w-[90%] max-w-[1200px] mx-auto flex items-center justify-between">
         <!-- Logo à gauche -->
             <div class="w-[20%] flex items-center">
-                <a href="index.html" class="logo-content flex items-center">
+                <a href="index.php" class="logo-content flex items-center">
                     <img src="images/Logo3.png" alt="Logo Maison Design" class="w-[60px] md:w-[70px] h-auto">
                 </a>
             </div>

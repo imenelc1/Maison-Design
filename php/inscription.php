@@ -1,4 +1,7 @@
 <?php
+// Démarrer la session
+session_start();
+
 // Activer l'affichage des erreurs pour le débogage
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
@@ -23,12 +26,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Vérifier la correspondance des mots de passe
         if ($password !== $confirmPassword) {
-            header('Location: ../inscription.html?error=password_mismatch');
+            // Préserver les données du formulaire
+            $params = http_build_query([
+                'error' => 'password_mismatch',
+                'nom' => $nom,
+                'prenom' => $prenom,
+                'email' => $email,
+                'adresse' => $adresse,
+                'numtel' => $numtel
+            ]);
+            header('Location: ../inscription.php?' . $params);
             exit();
         }
 
         $passwordHash = password_hash($password, PASSWORD_DEFAULT);
-
 
         // Vérifier si l'email existe déjà
         $stmt = $pdo->prepare("SELECT COUNT(*) FROM client WHERE Email = :email");
@@ -37,7 +48,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $emailExists = $stmt->fetchColumn();
 
         if ($emailExists) {
-            header('Location: ../inscription.html?error=email_exists');
+            // Préserver les données du formulaire
+            $params = http_build_query([
+                'error' => 'email_exists',
+                'nom' => $nom,
+                'prenom' => $prenom,
+                'adresse' => $adresse,
+                'numtel' => $numtel
+            ]);
+            header('Location: ../inscription.php?' . $params);
             exit();
         } else {
             // Insérer le nouvel utilisateur dans la base de données
@@ -50,18 +69,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->bindParam(':numtel', $numtel);
 
             if ($stmt->execute()) {
-                header('Location: ../client.php');
+                // NOUVEAU : Récupérer l'ID du client nouvellement créé
+                $clientId = $pdo->lastInsertId();
+                
+                // NOUVEAU : Connecter automatiquement l'utilisateur
+                $_SESSION['user_id'] = $clientId;
+                $_SESSION['nom'] = $nom;
+                $_SESSION['prenom'] = $prenom;
+                $_SESSION['email'] = $email;
+                $_SESSION['telephone'] = $numtel;
+                $_SESSION['adresse'] = $adresse;
+                $_SESSION['date_inscription'] = date('Y-m-d H:i:s');
+                
+                // Rediriger vers la page client avec un message de succès
+                header('Location: ../client.php?success=inscription');
                 exit();
             } else {
-                header('Location: ../inscription.html?error=insert_failed');
+                // Préserver les données du formulaire
+                $params = http_build_query([
+                    'error' => 'insert_failed',
+                    'nom' => $nom,
+                    'prenom' => $prenom,
+                    'email' => $email,
+                    'adresse' => $adresse,
+                    'numtel' => $numtel
+                ]);
+                header('Location: ../inscription.php?' . $params);
                 exit();
             }
         }
     } else {
-        header('Location: ../inscription.html?error=empty');
+        header('Location: ../inscription.php?error=empty');
         exit();
     }
 } else {
-    header('Location: ../inscription.html');
+    header('Location: ../inscription.php');
     exit();
 }
+?>

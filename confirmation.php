@@ -113,7 +113,7 @@ $livraison = $stmtLivraison->fetch(PDO::FETCH_ASSOC);
                 </div>
                 
                 <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                    <a href="client.php" class="px-6 py-3 bg-primary text-textColor rounded-full hover:bg-primary/80 transition-colors">
+                    <a href="client.php?tab=orders" class="px-6 py-3 bg-primary text-textColor rounded-full hover:bg-primary/80 transition-colors">
                         Voir mes commandes
                     </a>
                     <a href="categories.php" class="px-6 py-3 bg-accent text-white rounded-full hover:bg-accent/90 transition-colors">

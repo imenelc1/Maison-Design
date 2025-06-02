@@ -1,190 +1,171 @@
 <?php
-// Activer l'affichage des erreurs pour le débogage
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
-
-// Démarrer la session
+// Version corrigée basée sur la vraie structure de votre base de données
 session_start();
+header('Content-Type: application/json');
 
-// Vérifier si l'utilisateur est connecté
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'client') {
-    header('Content-Type: application/json');
+if (!isset($_SESSION['user_id'])) {
     echo json_encode(['error' => 'not_authenticated']);
     exit();
 }
 
-// Inclure la connexion à la base de données
-require_once 'db.php';
-
-// Récupérer l'ID du client depuis la session
-$clientId = $_SESSION['user_id'];
-
 try {
+    require_once 'db.php';
+    $clientId = $_SESSION['user_id'];
+    
     // Récupérer les informations du client
-    $stmt = $pdo->prepare("SELECT * FROM client WHERE IdClient = :id");
-    $stmt->bindParam(':id', $clientId, PDO::PARAM_INT);
-    $stmt->execute();
-    $client = $stmt->fetch(PDO::FETCH_ASSOC);
-
+    $stmtClient = $pdo->prepare("
+        SELECT 
+            IdClient,
+            NomClient as nom,
+            PrenomClient as prenom,
+            Email as email,
+            NumTel as telephone,
+            Adresse as adresse,
+            DateInscription as dateInscription
+        FROM client 
+        WHERE IdClient = ?
+    ");
+    $stmtClient->execute([$clientId]);
+    $client = $stmtClient->fetch(PDO::FETCH_ASSOC);
+    
     if (!$client) {
-        throw new Exception("Client non trouvé avec l'ID: $clientId");
+        echo json_encode(['error' => 'client_not_found']);
+        exit();
     }
-
-    // Préparer les données à renvoyer
-    $data = [
-        'client' => [
-            'id' => $client['IdClient'],
-            'prenom' => isset($client['PrenomClient']) ? $client['PrenomClient'] : '',
-            'nom' => isset($client['NomClient']) ? $client['NomClient'] : '',
-            'email' => $client['Email'],
-            'telephone' => isset($client['NumTel']) ? $client['NumTel'] : '',
-            'dateInscription' => isset($client['DateInscription']) ? $client['DateInscription'] : date('Y-m-d H:i:s')
-        ],
-        'commandes' => [],
-        'adresses' => [],
-        'favoris' => [],
-        'panier' => [
-            'articles' => [],
-            'total' => 0,
-            'nombreArticles' => 0
-        ]
-    ];
-
+    
     // Récupérer les commandes
-    try {
-        $stmtCommandes = $pdo->prepare("
-            SELECT c.*, DATE_FORMAT(c.DateCommande, '%d/%m/%Y à %H:%i') as date_formatee
-            FROM commande c
-            WHERE c.IdClient = :id
-            ORDER BY c.DateCommande DESC
-        ");
-        $stmtCommandes->bindParam(':id', $clientId, PDO::PARAM_INT);
-        $stmtCommandes->execute();
-        $commandes = $stmtCommandes->fetchAll(PDO::FETCH_ASSOC);
-
-        // Pour chaque commande, récupérer les produits
-        foreach ($commandes as $commande) {
-            $stmtProduits = $pdo->prepare("
-                SELECT p.IdProd, p.Qtt, pr.NomProduit, pr.Prix, i.URL as image
-                FROM panier p
-                JOIN produit pr ON p.IdProd = pr.IdProduit
-                LEFT JOIN imageprod i ON pr.IdProduit = i.IdProduit
-                WHERE p.IdCom = ?
-                GROUP BY p.IdProd
-            ");
-            $stmtProduits->execute([$commande['IdCommande']]);
-            $produits = $stmtProduits->fetchAll(PDO::FETCH_ASSOC);
-            
-            // Récupérer les informations de livraison
-            $stmtLivraison = $pdo->prepare("SELECT * FROM livraison WHERE IdComm = ?");
-            $stmtLivraison->execute([$commande['IdCommande']]);
-            $livraison = $stmtLivraison->fetch(PDO::FETCH_ASSOC);
-            
-            $data['commandes'][] = [
-                'id' => $commande['IdCommande'],
-                'date' => $commande['date_formatee'],
-                'statut' => $commande['Status'],
-                'montant_total' => number_format($commande['TotalPrix'], 2, ',', ' '),
-                'adresse_livraison' => $livraison ? $livraison['Adresse'] : '',
-                'produits' => array_map(function($p) {
-                    return [
-                        'id' => $p['IdProd'],
-                        'nom' => $p['NomProduit'],
-                        'quantite' => $p['Qtt'],
-                        'prix_unitaire' => number_format($p['Prix'], 2, ',', ' '),
-                        'image' => $p['image'] ?? 'images/placeholder.jpeg'
-                    ];
-                }, $produits)
-            ];
-        }
-    } catch (PDOException $e) {
-        error_log("Erreur commandes: " . $e->getMessage());
-    }
-
-    // Récupérer les adresses
-    try {
-        $stmtAdresses = $pdo->prepare("
-            SELECT * FROM adresse 
-            WHERE IdClient = :id
-            ORDER BY EstPrincipale DESC
-        ");
-        $stmtAdresses->bindParam(':id', $clientId, PDO::PARAM_INT);
-        $stmtAdresses->execute();
-        $adresses = $stmtAdresses->fetchAll(PDO::FETCH_ASSOC);
+    $stmtCommandes = $pdo->prepare("
+        SELECT 
+            IdCommande as id,
+            TotalPrix as montant_total,
+            Status as statut,
+            DateCommande as date
+        FROM commande 
+        WHERE IdClient = ? 
+        ORDER BY DateCommande DESC
+    ");
+    $stmtCommandes->execute([$clientId]);
+    $commandes = $stmtCommandes->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Traiter chaque commande
+    foreach ($commandes as &$commande) {
+        // Formater la date
+        $commande['date'] = date('d/m/Y à H:i', strtotime($commande['date']));
         
-        $data['adresses'] = array_map(function($a) {
-            return [
-                'id' => $a['IdAdresse'],
-                'titre' => $a['Titre'] ?? 'Adresse',
-                'adresse' => $a['Adresse'],
-                'isPrimary' => isset($a['EstPrincipale']) && $a['EstPrincipale'] == 1
-            ];
-        }, $adresses);
-    } catch (PDOException $e) {
-        error_log("Erreur adresses: " . $e->getMessage());
-    }
-
-    // Récupérer les favoris
-    try {
-        $stmtFavoris = $pdo->prepare("
-            SELECT f.*, p.NomProduit, p.Prix, p.Description, i.URL as image
-            FROM favoris f
-            JOIN produit p ON f.IdProduit = p.IdProduit
+        // Formater le montant (diviser par 1000 car stocké en millièmes)
+        $montant = floatval($commande['montant_total']) / 1000;
+        $commande['montant_total'] = number_format($montant, 0, ',', ' ');
+        
+        // Traduire le statut
+        switch ($commande['statut']) {
+            case 'en attente':
+                $commande['statut'] = 'En attente';
+                break;
+            case 'expe?die?':
+            case 'expedie':
+            case 'expédié':
+                $commande['statut'] = 'Expédié';
+                break;
+            case 'livre?':
+            case 'livre':
+            case 'livré':
+                $commande['statut'] = 'Livré';
+                break;
+            case 'annule?':
+            case 'annule':
+            case 'annulé':
+                $commande['statut'] = 'Annulé';
+                break;
+            default:
+                $commande['statut'] = ucfirst($commande['statut']);
+        }
+        
+        // Ajouter l'adresse de livraison
+        $commande['adresse_livraison'] = $client['adresse'];
+        
+        // Récupérer les produits de cette commande depuis la table `panier`
+        $stmtProduits = $pdo->prepare("
+            SELECT 
+                p.NomProduit as nom,
+                pa.Qtt as quantite,
+                p.Prix as prix_unitaire,
+                i.URL as image
+            FROM panier pa
+            JOIN produit p ON pa.IdProd = p.IdProduit
             LEFT JOIN imageprod i ON p.IdProduit = i.IdProduit
-            WHERE f.IdClient = :id
-            GROUP BY f.IdProduit
+            WHERE pa.IdCom = ?
         ");
-        $stmtFavoris->bindParam(':id', $clientId, PDO::PARAM_INT);
-        $stmtFavoris->execute();
-        $favoris = $stmtFavoris->fetchAll(PDO::FETCH_ASSOC);
+        $stmtProduits->execute([$commande['id']]);
+        $produits = $stmtProduits->fetchAll(PDO::FETCH_ASSOC);
         
-        $data['favoris'] = array_map(function($f) {
-            return [
-                'id' => $f['IdProduit'],
-                'nom' => $f['NomProduit'],
-                'prix' => floatval($f['Prix']),
-                'image' => $f['image'] ?? 'images/placeholder.jpeg',
-                'description' => $f['Description'] ?? ''
-            ];
-        }, $favoris);
-    } catch (PDOException $e) {
-        error_log("Erreur favoris: " . $e->getMessage());
-    }
-
-    // Récupérer le panier
-    try {
-        $stmtPanier = $pdo->prepare("
-            SELECT p.*, c.Qtt as Quantite
-            FROM panier c
-            JOIN produit p ON c.IdProd = p.IdProduit
-            WHERE c.IdClient = :id AND c.IdCom IS NULL
-        ");
-        $stmtPanier->bindParam(':id', $clientId, PDO::PARAM_INT);
-        $stmtPanier->execute();
-        $panier = $stmtPanier->fetchAll(PDO::FETCH_ASSOC);
-        
-        // Calculer le total du panier
-        $totalPanier = 0;
-        $nombreArticles = 0;
-        foreach ($panier as $article) {
-            $totalPanier += $article['Prix'] * $article['Quantite'];
-            $nombreArticles += $article['Quantite'];
+        // Traiter les produits
+        foreach ($produits as &$produit) {
+            // Formater le prix unitaire (diviser par 1000)
+            $prix = floatval($produit['prix_unitaire']) / 1000;
+            $produit['prix_unitaire'] = number_format($prix, 0, ',', ' ');
+            
+            // Corriger le chemin de l'image
+            if (empty($produit['image'])) {
+                $produit['image'] = 'images/placeholder.jpeg';
+            } else {
+                // S'assurer que l'image a une extension
+                $image = $produit['image'];
+                if (!str_contains($image, '.')) {
+                    // Ajouter .jpg par défaut si pas d'extension
+                    $image .= '.jpg';
+                }
+                
+                // S'assurer que le chemin commence par images/
+                if (!str_starts_with($image, 'images/')) {
+                    $image = 'images/' . basename($image);
+                }
+                
+                $produit['image'] = $image;
+            }
         }
         
-        $data['panier']['articles'] = $panier;
-        $data['panier']['total'] = $totalPanier;
-        $data['panier']['nombreArticles'] = $nombreArticles;
-    } catch (PDOException $e) {
-        error_log("Erreur panier: " . $e->getMessage());
+        // Si pas de produits trouvés, créer un produit générique
+        if (empty($produits)) {
+            $produits = [
+                [
+                    'nom' => 'Commande #' . $commande['id'],
+                    'quantite' => 'Plusieurs',
+                    'prix_unitaire' => $commande['montant_total'],
+                    'image' => 'images/package-icon.png'
+                ]
+            ];
+        }
+        
+        $commande['produits'] = $produits;
     }
-
-    // Renvoyer les données au format JSON
-    header('Content-Type: application/json');
-    echo json_encode($data);
-
+    
+    // Adresses
+    $adresses = [];
+    if (!empty($client['adresse'])) {
+        $adresses = [
+            [
+                'id' => 1,
+                'titre' => 'Adresse principale',
+                'adresse' => $client['adresse'],
+                'isPrimary' => true
+            ]
+        ];
+    }
+    
+    $response = [
+        'success' => true,
+        'client' => $client,
+        'commandes' => $commandes,
+        'adresses' => $adresses
+    ];
+    
+    echo json_encode($response);
+    
+} catch (PDOException $e) {
+    error_log("Erreur base de données dans get_client_data.php: " . $e->getMessage());
+    echo json_encode(['error' => 'database_error', 'message' => 'Erreur de base de données']);
 } catch (Exception $e) {
-    // Renvoyer un message d'erreur
-    header('Content-Type: application/json');
-    echo json_encode(['error' => $e->getMessage()]);
+    error_log("Erreur générale dans get_client_data.php: " . $e->getMessage());
+    echo json_encode(['error' => 'general_error', 'message' => 'Erreur serveur']);
 }
 ?>

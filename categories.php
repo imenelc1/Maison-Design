@@ -1,5 +1,5 @@
 <?php
-// Démarrer la session
+// Version corrigée pour résoudre le problème d'affichage des doublons
 session_start();
 
 // Connexion à la base de données
@@ -9,36 +9,38 @@ require_once 'php/db.php';
 $selectedCategory = isset($_GET['category']) ? $_GET['category'] : 'all';
 
 try {
-    // Requête pour récupérer toutes les catégories
+    // 1. Récupérer toutes les catégories
     $stmtCategories = $pdo->query("SELECT * FROM categorie ORDER BY NomCategorie");
     $categories = $stmtCategories->fetchAll(PDO::FETCH_ASSOC);
     
-    // Si c'est une requête AJAX, retourner les données JSON
+    // 2. Récupérer les favoris de l'utilisateur connecté
+    $userFavorites = [];
+    if (isset($_SESSION['user_id'])) {
+        try {
+            $stmtFavorites = $pdo->prepare("SELECT IdProduit FROM favoris WHERE IdClient = ?");
+            $stmtFavorites->execute([$_SESSION['user_id']]);
+            $userFavorites = $stmtFavorites->fetchAll(PDO::FETCH_COLUMN);
+        } catch (PDOException $e) {
+            $userFavorites = [];
+        }
+    }
+    
+    // 3. Si c'est une requête AJAX, traiter et retourner JSON
     if (isset($_GET['ajax']) && $_GET['ajax'] === '1') {
         header('Content-Type: application/json');
         
         if ($selectedCategory === 'all') {
             $stmtProduits = $pdo->query("
-                SELECT p.IdProduit, p.NomProduit, p.Prix, p.Stock, c.NomCategorie as categorie, i.URL as image
+                SELECT p.IdProduit, p.NomProduit, p.Prix, p.Stock, p.Description, c.NomCategorie as categorie
                 FROM produit p
                 LEFT JOIN categorie c ON p.IdCat = c.IdCategorie
-                LEFT JOIN (
-                    SELECT IdProduit, MIN(URL) as URL
-                    FROM imageprod
-                    GROUP BY IdProduit
-                ) i ON p.IdProduit = i.IdProduit
                 ORDER BY p.IdProduit DESC
             ");
         } else {
             $stmtProduits = $pdo->prepare("
-                SELECT p.IdProduit, p.NomProduit, p.Prix, p.Stock, c.NomCategorie as categorie, i.URL as image
+                SELECT p.IdProduit, p.NomProduit, p.Prix, p.Stock, p.Description, c.NomCategorie as categorie
                 FROM produit p
                 LEFT JOIN categorie c ON p.IdCat = c.IdCategorie
-                LEFT JOIN (
-                    SELECT IdProduit, MIN(URL) as URL
-                    FROM imageprod
-                    GROUP BY IdProduit
-                ) i ON p.IdProduit = i.IdProduit
                 WHERE LOWER(c.NomCategorie) = LOWER(?)
                 ORDER BY p.IdProduit DESC
             ");
@@ -47,61 +49,94 @@ try {
         
         $produits = $stmtProduits->fetchAll(PDO::FETCH_ASSOC);
         
-        // Traiter les images
-        foreach ($produits as &$produit) {
-            if (!empty($produit['image'])) {
-                if (strpos($produit['image'], 'images/') !== 0) {
-                    $produit['image'] = 'images/' . basename($produit['image']);
+        // CORRECTION: Vérifier l'unicité des produits
+        $uniqueProduits = [];
+        $seenIds = [];
+        
+        foreach ($produits as $produit) {
+            if (!in_array($produit['IdProduit'], $seenIds)) {
+                $seenIds[] = $produit['IdProduit'];
+                
+                // Récupérer l'image du produit
+                $stmtImage = $pdo->prepare("SELECT URL FROM imageprod WHERE IdProduit = ? LIMIT 1");
+                $stmtImage->execute([$produit['IdProduit']]);
+                $image = $stmtImage->fetchColumn();
+                
+                if ($image) {
+                    $produit['image'] = strpos($image, 'images/') === 0 ? $image : 'images/' . basename($image);
+                } else {
+                    $produit['image'] = 'images/placeholder.jpeg';
                 }
-            } else {
-                $produit['image'] = 'images/placeholder.jpeg';
+                
+                // Marquer si c'est un favori
+                $produit['isFavorite'] = in_array($produit['IdProduit'], $userFavorites);
+                
+                $uniqueProduits[] = $produit;
             }
         }
         
         echo json_encode([
             'success' => true, 
-            'products' => $produits,
-            'categories' => $categories
+            'products' => $uniqueProduits,
+            'categories' => $categories,
+            'userFavorites' => $userFavorites
         ]);
         exit;
     }
     
-    // Pour le chargement initial de la page
+    // 4. Pour le chargement initial de la page
     if ($selectedCategory === 'all') {
         $stmtProduits = $pdo->query("
-            SELECT p.IdProduit, p.NomProduit, p.Prix, p.Stock, c.NomCategorie as categorie, i.URL as image
+            SELECT p.IdProduit, p.NomProduit, p.Prix, p.Stock, p.Description, c.NomCategorie as categorie
             FROM produit p
             LEFT JOIN categorie c ON p.IdCat = c.IdCategorie
-            LEFT JOIN (
-                SELECT IdProduit, MIN(URL) as URL
-                FROM imageprod
-                GROUP BY IdProduit
-            ) i ON p.IdProduit = i.IdProduit
             ORDER BY p.IdProduit DESC
         ");
     } else {
         $stmtProduits = $pdo->prepare("
-            SELECT p.IdProduit, p.NomProduit, p.Prix, p.Stock, c.NomCategorie as categorie, i.URL as image
+            SELECT p.IdProduit, p.NomProduit, p.Prix, p.Stock, p.Description, c.NomCategorie as categorie
             FROM produit p
             LEFT JOIN categorie c ON p.IdCat = c.IdCategorie
-            LEFT JOIN (
-                SELECT IdProduit, MIN(URL) as URL
-                FROM imageprod
-                GROUP BY IdProduit
-            ) i ON p.IdProduit = i.IdProduit
             WHERE LOWER(c.NomCategorie) = LOWER(?)
             ORDER BY p.IdProduit DESC
         ");
         $stmtProduits->execute([$selectedCategory]);
     }
     
-    $produits = $stmtProduits->fetchAll(PDO::FETCH_ASSOC);
+    $produitsRaw = $stmtProduits->fetchAll(PDO::FETCH_ASSOC);
+    
+    // CORRECTION: Assurer l'unicité des produits pour l'affichage initial
+    $produits = [];
+    $seenIds = [];
+    
+    foreach ($produitsRaw as $produit) {
+        if (!in_array($produit['IdProduit'], $seenIds)) {
+            $seenIds[] = $produit['IdProduit'];
+            
+            // Récupérer l'image du produit
+            $stmtImage = $pdo->prepare("SELECT URL FROM imageprod WHERE IdProduit = ? LIMIT 1");
+            $stmtImage->execute([$produit['IdProduit']]);
+            $image = $stmtImage->fetchColumn();
+            
+            if ($image) {
+                $produit['image'] = strpos($image, 'images/') === 0 ? $image : 'images/' . basename($image);
+            } else {
+                $produit['image'] = 'images/placeholder.jpeg';
+            }
+            
+            $produits[] = $produit;
+        }
+    }
+    
+    // Debug
+    error_log("Produits bruts récupérés: " . count($produitsRaw));
+    error_log("Produits uniques après filtrage: " . count($produits));
+    error_log("IDs des produits uniques: " . implode(', ', array_column($produits, 'IdProduit')));
     
 } catch (PDOException $e) {
-    // Gérer l'erreur
     $error = "Une erreur est survenue lors du chargement des produits: " . $e->getMessage();
+    error_log("Erreur SQL: " . $e->getMessage());
     
-    // Si c'est une requête AJAX, retourner l'erreur en JSON
     if (isset($_GET['ajax']) && $_GET['ajax'] === '1') {
         header('Content-Type: application/json');
         echo json_encode(['success' => false, 'message' => $error]);
@@ -109,6 +144,7 @@ try {
     }
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -119,8 +155,43 @@ try {
     <link href="https://unpkg.com/boxicons@2.1.2/css/boxicons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="tailwind.config.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': '#EEE7DE',
+                        'accent': '#8E9675',
+                        'background': '#F5F5F5',
+                        'textColor': '#3D3D3D'
+                    },
+                    fontFamily: {
+                        'cormorant': ['Cormorant Garamond', 'serif'],
+                        'frunchy': ['Frunchy', 'serif']
+                    }
+                }
+            }
+        }
+    </script>
     <link rel="stylesheet" href="css/style.css">
+    <script>
+        // Variables globales pour JavaScript
+        window.sessionData = {
+            isLoggedIn: <?php echo isset($_SESSION['user_id']) ? 'true' : 'false'; ?>,
+            clientId: <?php echo isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 'null'; ?>
+        };
+        window.userFavorites = <?php echo json_encode($userFavorites); ?>;
+        window.initialData = {
+            selectedCategory: <?php echo json_encode($selectedCategory); ?>,
+            categories: <?php echo json_encode($categories); ?>
+        };
+        
+        console.log('DEBUG - Session:', window.sessionData);
+        console.log('DEBUG - Favoris:', window.userFavorites);
+        console.log('DEBUG - Nombre de produits PHP:', <?php echo count($produits); ?>);
+        console.log('DEBUG - IDs des produits:', <?php echo json_encode(array_column($produits, 'IdProduit')); ?>);
+        console.log('DEBUG - Noms des produits:', <?php echo json_encode(array_column($produits, 'NomProduit')); ?>);
+    </script>
 </head>
 <body class="font-cormorant bg-background m-0 p-0 box-border">
     <!-- HEADER -->
@@ -133,17 +204,17 @@ try {
             <!-- Filtres de catégories -->
             <div class="mb-10">
                 <div class="flex flex-wrap justify-center gap-3 md:gap-4" id="category-filters">
-                    <a href="categories.php" 
-                       class="category-filter <?php echo $selectedCategory === 'all' ? 'bg-accent text-white' : 'bg-primary text-textColor hover:bg-accent hover:text-white'; ?> px-4 py-2 rounded-full transition-all duration-300" 
-                       data-category="all">
+                    <button type="button"
+                            class="category-filter <?php echo $selectedCategory === 'all' ? 'bg-accent text-white' : 'bg-primary text-textColor hover:bg-accent hover:text-white'; ?> px-4 py-2 rounded-full transition-all duration-300" 
+                            data-category="all">
                         Tous
-                    </a>
+                    </button>
                     <?php foreach ($categories as $category): ?>
-                    <a href="categories.php?category=<?php echo urlencode(strtolower($category['NomCategorie'])); ?>" 
-                       class="category-filter <?php echo strtolower($selectedCategory) === strtolower($category['NomCategorie']) ? 'bg-accent text-white' : 'bg-primary text-textColor hover:bg-accent hover:text-white'; ?> px-4 py-2 rounded-full transition-all duration-300" 
-                       data-category="<?php echo strtolower($category['NomCategorie']); ?>">
+                    <button type="button"
+                            class="category-filter <?php echo strtolower($selectedCategory) === strtolower($category['NomCategorie']) ? 'bg-accent text-white' : 'bg-primary text-textColor hover:bg-accent hover:text-white'; ?> px-4 py-2 rounded-full transition-all duration-300" 
+                            data-category="<?php echo strtolower($category['NomCategorie']); ?>">
                         <?php echo htmlspecialchars($category['NomCategorie']); ?>
-                    </a>
+                    </button>
                     <?php endforeach; ?>
                 </div>
             </div>
@@ -152,9 +223,9 @@ try {
             <h2 class="text-2xl md:text-3xl font-medium text-textColor mb-6" id="products-title">
                 <?php 
                 if ($selectedCategory === 'all') {
-                    echo 'Tous nos produits';
+                    echo 'Tous nos produits (' . count($produits) . ')';
                 } else {
-                    echo 'Nos ' . htmlspecialchars($selectedCategory);
+                    echo 'Nos ' . htmlspecialchars($selectedCategory) . ' (' . count($produits) . ')';
                 }
                 ?>
             </h2>
@@ -166,7 +237,6 @@ try {
             </div>
 
             <?php if (isset($error)): ?>
-            <!-- Message d'erreur -->
             <div id="error-message" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
                 <span id="error-text"><?php echo htmlspecialchars($error); ?></span>
             </div>
@@ -183,16 +253,21 @@ try {
                     <p class="text-xl text-textColor/70">Aucun produit trouvé dans cette catégorie.</p>
                 </div>
                 <?php else: ?>
-                    <?php foreach ($produits as $produit): ?>
-                    <div class="product-item bg-white rounded-xl overflow-hidden shadow-md transition-transform hover:-translate-y-1" data-category="<?php echo strtolower($produit['categorie'] ?? ''); ?>">
-                        <!-- Image du produit (cliquable) -->
-                        <a href="product.php?id=<?php echo $produit['IdProduit']; ?>" class="block">
+                    <?php 
+                    // CORRECTION: S'assurer qu'on itère sur les produits uniques
+                    foreach ($produits as $index => $produit): 
+                    ?>
+                    <div class="product-item bg-white rounded-xl overflow-hidden shadow-md transition-transform hover:-translate-y-1" 
+                         data-product-id="<?php echo $produit['IdProduit']; ?>" 
+                         data-index="<?php echo $index; ?>">
+                        
+                        <!-- Image du produit -->
+                        <a href="produit.php?id=<?php echo $produit['IdProduit']; ?>" class="block">
                             <div class="product-image h-48 overflow-hidden relative group">
-                                <img src="<?php echo htmlspecialchars($produit['image'] ?? 'images/placeholder.jpeg'); ?>" 
+                                <img src="<?php echo htmlspecialchars($produit['image']); ?>" 
                                      alt="<?php echo htmlspecialchars($produit['NomProduit']); ?>" 
                                      class="w-full h-full object-cover transition-transform group-hover:scale-105"
                                      onerror="this.src='images/placeholder.jpeg'">
-                                <!-- Overlay au survol -->
                                 <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
                                     <span class="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-medium">
                                         Voir détails
@@ -201,16 +276,16 @@ try {
                             </div>
                         </a>
                         
-                        <!-- Informations du produit (simplifiées) -->
+                        <!-- Informations du produit -->
                         <div class="product-info p-4">
                             <h3 class="text-lg font-medium text-textColor mb-1"><?php echo htmlspecialchars($produit['NomProduit']); ?></h3>
                             <p class="text-accent font-bold text-xl"><?php echo number_format($produit['Prix'], 2, ',', ' '); ?> DA</p>
                             
-                            <!-- Disponibilité (icône seulement) -->
+                            <!-- Disponibilité -->
                             <?php if ($produit['Stock'] > 0): ?>
                             <div class="flex items-center gap-1 mt-2 text-green-600">
                                 <i class='bx bx-check'></i>
-                                <span class="text-sm">Disponible</span>
+                                <span class="text-sm">Disponible (<?php echo $produit['Stock']; ?>)</span>
                             </div>
                             <?php else: ?>
                             <div class="flex items-center gap-1 mt-2 text-red-600">
@@ -223,18 +298,18 @@ try {
                         <!-- Boutons d'action -->
                         <div class="p-4 pt-0 flex flex-col gap-2">
                             <!-- Bouton Voir détails -->
-                            <a href="product.php?id=<?php echo $produit['IdProduit']; ?>" 
+                            <a href="produit.php?id=<?php echo $produit['IdProduit']; ?>" 
                                class="w-full px-3 py-2 bg-primary text-textColor rounded-full hover:bg-accent hover:text-white transition-colors text-sm flex items-center justify-center gap-2 font-medium">
-                                <i class='bx bx-show'></i> Voir détails
+                                Voir détails
                             </a>
                             
                             <!-- Boutons Ajouter au panier et Favoris -->
                             <div class="flex gap-2">
                                 <?php if ($produit['Stock'] > 0): ?>
-                                <a href="php/cart_actions.php?action=ajouter&produitId=<?php echo $produit['IdProduit']; ?>&quantite=1" 
-                                   class="flex-1 px-3 py-2 bg-accent text-white rounded-full hover:bg-accent/80 transition-colors text-sm flex items-center justify-center gap-1">
+                                <button onclick="addToCart(<?php echo $produit['IdProduit']; ?>)"
+                                        class="flex-1 px-3 py-2 bg-accent text-white rounded-full hover:bg-accent/80 transition-colors text-sm flex items-center justify-center gap-1">
                                     <i class='bx bx-cart-add'></i> Ajouter
-                                </a>
+                                </button>
                                 <?php else: ?>
                                 <button disabled 
                                         class="flex-1 px-3 py-2 bg-gray-300 text-gray-500 rounded-full cursor-not-allowed text-sm flex items-center justify-center gap-1">
@@ -243,20 +318,16 @@ try {
                                 <?php endif; ?>
                                 
                                 <!-- Bouton Favoris -->
-                                <button class="favorite-btn px-3 py-2 bg-gray-100 text-gray-600 rounded-full hover:bg-red-100 hover:text-red-600 transition-colors text-sm flex items-center justify-center"
-                                        title="Ajouter aux favoris"
+                                <?php $isFavorite = in_array($produit['IdProduit'], $userFavorites); ?>
+                                <button class="favorite-btn px-3 py-2 <?php echo $isFavorite ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600'; ?> rounded-full hover:bg-red-100 hover:text-red-600 transition-colors text-sm flex items-center justify-center"
+                                        title="<?php echo $isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'; ?>"
                                         data-product-id="<?php echo $produit['IdProduit']; ?>">
-                                    <i class='bx bx-heart'></i>
+                                    <i class='<?php echo $isFavorite ? 'fas fa-heart text-red-600' : 'far fa-heart'; ?>'></i>
                                 </button>
                             </div>
                         </div>
                     </div>
                     <?php endforeach; ?>
-                    
-                    <!-- Message "Aucun produit" caché par défaut -->
-                    <div id="no-products" class="col-span-full text-center py-12 hidden">
-                        <p class="text-xl text-textColor/70">Aucun produit trouvé dans cette catégorie.</p>
-                    </div>
                 <?php endif; ?>
             </div>
         </div>
@@ -265,78 +336,321 @@ try {
     <!-- FOOTER -->
     <?php include 'footer.php'; ?>
 
-    <!-- Script pour le menu mobile et la recherche -->
+    <!-- Scripts -->
     <script src="js/script.js"></script>
     <script>
-        // Données initiales passées du PHP au JavaScript
-        window.initialData = {
+        // Configuration globale
+        window.siteConfig = {
             selectedCategory: <?php echo json_encode($selectedCategory); ?>,
-            categories: <?php echo json_encode($categories); ?>
+            categories: <?php echo json_encode($categories); ?>,
+            isLoggedIn: <?php echo isset($_SESSION['user_id']) ? 'true' : 'false'; ?>,
+            clientId: <?php echo isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 'null'; ?>
         };
-        
-        // Données de session pour JavaScript
-        window.sessionData = {
-            isLoggedIn: <?php echo isset($_SESSION['client_id']) ? 'true' : 'false'; ?>,
-            clientId: <?php echo isset($_SESSION['client_id']) ? $_SESSION['client_id'] : 'null'; ?>
-        };
-        
-        console.log('Données de session:', window.sessionData);
 
-        // Attacher les événements favoris aux produits initiaux
-        document.addEventListener('DOMContentLoaded', function() {
-            const initialFavoriteButtons = document.querySelectorAll('.favorite-btn');
-            initialFavoriteButtons.forEach(button => {
-                button.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const productId = parseInt(button.getAttribute('data-product-id'));
-                    
-                    if (!window.sessionData.isLoggedIn) {
-                        alert('Veuillez vous connecter pour ajouter des produits aux favoris');
-                        window.location.href = 'connexion.html';
-                        return;
-                    }
-                    
-                    const icon = button.querySelector('i');
-                    button.disabled = true;
-                    
-                    fetch('php/favorites_actions.php', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                        },
-                        body: `action=toggle&produitId=${productId}`
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            if (data.action === 'added') {
-                                icon.classList.remove('bx-heart');
-                                icon.classList.add('bxs-heart');
-                                button.classList.remove('bg-gray-100', 'text-gray-600');
-                                button.classList.add('bg-red-100', 'text-red-600');
-                                button.title = 'Retirer des favoris';
+        function addToCart(productId) {
+            fetch('php/cart_actions.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: `action=ajouter&produitId=${productId}&quantite=1`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Produit ajouté au panier !', 'success');
+                    // AJOUTER CETTE LIGNE :
+                    updateCartCounter();
+                } else {
+                    showNotification('Erreur: ' + data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                showNotification('Une erreur est survenue', 'error');
+            });
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 px-4 py-2 rounded-lg text-white ${
+                type === 'success' ? 'bg-green-500' : 
+                type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+            } transition-all duration-300 transform translate-x-full`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.classList.remove('translate-x-full');
+            }, 100);
+            
+            setTimeout(() => {
+                notification.classList.add('translate-x-full');
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+
+        function updateCartCounter() {
+            fetch("php/get_cart_count.php")
+                .then((response) => response.json())
+                .then((data) => {
+                    if (data.success) {
+                        // Chercher tous les éléments possibles du compteur panier
+                        const cartCounters = document.querySelectorAll(".cart-counter, .cart-count, #cart-count, [data-cart-count]")
+                        const cartBadges = document.querySelectorAll(".cart-badge, .badge, .notification-badge")
+
+                        // Mettre à jour tous les compteurs trouvés
+                        cartCounters.forEach((counter) => {
+                            counter.textContent = data.count
+                            if (data.count > 0) {
+                                counter.style.display = "inline-block"
+                                counter.classList.remove("hidden")
                             } else {
-                                icon.classList.remove('bxs-heart');
-                                icon.classList.add('bx-heart');
-                                button.classList.remove('bg-red-100', 'text-red-600');
-                                button.classList.add('bg-gray-100', 'text-gray-600');
-                                button.title = 'Ajouter aux favoris';
+                                counter.style.display = "none"
+                                counter.classList.add("hidden")
                             }
-                        } else {
-                            alert('Erreur: ' + data.message);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Erreur:', error);
-                        alert('Une erreur est survenue');
-                    })
-                    .finally(() => {
-                        button.disabled = false;
+                        })
+
+                        // Mettre à jour les badges aussi
+                        cartBadges.forEach((badge) => {
+                            badge.textContent = data.count
+                            if (data.count > 0) {
+                                badge.style.display = "inline-block"
+                                badge.classList.remove("hidden")
+                            } else {
+                                badge.style.display = "none"
+                                badge.classList.add("hidden")
+                            }
+                        })
+
+                        console.log(`Compteur panier mis à jour: ${data.count}`)
+                    }
+                })
+                .catch((error) => {
+                    console.error("Erreur lors de la mise à jour du compteur panier:", error)
+                })
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const categoryFilters = document.querySelectorAll('.category-filter');
+            const productsContainer = document.getElementById('products-container');
+            const productsTitle = document.getElementById('products-title');
+            const loading = document.getElementById('loading');
+            const errorMessage = document.getElementById('error-message');
+
+            // Attacher les événements aux boutons favoris
+            attachFavoriteEvents();
+
+            categoryFilters.forEach(filter => {
+                filter.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const category = this.getAttribute('data-category');
+                    
+                    categoryFilters.forEach(f => {
+                        f.classList.remove('bg-accent', 'text-white');
+                        f.classList.add('bg-primary', 'text-textColor');
                     });
+                    this.classList.remove('bg-primary', 'text-textColor');
+                    this.classList.add('bg-accent', 'text-white');
+                    
+                    loading.classList.remove('hidden');
+                    errorMessage.classList.add('hidden');
+                    
+                    const currentFileName = window.location.pathname.split('/').pop();
+                    fetch(`${currentFileName}?ajax=1&category=${encodeURIComponent(category)}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            loading.classList.add('hidden');
+                            
+                            if (data.success) {
+                                window.userFavorites = data.userFavorites || [];
+                                
+                                productsTitle.textContent = category === 'all' ? 
+                                    `Tous nos produits (${data.products.length})` : 
+                                    `Nos ${category} (${data.products.length})`;
+                                
+                                const newUrl = category === 'all' ? currentFileName : `${currentFileName}?category=${encodeURIComponent(category)}`;
+                                window.history.pushState({}, '', newUrl);
+                                
+                                updateProductsDisplay(data.products);
+                                
+                                console.log('DEBUG - Produits reçus:', data.products.length);
+                                console.log('DEBUG - IDs des produits:', data.products.map(p => p.IdProduit));
+                            } else {
+                                errorMessage.classList.remove('hidden');
+                                document.getElementById('error-text').textContent = data.message;
+                            }
+                        })
+                        .catch(error => {
+                            loading.classList.add('hidden');
+                            errorMessage.classList.remove('hidden');
+                            document.getElementById('error-text').textContent = 'Une erreur est survenue lors du chargement';
+                            console.error('Erreur:', error);
+                        });
                 });
             });
+
+            function updateProductsDisplay(products) {
+                console.log('DEBUG - Mise à jour avec', products.length, 'produits');
+                
+                if (products.length === 0) {
+                    productsContainer.innerHTML = '<div class="col-span-full text-center py-12"><p class="text-xl text-textColor/70">Aucun produit trouvé dans cette catégorie.</p></div>';
+                    return;
+                }
+
+                // CORRECTION: S'assurer de l'unicité côté client aussi
+                const uniqueProducts = [];
+                const seenIds = new Set();
+                
+                products.forEach(product => {
+                    if (!seenIds.has(product.IdProduit)) {
+                        seenIds.add(product.IdProduit);
+                        uniqueProducts.push(product);
+                    }
+                });
+
+                let html = '';
+                uniqueProducts.forEach((product, index) => {
+                    const isFavorite = product.isFavorite || false;
+                    html += `
+                        <div class="product-item bg-white rounded-xl overflow-hidden shadow-md transition-transform hover:-translate-y-1" data-product-id="${product.IdProduit}" data-index="${index}">
+                            <a href="produit.php?id=${product.IdProduit}" class="block">
+                                <div class="product-image h-48 overflow-hidden relative group">
+                                    <img src="${product.image}" 
+                                         alt="${product.NomProduit}" 
+                                         class="w-full h-full object-cover transition-transform group-hover:scale-105"
+                                         onerror="this.src='images/placeholder.jpeg'">
+                                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
+                                        <span class="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-medium">
+                                            Voir détails
+                                        </span>
+                                    </div>
+                                </div>
+                            </a>
+                            
+                            <div class="product-info p-4">
+                                <h3 class="text-lg font-medium text-textColor mb-1">${product.NomProduit}</h3>
+                                <p class="text-accent font-bold text-xl">${parseFloat(product.Prix).toLocaleString('fr-FR', {minimumFractionDigits: 2})} DA</p>
+                                
+                                ${product.Stock > 0 ? 
+                                    `<div class="flex items-center gap-1 mt-2 text-green-600">
+                                        <i class='bx bx-check'></i>
+                                        <span class="text-sm">Disponible (${product.Stock})</span>
+                                    </div>` :
+                                    `<div class="flex items-center gap-1 mt-2 text-red-600">
+                                        <i class='bx bx-x'></i>
+                                        <span class="text-sm">Indisponible</span>
+                                    </div>`
+                                }
+                            </div>
+                            
+                            <div class="p-4 pt-0 flex flex-col gap-2">
+                                <a href="produit.php?id=${product.IdProduit}" 
+                                   class="w-full px-3 py-2 bg-primary text-textColor rounded-full hover:bg-accent hover:text-white transition-colors text-sm flex items-center justify-center gap-2 font-medium">
+                                    Voir détails
+                                </a>
+                                
+                                <div class="flex gap-2">
+                                    ${product.Stock > 0 ?
+                                        `<button onclick="addToCart(${product.IdProduit})"
+                                                class="flex-1 px-3 py-2 bg-accent text-white rounded-full hover:bg-accent/80 transition-colors text-sm flex items-center justify-center gap-1">
+                                            <i class='bx bx-cart-add'></i> Ajouter
+                                        </button>` :
+                                        `<button disabled 
+                                                class="flex-1 px-3 py-2 bg-gray-300 text-gray-500 rounded-full cursor-not-allowed text-sm flex items-center justify-center gap-1">
+                                            <i class='bx bx-cart-add'></i> Ajouter
+                                        </button>`
+                                    }
+                                    
+                                    <button class="favorite-btn px-3 py-2 ${isFavorite ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600'} rounded-full hover:bg-red-100 hover:text-red-600 transition-colors text-sm flex items-center justify-center"
+                                            title="${isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}"
+                                            data-product-id="${product.IdProduit}">
+                                        <i class='${isFavorite ? 'fas fa-heart text-red-600' : 'far fa-heart'}'></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                productsContainer.innerHTML = html;
+                attachFavoriteEvents();
+                
+                console.log('DEBUG - Produits uniques affichés:', uniqueProducts.length);
+                console.log('DEBUG - IDs uniques:', Array.from(seenIds));
+            }
+
+            function attachFavoriteEvents() {
+                const favoriteButtons = document.querySelectorAll('.favorite-btn');
+                favoriteButtons.forEach(button => {
+                    const newButton = button.cloneNode(true);
+                    button.parentNode.replaceChild(newButton, button);
+                    
+                    newButton.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const productId = parseInt(this.getAttribute('data-product-id'));
+                        
+                        if (!window.siteConfig.isLoggedIn) {
+                            showNotification('Veuillez vous connecter pour ajouter des produits aux favoris', 'error');
+                            setTimeout(() => {
+                                window.location.href = 'connexion.php';
+                            }, 1500);
+                            return;
+                        }
+                        
+                        const icon = this.querySelector('i');
+                        this.disabled = true;
+                        
+                        fetch('php/favorites_actions.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                            },
+                            body: `action=toggle&produitId=${productId}`
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                if (data.action === 'added') {
+                                    icon.classList.remove('far', 'fa-heart');
+                                    icon.classList.add('fas', 'fa-heart', 'text-red-600');
+                                    this.classList.remove('bg-gray-100', 'text-gray-600');
+                                    this.classList.add('bg-red-100', 'text-red-600');
+                                    this.title = 'Retirer des favoris';
+                                    showNotification('Produit ajouté aux favoris !', 'success');
+                                    
+                                    if (!window.userFavorites.includes(productId)) {
+                                        window.userFavorites.push(productId);
+                                    }
+                                } else {
+                                    icon.classList.remove('fas', 'fa-heart', 'text-red-600');
+                                    icon.classList.add('far', 'fa-heart');
+                                    this.classList.remove('bg-red-100', 'text-red-600');
+                                    this.classList.add('bg-gray-100', 'text-gray-600');
+                                    this.title = 'Ajouter aux favoris';
+                                    showNotification('Produit retiré des favoris', 'info');
+                                    
+                                    window.userFavorites = window.userFavorites.filter(id => id !== productId);
+                                }
+                            } else {
+                                showNotification('Erreur: ' + data.message, 'error');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Erreur:', error);
+                            showNotification('Une erreur est survenue', 'error');
+                        })
+                        .finally(() => {
+                            this.disabled = false;
+                        });
+                    });
+                });
+            }
         });
     </script>
-    <script src="js/categories-adapted.js"></script>
 </body>
 </html>

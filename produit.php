@@ -1,5 +1,5 @@
 <?php
-// Démarrer la session
+// Fichier produit.php corrigé - Version sans JavaScript inline
 session_start();
 
 // Connexion à la base de données
@@ -86,18 +86,16 @@ try {
     
     // Vérifier si le produit est dans les favoris de l'utilisateur connecté
     $isFavorite = false;
-    if (isset($_SESSION['client_id'])) {
+    if (isset($_SESSION['user_id'])) {
         $stmtFavorite = $pdo->prepare("SELECT COUNT(*) FROM favoris WHERE IdClient = ? AND IdProduit = ?");
-        $stmtFavorite->execute([$_SESSION['client_id'], $productId]);
+        $stmtFavorite->execute([$_SESSION['user_id'], $productId]);
         $isFavorite = $stmtFavorite->fetchColumn() > 0;
     }
     
 } catch (PDOException $e) {
     $error = "Une erreur est survenue lors du chargement du produit: " . $e->getMessage();
+    error_log("Erreur produit.php: " . $e->getMessage());
 }
-
-// Debug : afficher les informations de session (à supprimer en production)
-// echo "<!-- Debug Session: " . print_r($_SESSION, true) . " -->";
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -109,8 +107,22 @@ try {
     <link href="https://unpkg.com/boxicons@2.1.2/css/boxicons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="tailwind.config.js"></script>
+        <script src="tailwind.config.js"></script>
+
     <link rel="stylesheet" href="css/style.css">
+    <script>
+        // Variables globales pour JavaScript
+        window.productData = {
+            id: <?php echo $product['IdProduit']; ?>,
+            stock: <?php echo $product['Stock']; ?>,
+            isFavorite: <?php echo $isFavorite ? 'true' : 'false'; ?>
+        };
+        
+        window.sessionData = {
+            isLoggedIn: <?php echo isset($_SESSION['user_id']) ? 'true' : 'false'; ?>,
+            clientId: <?php echo isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 'null'; ?>
+        };
+    </script>
 </head>
 <body class="font-cormorant bg-background m-0 p-0 box-border">
     <!-- HEADER -->
@@ -129,7 +141,7 @@ try {
             <!-- Breadcrumb -->
             <nav class="mb-8">
                 <ol class="flex items-center space-x-2 text-sm text-gray-600">
-                    <li><a href="index.html" class="hover:text-accent">Accueil</a></li>
+                    <li><a href="index.php" class="hover:text-accent">Accueil</a></li>
                     <li><i class='bx bx-chevron-right'></i></li>
                     <li><a href="categories.php" class="hover:text-accent">Catégories</a></li>
                     <li><i class='bx bx-chevron-right'></i></li>
@@ -146,7 +158,7 @@ try {
                 <div class="space-y-4">
                     <!-- Image principale -->
                     <div class="aspect-square overflow-hidden rounded-xl bg-white shadow-lg">
-                        <img id="main-image" 
+                        <img id="main-product-image" 
                              src="<?php echo htmlspecialchars($processedImages[0]); ?>" 
                              alt="<?php echo htmlspecialchars($product['NomProduit']); ?>" 
                              class="w-full h-full object-cover"
@@ -157,13 +169,13 @@ try {
                     <?php if (count($processedImages) > 1): ?>
                     <div class="flex gap-2 overflow-x-auto">
                         <?php foreach ($processedImages as $index => $image): ?>
-                        <button onclick="changeMainImage('<?php echo htmlspecialchars($image); ?>')" 
-                                class="thumbnail flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 border-transparent hover:border-accent transition-colors <?php echo $index === 0 ? 'border-accent' : ''; ?>">
+                        <div class="thumbnail-item flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 border-transparent hover:border-accent transition-colors <?php echo $index === 0 ? 'border-accent' : ''; ?> cursor-pointer">
                             <img src="<?php echo htmlspecialchars($image); ?>" 
                                  alt="<?php echo htmlspecialchars($product['NomProduit']); ?>" 
                                  class="w-full h-full object-cover"
+                                 data-full-image="<?php echo htmlspecialchars($image); ?>"
                                  onerror="this.src='images/placeholder.jpeg'">
-                        </button>
+                        </div>
                         <?php endforeach; ?>
                     </div>
                     <?php endif; ?>
@@ -208,12 +220,12 @@ try {
                         <div class="flex items-center gap-4">
                             <label for="quantity" class="text-lg font-medium text-textColor">Quantité:</label>
                             <div class="flex items-center border border-gray-300 rounded-lg">
-                                <button type="button" onclick="decreaseQuantity()" class="px-3 py-2 hover:bg-gray-100 transition-colors">
+                                <button type="button" id="decrease-quantity" class="px-3 py-2 hover:bg-gray-100 transition-colors">
                                     <i class='bx bx-minus'></i>
                                 </button>
                                 <input type="number" id="quantity" value="1" min="1" max="<?php echo $product['Stock']; ?>" 
                                        class="w-16 text-center border-0 focus:outline-none">
-                                <button type="button" onclick="increaseQuantity()" class="px-3 py-2 hover:bg-gray-100 transition-colors">
+                                <button type="button" id="increase-quantity" class="px-3 py-2 hover:bg-gray-100 transition-colors">
                                     <i class='bx bx-plus'></i>
                                 </button>
                             </div>
@@ -223,7 +235,7 @@ try {
                         <!-- Boutons d'action -->
                         <div class="flex flex-col sm:flex-row gap-4">
                             <?php if ($product['Stock'] > 0): ?>
-                            <button onclick="addToCart()" 
+                            <button id="add-to-cart-btn" 
                                     class="flex-1 px-6 py-3 bg-accent text-white rounded-full hover:bg-accent/80 transition-colors text-lg font-medium flex items-center justify-center gap-2">
                                 <i class='bx bx-cart-add'></i> Ajouter au panier
                             </button>
@@ -234,16 +246,14 @@ try {
                             </button>
                             <?php endif; ?>
                             
-                            <button onclick="toggleFavorite(<?php echo $product['IdProduit']; ?>)" 
+                            <button id="favorite-btn" 
                                     class="px-6 py-3 <?php echo $isFavorite ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600'; ?> rounded-full hover:bg-red-100 hover:text-red-600 transition-colors text-lg font-medium flex items-center justify-center gap-2"
                                     title="<?php echo $isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'; ?>"
                                     data-product-id="<?php echo $product['IdProduit']; ?>">
-                                <i class='<?php echo $isFavorite ? 'bxs-heart' : 'bx-heart'; ?>'></i> Favoris
+                                <i class="<?php echo $isFavorite ? 'fas fa-heart text-red-600' : 'far fa-heart'; ?>"></i> Favoris
                             </button>
                         </div>
                     </div>
-
-                  
                 </div>
             </div>
 
@@ -254,7 +264,7 @@ try {
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                     <?php foreach ($similarProducts as $similarProduct): ?>
                     <div class="bg-white rounded-xl overflow-hidden shadow-md transition-transform hover:-translate-y-1">
-                        <a href="product.php?id=<?php echo $similarProduct['IdProduit']; ?>" class="block">
+                        <a href="produit.php?id=<?php echo $similarProduct['IdProduit']; ?>" class="block">
                             <div class="h-48 overflow-hidden">
                                 <img src="<?php echo htmlspecialchars($similarProduct['image']); ?>" 
                                      alt="<?php echo htmlspecialchars($similarProduct['NomProduit']); ?>" 
@@ -284,132 +294,8 @@ try {
     <!-- FOOTER -->
     <?php include 'footer.php'; ?>
 
+    <!-- Scripts -->
     <script src="js/script.js"></script>
-    <script>
-        // Variables globales pour le debug
-        const isLoggedIn = <?php echo isset($_SESSION['client_id']) ? 'true' : 'false'; ?>;
-        const clientId = <?php echo isset($_SESSION['client_id']) ? $_SESSION['client_id'] : 'null'; ?>;
-        
-        // Ajouter après les variables existantes isLoggedIn et clientId
-        // Données de session pour JavaScript (comme dans categories.php)
-        window.sessionData = {
-            isLoggedIn: <?php echo isset($_SESSION['client_id']) ? 'true' : 'false'; ?>,
-            clientId: <?php echo isset($_SESSION['client_id']) ? $_SESSION['client_id'] : 'null'; ?>
-        };
-
-        console.log('Données de session:', window.sessionData);
-        
-        console.log('État de connexion:', isLoggedIn);
-        console.log('ID client:', clientId);
-
-        // Changer l'image principale
-        function changeMainImage(imageSrc) {
-            document.getElementById('main-image').src = imageSrc;
-            
-            // Mettre à jour les bordures des miniatures
-            document.querySelectorAll('.thumbnail').forEach(thumb => {
-                thumb.classList.remove('border-accent');
-                thumb.classList.add('border-transparent');
-            });
-            
-            // Ajouter la bordure à la miniature sélectionnée
-            event.target.closest('.thumbnail').classList.remove('border-transparent');
-            event.target.closest('.thumbnail').classList.add('border-accent');
-        }
-
-        // Gestion de la quantité
-        function increaseQuantity() {
-            const input = document.getElementById('quantity');
-            const max = parseInt(input.getAttribute('max'));
-            const current = parseInt(input.value);
-            if (current < max) {
-                input.value = current + 1;
-            }
-        }
-
-        function decreaseQuantity() {
-            const input = document.getElementById('quantity');
-            const current = parseInt(input.value);
-            if (current > 1) {
-                input.value = current - 1;
-            }
-        }
-
-        // Ajouter au panier
-        function addToCart() {
-            const quantity = document.getElementById('quantity').value;
-            const productId = <?php echo $product['IdProduit']; ?>;
-            
-            window.location.href = `php/cart_actions.php?action=ajouter&produitId=${productId}&quantite=${quantity}`;
-        }
-
-        // Remplacer la fonction toggleFavorite existante par :
-        function toggleFavorite(productId) {
-            console.log('toggleFavorite appelé pour produit:', productId);
-            console.log('Utilisateur connecté:', window.sessionData.isLoggedIn);
-            
-            const button = document.querySelector(`[data-product-id="${productId}"]`);
-            const icon = button.querySelector('i');
-            
-            if (!window.sessionData.isLoggedIn) {
-                alert('Veuillez vous connecter pour ajouter des produits aux favoris');
-                window.location.href = 'connexion.html';
-                return;
-            }
-            
-            // Désactiver le bouton temporairement
-            button.disabled = true;
-            
-            fetch('php/favorites_actions.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `action=toggle&produitId=${productId}`
-            })
-            .then(response => {
-                console.log('Réponse reçue:', response);
-                return response.json();
-            })
-            .then(data => {
-                console.log('Données reçues:', data);
-                if (data.success) {
-                    if (data.action === 'added') {
-                        icon.classList.remove('bx-heart');
-                        icon.classList.add('bxs-heart');
-                        button.classList.remove('bg-gray-100', 'text-gray-600');
-                        button.classList.add('bg-red-100', 'text-red-600');
-                        button.title = 'Retirer des favoris';
-                    } else {
-                        icon.classList.remove('bxs-heart');
-                        icon.classList.add('bx-heart');
-                        button.classList.remove('bg-red-100', 'text-red-600');
-                        button.classList.add('bg-gray-100', 'text-gray-600');
-                        button.title = 'Ajouter aux favoris';
-                    }
-                } else {
-                    alert('Erreur: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Erreur:', error);
-                alert('Une erreur est survenue');
-            })
-            .finally(() => {
-                // Réactiver le bouton
-                button.disabled = false;
-            });
-        }
-
-        // Validation de la quantité
-        document.getElementById('quantity').addEventListener('input', function() {
-            const max = parseInt(this.getAttribute('max'));
-            const min = parseInt(this.getAttribute('min'));
-            let value = parseInt(this.value);
-            
-            if (value > max) this.value = max;
-            if (value < min) this.value = min;
-        });
-    </script>
+    <script src="js/product.js"></script>
 </body>
 </html>

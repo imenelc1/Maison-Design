@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['email'] = $user['Email'];
             $_SESSION['role'] = 'admin';
 
-            header('Location: ../admin.html');
+            header('Location: ../admin.php');
             exit();
         } else {
             // verifier dans la table client 

@@ -1,6 +1,6 @@
 /**
- * Script pour la page client
- * Gère les onglets et les fonctionnalités du tableau de bord avec récupération des données BDD
+ * Script pour la page client - VERSION COMPLÈTE SANS TOUCHER AUX FAVORIS
+ * Gère les onglets et les fonctionnalités du tableau de bord
  */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -11,6 +11,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Charger les données client au démarrage
   loadClientData()
+
+  // Initialiser les gestionnaires d'événements pour les favoris
+  initFavoritesHandlers()
+
+  // Initialiser les autres gestionnaires d'événements
+  initEventHandlers()
 })
 
 // Variable globale pour stocker les données client
@@ -23,26 +29,40 @@ async function loadClientData() {
   try {
     showLoading()
 
+    console.log("Chargement des données client...")
     const response = await fetch("php/get_client_data.php", {
       method: "GET",
       credentials: "include",
       headers: {
         "Content-Type": "application/json",
+        "X-Requested-With": "XMLHttpRequest",
       },
     })
+
+    console.log("Statut de la réponse:", response.status)
 
     if (!response.ok) {
       throw new Error(`Erreur HTTP: ${response.status}`)
     }
 
+    const contentType = response.headers.get("content-type")
+    console.log("Type de contenu:", contentType)
+
+    if (!contentType || !contentType.includes("application/json")) {
+      const text = await response.text()
+      console.error("Réponse non-JSON reçue:", text)
+      throw new Error("Le serveur n'a pas retourné de JSON valide")
+    }
+
     const data = await response.json()
+    console.log("Données reçues:", data)
 
     if (data.error) {
       if (data.error === "not_authenticated") {
         window.location.href = "connexion.php"
         return
       }
-      throw new Error(data.error)
+      throw new Error(data.message || data.error)
     }
 
     clientData = data
@@ -52,7 +72,10 @@ async function loadClientData() {
     updateActiveTabContent()
   } catch (error) {
     console.error("Erreur lors du chargement des données:", error)
-    showError("Erreur lors du chargement de vos données: " + error.message)
+    // Ne pas afficher l'erreur si on utilise le HTML statique
+    if (!document.querySelector(".product-card")) {
+      showError("Erreur lors du chargement de vos données: " + error.message)
+    }
   } finally {
     hideLoading()
   }
@@ -69,9 +92,11 @@ function showLoading() {
     </div>
   `
 
-  // Afficher le loading dans tous les onglets
+  // Afficher le loading dans tous les onglets (sauf si contenu statique existe)
   document.querySelectorAll(".tab-pane").forEach((pane) => {
-    pane.innerHTML = loadingHTML
+    if (!pane.querySelector(".product-card") && !pane.querySelector("form")) {
+      pane.innerHTML = loadingHTML
+    }
   })
 }
 
@@ -101,7 +126,9 @@ function showError(message) {
   `
 
   document.querySelectorAll(".tab-pane").forEach((pane) => {
-    pane.innerHTML = errorHTML
+    if (!pane.querySelector(".product-card") && !pane.querySelector("form")) {
+      pane.innerHTML = errorHTML
+    }
   })
 }
 
@@ -301,6 +328,7 @@ async function handleProfileSubmit(e) {
       credentials: "include",
       headers: {
         "Content-Type": "application/json",
+        "X-Requested-With": "XMLHttpRequest",
       },
       body: JSON.stringify(profileData),
     })
@@ -337,7 +365,7 @@ async function handleProfileSubmit(e) {
  * Met à jour l'onglet commandes
  */
 function updateOrdersTab() {
-  const commandes = clientData.commandes
+  const commandes = clientData.commandes || []
 
   let ordersHTML = `
     <div class="bg-white rounded-xl shadow-md overflow-hidden p-6">
@@ -382,7 +410,7 @@ function updateOrdersTab() {
               .map(
                 (produit) => `
               <div class="flex items-center gap-2">
-                <img src="${produit.image}" alt="${produit.nom}" class="w-10 h-10 object-cover rounded" onerror="this.src='images/placeholder.jpeg'">
+                <img src="${produit.image || "images/placeholder.jpeg"}" alt="${produit.nom}" class="w-10 h-10 object-cover rounded" onerror="this.src='images/placeholder.jpeg'">
                 <div class="flex-1">
                   <p class="text-sm">${produit.nom}</p>
                   <p class="text-xs text-gray-500">Qté: ${produit.quantite} × ${produit.prix_unitaire} DA</p>
@@ -407,7 +435,7 @@ function updateOrdersTab() {
  * Met à jour l'onglet adresses
  */
 function updateAddressesTab() {
-  const adresses = clientData.adresses
+  const adresses = clientData.adresses || []
 
   let addressesHTML = `
     <div class="bg-white rounded-xl shadow-md overflow-hidden p-6">
@@ -475,89 +503,438 @@ function updateAddressesTab() {
 }
 
 /**
- * Met à jour l'onglet favoris
+ * Met à jour l'onglet favoris avec les données dynamiques
  */
-function updateWishlistTab() {
-  const favoris = clientData.favoris
+async function updateWishlistTab() {
+  try {
+    console.log("Chargement des favoris...")
 
-  let wishlistHTML = `
-    <div class="bg-white rounded-xl shadow-md overflow-hidden p-6">
-      <h2 class="text-2xl text-accent mb-6">Mes favoris (${favoris.length})</h2>
-  `
-
-  if (favoris.length === 0) {
-    wishlistHTML += `
-      <div class="text-center py-12">
-        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
-          <i class='bx bx-heart text-3xl text-gray-400'></i>
-        </div>
-        <p class="text-gray-500 mb-4">Vous n'avez pas encore ajouté de produits à vos favoris.</p>
-        <a href="categories.php" class="inline-block px-4 py-2 bg-accent text-white rounded-full hover:bg-accent/80 transition-colors">
-          <i class='bx bx-shopping-bag mr-1'></i> Découvrir nos produits
-        </a>
-      </div>
-    `
-  } else {
-    wishlistHTML += '<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">'
-
-    favoris.forEach((produit) => {
-      wishlistHTML += `
-        <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 hover:shadow-md transition-shadow">
-          <div class="relative h-48">
-            <img src="${produit.image}" alt="${produit.nom}" class="w-full h-full object-cover" onerror="this.src='images/placeholder.jpeg'">
-            <button onclick="removeFavorite(${produit.id})" class="absolute top-2 right-2 w-8 h-8 bg-white/80 rounded-full flex items-center justify-center text-red-500 hover:bg-white hover:text-red-600 transition-colors">
-              ×
-            </button>
-          </div>
-          <div class="p-4">
-            <h3 class="font-medium text-lg mb-1">${produit.nom}</h3>
-            <p class="text-accent font-medium mb-4">${produit.prix.toFixed(2)} DA</p>
-            ${produit.description ? `<p class="text-gray-500 text-sm mb-4 line-clamp-2">${produit.description}</p>` : ""}
-            <div class="flex justify-between">
-              <button class="px-3 py-1 text-sm border border-gray-300 rounded-full hover:bg-gray-50 transition-colors">
-                Voir détails
-              </button>
-              <button class="px-3 py-1 text-sm bg-accent text-white rounded-full hover:bg-accent/90 transition-colors">
-                Ajouter au panier
-              </button>
-            </div>
-          </div>
-        </div>
-      `
+    const response = await fetch("php/get_favoris.php", {
+      method: "GET",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Requested-With": "XMLHttpRequest",
+      },
     })
 
-    wishlistHTML += "</div>"
-  }
+    if (!response.ok) {
+      throw new Error(`Erreur HTTP: ${response.status}`)
+    }
 
-  wishlistHTML += "</div>"
-  document.getElementById("wishlist-tab").innerHTML = wishlistHTML
+    const data = await response.json()
+    console.log("Favoris reçus:", data)
+
+    if (data.error) {
+      if (data.error === "not_authenticated") {
+        window.location.href = "connexion.php"
+        return
+      }
+      throw new Error(data.message || data.error)
+    }
+
+    const favoris = data.favoris || []
+    const count = data.count || 0
+
+    let wishlistHTML = `
+      <div class="bg-white rounded-xl shadow-md overflow-hidden p-6">
+        <div class="flex justify-between items-center mb-6">
+          <div>
+            <h2 class="text-2xl text-accent">Mes Favoris</h2>
+            <p class="text-textColor/70">${count} produit${count > 1 ? "s" : ""} dans vos favoris</p>
+          </div>
+          ${
+            count > 0
+              ? `
+            <button id="clear-all-favorites" class="px-4 py-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors flex items-center">
+              <i class='bx bx-trash mr-1'></i> Vider les favoris
+            </button>
+          `
+              : ""
+          }
+        </div>
+    `
+
+    if (count === 0) {
+      wishlistHTML += `
+        <div class="text-center py-12">
+          <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+            <i class='bx bx-heart text-3xl text-gray-400'></i>
+          </div>
+          <h3 class="text-xl font-semibold text-textColor mb-2">Aucun favori pour le moment</h3>
+          <p class="text-textColor/70 mb-6">Découvrez nos produits et ajoutez vos coups de cœur à vos favoris</p>
+          <a href="categories.php" class="inline-block px-4 py-2 bg-accent text-white rounded-full hover:bg-accent/80 transition-colors">
+            <i class='bx bx-shopping-bag mr-1'></i> Découvrir nos produits
+          </a>
+        </div>
+      `
+    } else {
+      wishlistHTML += '<div id="favorites-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">'
+
+      favoris.forEach((produit) => {
+        wishlistHTML += `
+          <div class="product-card bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow" data-product-id="${produit.IdProduit}">
+            <div class="relative">
+              <img src="${produit.image}" alt="${produit.NomProduit}" class="w-full h-48 object-cover" onerror="this.src='images/placeholder.jpeg'">
+              <button class="favorite-btn absolute top-2 right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md hover:shadow-lg transition-shadow" data-product-id="${produit.IdProduit}">
+                <i class='bx bxs-heart text-red-500'></i>
+              </button>
+            </div>
+            <div class="p-4">
+              <h3 class="font-semibold text-textColor mb-2">${produit.NomProduit}</h3>
+              <p class="text-textColor/70 text-sm mb-3 line-clamp-2">${produit.Description}</p>
+              <div class="flex justify-between items-center mb-3">
+                <span class="text-xl font-bold text-accent">${produit.Prix} DA</span>
+                <span class="text-sm text-gray-500">Stock: ${produit.Stock}</span>
+              </div>
+              <div class="flex gap-2">
+                <button onclick="addToCart(${produit.IdProduit})" class="flex-1 bg-accent text-white py-2 px-4 rounded-lg hover:bg-accent/90 transition-colors flex items-center justify-center">
+                  <i class='bx bx-cart mr-1'></i> Ajouter au panier
+                </button>
+                <button class="remove-favorite-btn px-3 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors" data-product-id="${produit.IdProduit}">
+                  <i class='bx bx-trash'></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        `
+      })
+
+      wishlistHTML += "</div>"
+    }
+
+    wishlistHTML += "</div>"
+    document.getElementById("wishlist-tab").innerHTML = wishlistHTML
+
+    // Réinitialiser les gestionnaires d'événements
+    initFavoritesHandlers()
+  } catch (error) {
+    console.error("Erreur lors du chargement des favoris:", error)
+    document.getElementById("wishlist-tab").innerHTML = `
+      <div class="bg-white rounded-xl shadow-md overflow-hidden p-6">
+        <div class="text-center py-12">
+          <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 mb-4">
+            <i class='bx bx-error text-3xl text-red-500'></i>
+          </div>
+          <p class="text-red-600 mb-4">Erreur lors du chargement des favoris: ${error.message}</p>
+          <button onclick="updateWishlistTab()" class="px-4 py-2 bg-accent text-white rounded-full hover:bg-accent/90 transition-colors">
+            Réessayer
+          </button>
+        </div>
+      </div>
+    `
+  }
 }
 
 /**
- * Supprime un produit des favoris
+ * Initialise les gestionnaires d'événements pour les favoris
  */
-async function removeFavorite(productId) {
+function initFavoritesHandlers() {
+  // Boutons de suppression individuelle des favoris
+  document.querySelectorAll(".remove-favorite-btn").forEach((button) => {
+    button.addEventListener("click", function () {
+      const productId = this.getAttribute("data-product-id")
+      removeFavorite(productId)
+    })
+  })
+
+  // Boutons favoris (cœur rouge)
+  document.querySelectorAll(".favorite-btn").forEach((button) => {
+    button.addEventListener("click", function () {
+      const productId = this.getAttribute("data-product-id")
+      removeFavorite(productId)
+    })
+  })
+
+  // Bouton vider tous les favoris
+  const clearAllBtn = document.getElementById("clear-all-favorites")
+  if (clearAllBtn) {
+    clearAllBtn.addEventListener("click", () => {
+      clearAllFavorites()
+    })
+  }
+}
+
+/**
+ * Initialise les autres gestionnaires d'événements
+ */
+function initEventHandlers() {
+  // Gestionnaire pour les boutons d'ajout au panier (si présents)
+  document.querySelectorAll('[onclick*="addToCart"]').forEach((button) => {
+    const onclickAttr = button.getAttribute("onclick")
+    if (onclickAttr) {
+      const productIdMatch = onclickAttr.match(/addToCart$$(\d+)$$/)
+      if (productIdMatch) {
+        const productId = productIdMatch[1]
+        button.removeAttribute("onclick")
+        button.addEventListener("click", () => addToCart(productId))
+      }
+    }
+  })
+}
+
+/**
+ * Fonction pour ajouter un produit au panier
+ */
+function addToCart(productId) {
+  console.log(`Ajout du produit ${productId} au panier`)
+
+  fetch("php/cart_actions.php", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      "X-Requested-With": "XMLHttpRequest",
+    },
+    body: `action=ajouter&produitId=${productId}&quantite=1`,
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.success) {
+        showNotification("Produit ajouté au panier !", "success")
+        // Optionnel : mettre à jour le compteur du panier
+        updateCartCounter()
+      } else {
+        showNotification(data.message || "Erreur lors de l'ajout au panier", "error")
+      }
+    })
+    .catch((error) => {
+      console.error("Erreur:", error)
+      showNotification("Une erreur est survenue lors de l'ajout au panier", "error")
+    })
+}
+
+/**
+ * Fonction pour retirer un produit des favoris
+ */
+function removeFavorite(productId) {
   if (!confirm("Êtes-vous sûr de vouloir retirer ce produit de vos favoris ?")) {
     return
   }
 
-  try {
-    const response = await fetch(`php/remove_favorite.php?id=${productId}`, {
-      method: "GET",
-      credentials: "include",
-    })
+  console.log(`Suppression du produit ${productId} des favoris`)
 
-    if (response.ok) {
-      // Recharger les données et mettre à jour l'affichage
-      await loadClientData()
-      showNotification("Produit retiré des favoris", "success")
-    } else {
-      throw new Error("Erreur lors de la suppression")
-    }
-  } catch (error) {
-    console.error("Erreur:", error)
-    showNotification("Erreur lors de la suppression du favori", "error")
+  // Afficher un indicateur de chargement sur le bouton
+  const buttons = document.querySelectorAll(`[data-product-id="${productId}"]`)
+  buttons.forEach((btn) => {
+    btn.disabled = true
+    const originalContent = btn.innerHTML
+    btn.innerHTML = '<i class="bx bx-loader-alt animate-spin"></i>'
+    btn.setAttribute("data-original-content", originalContent)
+  })
+
+  fetch("php/favorites_actions.php", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: `action=toggle&produitId=${productId}`,
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.success) {
+        // Supprimer la carte du produit de l'affichage
+        const productCard = document.querySelector(`.product-card[data-product-id="${productId}"]`)
+        if (productCard) {
+          productCard.style.transition = "all 0.3s ease"
+          productCard.style.opacity = "0"
+          productCard.style.transform = "scale(0.8)"
+
+          setTimeout(() => {
+            productCard.remove()
+            updateFavoritesCount()
+            checkEmptyFavorites()
+          }, 300)
+        }
+
+        showNotification("Produit retiré des favoris", "success")
+      } else {
+        // Restaurer les boutons en cas d'erreur
+        buttons.forEach((btn) => {
+          btn.disabled = false
+          btn.innerHTML = btn.getAttribute("data-original-content") || btn.innerHTML
+        })
+        showNotification("Erreur: " + data.message, "error")
+      }
+    })
+    .catch((error) => {
+      console.error("Erreur:", error)
+      // Restaurer les boutons en cas d'erreur
+      buttons.forEach((btn) => {
+        btn.disabled = false
+        btn.innerHTML = btn.getAttribute("data-original-content") || btn.innerHTML
+      })
+      showNotification("Erreur lors de la suppression du favori", "error")
+    })
+}
+
+/**
+ * Fonction pour vider tous les favoris
+ */
+function clearAllFavorites() {
+  if (!confirm("Êtes-vous sûr de vouloir vider tous vos favoris ?")) {
+    return
   }
+
+  const productCards = document.querySelectorAll(".product-card[data-product-id]")
+  const productIds = Array.from(productCards).map((card) => card.getAttribute("data-product-id"))
+
+  if (productIds.length === 0) {
+    showNotification("Aucun favori à supprimer", "info")
+    return
+  }
+
+  // Désactiver le bouton pendant l'opération
+  const clearAllBtn = document.getElementById("clear-all-favorites")
+  if (clearAllBtn) {
+    clearAllBtn.disabled = true
+    clearAllBtn.innerHTML = '<i class="bx bx-loader-alt animate-spin mr-1"></i> Suppression...'
+  }
+
+  // Supprimer tous les favoris
+  Promise.all(
+    productIds.map((id) =>
+      fetch("php/favorites_actions.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: `action=toggle&produitId=${id}`,
+      }),
+    ),
+  )
+    .then((responses) => Promise.all(responses.map((r) => r.json())))
+    .then((results) => {
+      const successCount = results.filter((r) => r.success).length
+      const errorCount = results.length - successCount
+
+      if (successCount > 0) {
+        // Recharger la page pour mettre à jour l'affichage
+        location.reload()
+      }
+
+      if (errorCount > 0) {
+        showNotification(`${successCount} favoris supprimés, ${errorCount} erreurs`, "warning")
+      } else {
+        showNotification("Tous les favoris ont été supprimés", "success")
+      }
+    })
+    .catch((error) => {
+      console.error("Erreur:", error)
+      showNotification("Erreur lors de la suppression des favoris", "error")
+
+      // Restaurer le bouton
+      if (clearAllBtn) {
+        clearAllBtn.disabled = false
+        clearAllBtn.innerHTML = '<i class="bx bx-trash mr-1"></i> Vider les favoris'
+      }
+    })
+}
+
+/**
+ * Met à jour le compteur de favoris dans l'onglet
+ */
+function updateFavoritesCount() {
+  const remainingCards = document.querySelectorAll(".product-card[data-product-id]")
+  const count = remainingCards.length
+
+  // Mettre à jour le badge de compteur dans l'onglet
+  const wishlistTab = document.querySelector('[data-tab="wishlist"]')
+  if (wishlistTab) {
+    const badge = wishlistTab.querySelector(".bg-white.text-accent")
+    if (badge) {
+      if (count > 0) {
+        badge.textContent = count
+      } else {
+        badge.remove()
+      }
+    }
+  }
+
+  // Mettre à jour le titre de la section
+  const favoritesTitle = document.querySelector("#wishlist-tab h2")
+  if (favoritesTitle) {
+    favoritesTitle.textContent = `Mes Favoris`
+  }
+
+  const favoritesSubtitle = document.querySelector("#wishlist-tab .text-textColor\\/70")
+  if (favoritesSubtitle) {
+    favoritesSubtitle.textContent = `${count} produit${count > 1 ? "s" : ""} dans vos favoris`
+  }
+}
+
+/**
+ * Vérifie si la liste des favoris est vide et affiche le message approprié
+ */
+function checkEmptyFavorites() {
+  const remainingCards = document.querySelectorAll(".product-card[data-product-id]")
+  const favoritesContainer = document.getElementById("favorites-container")
+
+  if (remainingCards.length === 0 && favoritesContainer) {
+    favoritesContainer.innerHTML = `
+      <div class="bg-white rounded-xl shadow-md overflow-hidden p-6">
+        <div class="text-center py-12">
+          <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+            <i class='bx bx-heart text-3xl text-gray-400'></i>
+          </div>
+          <h3 class="text-xl font-semibold text-textColor mb-2">Aucun favori pour le moment</h3>
+          <p class="text-textColor/70 mb-6">Découvrez nos produits et ajoutez vos coups de cœur à vos favoris</p>
+          <a href="categories.php" class="inline-block px-4 py-2 bg-accent text-white rounded-full hover:bg-accent/80 transition-colors">
+            <i class='bx bx-shopping-bag mr-1'></i> Découvrir nos produits
+          </a>
+        </div>
+      </div>
+    `
+
+    // Masquer le bouton "Vider les favoris"
+    const clearAllBtn = document.getElementById("clear-all-favorites")
+    if (clearAllBtn) {
+      clearAllBtn.style.display = "none"
+    }
+  }
+}
+
+/**
+ * Met à jour le compteur du panier (optionnel)
+ */
+function updateCartCounter() {
+  fetch("php/get_cart_count.php")
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.success) {
+        // Chercher tous les éléments possibles du compteur panier
+        const cartCounters = document.querySelectorAll(".cart-counter, .cart-count, #cart-count, [data-cart-count]")
+        const cartBadges = document.querySelectorAll(".cart-badge, .badge, .notification-badge")
+
+        // Mettre à jour tous les compteurs trouvés
+        cartCounters.forEach((counter) => {
+          counter.textContent = data.count
+          if (data.count > 0) {
+            counter.style.display = "inline-block"
+            counter.classList.remove("hidden")
+          } else {
+            counter.style.display = "none"
+            counter.classList.add("hidden")
+          }
+        })
+
+        // Mettre à jour les badges aussi
+        cartBadges.forEach((badge) => {
+          badge.textContent = data.count
+          if (data.count > 0) {
+            badge.style.display = "inline-block"
+            badge.classList.remove("hidden")
+          } else {
+            badge.style.display = "none"
+            badge.classList.add("hidden")
+          }
+        })
+
+        console.log(`Compteur panier mis à jour: ${data.count}`)
+      }
+    })
+    .catch((error) => {
+      console.error("Erreur lors de la mise à jour du compteur panier:", error)
+    })
 }
 
 /**
@@ -570,27 +947,33 @@ function formatDate(dateString) {
 }
 
 function getStatusClass(status) {
-  switch (status.toLowerCase()) {
-    case "livré":
-    case "livre":
-      return "bg-green-100 text-green-800"
+  switch (status?.toLowerCase()) {
+    case "en attente":
+      return "bg-yellow-100 text-yellow-800"
     case "expédié":
     case "expedie":
       return "bg-blue-100 text-blue-800"
-    case "en cours":
-      return "bg-yellow-100 text-yellow-800"
+    case "livré":
+    case "livre":
+      return "bg-green-100 text-green-800"
+    case "annulé":
+    case "annule":
+      return "bg-red-100 text-red-800"
     default:
       return "bg-gray-100 text-gray-800"
   }
 }
 
+/**
+ * Fonction pour afficher les notifications
+ */
 function showNotification(message, type = "success") {
   // Créer le conteneur de notifications s'il n'existe pas
-  let container = document.getElementById("notifications-container")
+  let container = document.getElementById("notification-container")
   if (!container) {
     container = document.createElement("div")
-    container.id = "notifications-container"
-    container.className = "fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm"
+    container.id = "notification-container"
+    container.className = "fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-sm"
     document.body.appendChild(container)
   }
 
@@ -603,6 +986,16 @@ function showNotification(message, type = "success") {
       bgColor = "bg-red-500"
       textColor = "text-white"
       icon = "❌"
+      break
+    case "warning":
+      bgColor = "bg-yellow-500"
+      textColor = "text-white"
+      icon = "⚠️"
+      break
+    case "info":
+      bgColor = "bg-blue-500"
+      textColor = "text-white"
+      icon = "ℹ️"
       break
     case "success":
     default:
@@ -691,6 +1084,9 @@ function initTabs() {
         // Mettre à jour le contenu de l'onglet si les données sont chargées
         if (clientData) {
           updateActiveTabContent()
+        } else if (tabId === "wishlist") {
+          // Charger les favoris même sans clientData
+          updateWishlistTab()
         }
       } else {
         console.error(`Contenu d'onglet non trouvé: ${tabId}-tab`)
@@ -750,5 +1146,29 @@ window.addEventListener("popstate", (event) => {
 
 // Rendre les fonctions accessibles globalement
 window.removeFavorite = removeFavorite
+window.addToCart = addToCart
 window.editProfile = editProfile
 window.cancelEditProfile = cancelEditProfile
+window.updateWishlistTab = updateWishlistTab
+
+/**
+ * Force le rechargement des favoris (appelé depuis d'autres pages)
+ */
+window.refreshFavorites = () => {
+  if (
+    document.getElementById("wishlist-tab") &&
+    !document.getElementById("wishlist-tab").classList.contains("hidden")
+  ) {
+    updateWishlistTab()
+  }
+}
+
+// Écouter les changements de focus de la fenêtre pour recharger les favoris
+window.addEventListener("focus", () => {
+  const activeTab = document.querySelector(".tab-pane:not(.hidden)")
+  if (activeTab && activeTab.id === "wishlist-tab") {
+    updateWishlistTab()
+  }
+})
+
+console.log("Script client.js complet chargé avec succès")
