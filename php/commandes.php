@@ -104,7 +104,7 @@ function getOrderDetails() {
             return;
         }
         
-        // Récupérer les détails de la commande
+        // Récupérer les détails de la commande - CORRECTION ICI
         $sql = "SELECT p.NomProduit as produit, pa.Qtt as quantite, 
                 p.Prix as prix, (pa.Qtt * p.Prix) as total
                 FROM panier pa
@@ -115,9 +115,22 @@ function getOrderDetails() {
         $stmt->execute([':order_id' => $orderId]);
         $details = $stmt->fetchAll();
         
+        // Récupérer les infos de base de la commande
+        $orderSql = "SELECT c.IdCommande, CONCAT(cl.PrenomClient, ' ', cl.NomClient) as client, 
+                    DATE_FORMAT(c.DateCommande, '%Y-%m-%d') as date, c.Status as statut, 
+                    c.TotalPrix as total
+                    FROM commande c
+                    JOIN client cl ON c.IdClient = cl.IdClient
+                    WHERE c.IdCommande = :order_id";
+        
+        $orderStmt = $pdo->prepare($orderSql);
+        $orderStmt->execute([':order_id' => $orderId]);
+        $orderInfo = $orderStmt->fetch();
+        
         echo json_encode([
             'success' => true,
-            'data' => $details
+            'data' => $details,
+            'orderInfo' => $orderInfo
         ]);
         
     } catch(PDOException $e) {

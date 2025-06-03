@@ -21,7 +21,6 @@ switch($method) {
         echo json_encode(['error' => 'Méthode non autorisée']);
         break;
 }
-
 function getProducts() {
     global $pdo;
     
@@ -32,38 +31,50 @@ function getProducts() {
         
         $offset = ($page - 1) * $limit;
         
-        // Requête avec jointure pour récupérer la catégorie et l'image
-        $sql = "SELECT p.IdProduit as id, p.NomProduit as nom, c.NomCategorie as categorie, 
-                p.Prix as prix, p.Stock as stock, i.URL as image
+        // Requête principale avec LEFT JOIN pour l'image
+        $sql = "SELECT 
+                p.IdProduit as id, 
+                p.NomProduit as nom, 
+                c.NomCategorie as categorie, 
+                p.Prix as prix, 
+                p.Stock as stock,
+                i.URL as image
                 FROM produit p 
                 LEFT JOIN categorie c ON p.IdCat = c.IdCategorie
                 LEFT JOIN imageprod i ON p.IdProduit = i.IdProduit";
         
         $params = [];
         
-        // Ajouter la recherche si nécessaire
         if (!empty($search)) {
             $sql .= " WHERE p.NomProduit LIKE :search OR c.NomCategorie LIKE :search";
             $params[':search'] = "%$search%";
         }
         
-        // Compter le total
-        $countSql = "SELECT COUNT(DISTINCT p.IdProduit) FROM produit p 
-                     LEFT JOIN categorie c ON p.IdCat = c.IdCategorie";
+        // Requête de comptage
+        $countSql = "SELECT COUNT(*) FROM produit p";
         if (!empty($search)) {
-            $countSql .= " WHERE p.NomProduit LIKE :search OR c.NomCategorie LIKE :search";
+            $countSql .= " WHERE p.NomProduit LIKE :search";
         }
         
+        // Exécution
+        $stmt = $pdo->prepare($sql . " LIMIT :limit OFFSET :offset");
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+        $stmt->execute();
+        $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Comptage total
         $countStmt = $pdo->prepare($countSql);
-        $countStmt->execute($params);
+        foreach ($params as $key => $value) {
+            if (strpos($countSql, $key) !== false) {
+                $countStmt->bindValue($key, $value);
+            }
+        }
+        $countStmt->execute();
         $total = $countStmt->fetchColumn();
-        
-        // Ajouter la pagination - CORRECTION ICI
-        $sql .= " ORDER BY p.IdProduit DESC LIMIT $limit OFFSET $offset";
-        
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute($params);
-        $products = $stmt->fetchAll();
         
         echo json_encode([
             'success' => true,
@@ -75,7 +86,7 @@ function getProducts() {
         
     } catch(PDOException $e) {
         http_response_code(500);
-        echo json_encode(['error' => 'Erreur lors de la récupération des produits: ' . $e->getMessage()]);
+        echo json_encode(['error' => 'Erreur SQL: ' . $e->getMessage()]);
     }
 }
 

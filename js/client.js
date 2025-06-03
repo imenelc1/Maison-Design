@@ -431,76 +431,6 @@ function updateOrdersTab() {
   document.getElementById("orders-tab").innerHTML = ordersHTML
 }
 
-/**
- * Met à jour l'onglet adresses
- */
-function updateAddressesTab() {
-  const adresses = clientData.adresses || []
-
-  let addressesHTML = `
-    <div class="bg-white rounded-xl shadow-md overflow-hidden p-6">
-      <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl text-accent">Mes adresses (${adresses.length})</h2>
-        <button class="px-4 py-2 bg-accent text-white rounded-full hover:bg-accent/90 transition-colors flex items-center">
-          <i class='bx bx-plus mr-1'></i> Ajouter une adresse
-        </button>
-      </div>
-  `
-
-  if (adresses.length === 0) {
-    addressesHTML += `
-      <div class="text-center py-12">
-        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
-          <i class='bx bx-map text-3xl text-gray-400'></i>
-        </div>
-        <p class="text-gray-500 mb-4">Vous n'avez pas encore ajouté d'adresse.</p>
-        <button class="inline-block px-4 py-2 bg-accent text-white rounded-full hover:bg-accent/80 transition-colors">
-          <i class='bx bx-plus mr-1'></i> Ajouter une adresse
-        </button>
-      </div>
-    `
-  } else {
-    addressesHTML += '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">'
-
-    adresses.forEach((adresse) => {
-      addressesHTML += `
-        <div class="bg-white rounded-lg border p-4 relative ${adresse.isPrimary ? "border-accent" : "border-gray-200"}">
-          ${
-            adresse.isPrimary
-              ? `
-            <span class="absolute top-2 right-2 px-2 py-0.5 bg-amber-100 text-amber-800 text-xs rounded-full flex items-center gap-1">
-              <i class='bx bx-star text-xs'></i>
-              Principale
-            </span>
-          `
-              : ""
-          }
-          <h3 class="font-medium mb-1">${adresse.titre}</h3>
-          <p class="text-gray-600 mb-4">${adresse.adresse}</p>
-          <div class="flex justify-end gap-2">
-            <button class="px-3 py-1 text-sm border border-gray-300 rounded-full hover:bg-gray-50 transition-colors">
-              <i class='bx bx-edit text-xs mr-1'></i> Modifier
-            </button>
-            ${
-              !adresse.isPrimary
-                ? `
-              <button class="px-3 py-1 text-sm border border-red-300 text-red-600 rounded-full hover:bg-red-50 transition-colors">
-                <i class='bx bx-trash text-xs mr-1'></i> Supprimer
-              </button>
-            `
-                : ""
-            }
-          </div>
-        </div>
-      `
-    })
-
-    addressesHTML += "</div>"
-  }
-
-  addressesHTML += "</div>"
-  document.getElementById("addresses-tab").innerHTML = addressesHTML
-}
 
 /**
  * Met à jour l'onglet favoris avec les données dynamiques
@@ -509,7 +439,8 @@ async function updateWishlistTab() {
   try {
     console.log("Chargement des favoris...")
 
-    const response = await fetch("php/get_favoris.php", {
+    // CORRECTION: Utiliser le bon nom de fichier
+    const response = await fetch("php/favorites_actions.php", {
       method: "GET",
       credentials: "include",
       headers: {
@@ -624,6 +555,12 @@ async function updateWishlistTab() {
       </div>
     `
   }
+}
+
+// Placeholder function for initFavoritesHandlers
+function initFavoritesHandlers() {
+  // Implement the logic to initialize event handlers for favorite buttons
+  console.log("Initializing favorites handlers...");
 }
 
 /**

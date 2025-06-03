@@ -37,7 +37,7 @@ if (!isset($_SESSION['panier'])) {
                     <div class="home-text">
                         <h2 class="homeTitle font-cormorant text-xl md:text-2xl font-semibold uppercase text-textColorLight mt-4">Transformez votre intérieur avec élégance</h2>
                     </div>
-                    <a href="categories.html" class="button inline-block px-[20px] md:px-[30px] py-2 md:py-3 text-base md:text-lg font-semibold text-textColorLight bg-accent border-none rounded-full cursor-pointer no-underline transition-all duration-300 ease-in-out shadow-md hover:translate-y-[-3px] mt-6 md:mt-4">Découvrir</a>
+                    <a href="categories.php" class="button inline-block px-[20px] md:px-[30px] py-2 md:py-3 text-base md:text-lg font-semibold text-textColorLight bg-accent border-none rounded-full cursor-pointer no-underline transition-all duration-300 ease-in-out shadow-md hover:translate-y-[-3px] mt-6 md:mt-4">Découvrir</a>
                 </div>
             </div>
         </section>
@@ -67,7 +67,7 @@ if (!isset($_SESSION['panier'])) {
                         <div class="value-box text-center flex-1 p-3 md:p-4 bg-primary rounded-[15px] shadow-md">
                             <i class='bx bxs-wallet text-xl md:text-2xl text-accent mb-1 md:mb-2'></i>
                             <h3 class="text-[1.1rem] md:text-[1.3rem] text-textColor">Paiement Sécurisé </h3>
-                            <p class="text-[0.9rem] md:text-[1.1rem] text-textColor">Par carte ou en espèces à la livraison.</p>
+                            <p class="text-[0.9rem] md:text-[1.1rem] text-textColor">Paiement en espèces lors de la réception.</p>
                         </div>
                     </div>
                 </div>
@@ -83,35 +83,35 @@ if (!isset($_SESSION['panier'])) {
                         <h3 class="text-xl sm:text-2xl mb-4 text-accent text-center md:text-left">Chaises</h3>
                         <p class="text-base sm:text-lg leading-relaxed mb-6 md:mb-8 text-textColor text-center md:text-left">Découvrez notre collection exclusive de chaises. Un mélange parfait de confort et d'élégance pour votre intérieur.</p>
                         <div class="text-center md:text-left">
-                            <a href="categories.php?category=chaise" class="discover-btn inline-block px-[20px] sm:px-[30px] py-2 sm:py-3 bg-accent text-white no-underline rounded-full transition-transform duration-300 hover:translate-y-[-3px] text-sm sm:text-base">Découvrir</a>
+                            <a href="categories.php?category=chaises" class="discover-btn inline-block px-[20px] sm:px-[30px] py-2 sm:py-3 bg-accent text-white no-underline rounded-full transition-transform duration-300 hover:translate-y-[-3px] text-sm sm:text-base">Découvrir</a>
                         </div>
                     </div>
                     <div class="category-description" data-category="lit">
                         <h3 class="text-xl sm:text-2xl mb-4 text-accent text-center md:text-left">Lits</h3>
                         <p class="text-base sm:text-lg leading-relaxed mb-6 md:mb-8 text-textColor text-center md:text-left">Une collection de lits élégants pour transformer votre chambre en un havre de paix luxueux.</p>
                         <div class="text-center md:text-left">
-                            <a href="categories.php?category=lit" class="discover-btn inline-block px-[20px] sm:px-[30px] py-2 sm:py-3 bg-accent text-white no-underline rounded-full transition-transform duration-300 hover:translate-y-[-3px] text-sm sm:text-base">Découvrir</a>
+                            <a href="categories.php?category=lits" class="discover-btn inline-block px-[20px] sm:px-[30px] py-2 sm:py-3 bg-accent text-white no-underline rounded-full transition-transform duration-300 hover:translate-y-[-3px] text-sm sm:text-base">Découvrir</a>
                         </div>
                     </div>
                     <div class="category-description" data-category="table">
                         <h3 class="text-xl sm:text-2xl mb-4 text-accent text-center md:text-left">Tables</h3>
                         <p class="text-base sm:text-lg leading-relaxed mb-6 md:mb-8 text-textColor text-center md:text-left">Des tables au design raffiné qui sublimeront vos espaces de vie et de réception.</p>
                         <div class="text-center md:text-left">
-                            <a href="categories.php?category=table" class="discover-btn inline-block px-[20px] sm:px-[30px] py-2 sm:py-3 bg-accent text-white no-underline rounded-full transition-transform duration-300 hover:translate-y-[-3px] text-sm sm:text-base">Découvrir</a>
+                            <a href="categories.php?category=tables" class="discover-btn inline-block px-[20px] sm:px-[30px] py-2 sm:py-3 bg-accent text-white no-underline rounded-full transition-transform duration-300 hover:translate-y-[-3px] text-sm sm:text-base">Découvrir</a>
                         </div>
                     </div>
                     <div class="category-description" data-category="canapé">
                         <h3 class="text-xl sm:text-2xl mb-4 text-accent text-center md:text-left">Canapés</h3>
                         <p class="text-base sm:text-lg leading-relaxed mb-6 md:mb-8 text-textColor text-center md:text-left">Des canapés modernes et confortables qui allient style et confort pour votre salon.</p>
                         <div class="text-center md:text-left">
-                            <a href="categories.php?category=canapé" class="discover-btn inline-block px-[20px] sm:px-[30px] py-2 sm:py-3 bg-accent text-white no-underline rounded-full transition-transform duration-300 hover:translate-y-[-3px] text-sm sm:text-base">Découvrir</a>
+                            <a href="categories.php?category=canapés" class="discover-btn inline-block px-[20px] sm:px-[30px] py-2 sm:py-3 bg-accent text-white no-underline rounded-full transition-transform duration-300 hover:translate-y-[-3px] text-sm sm:text-base">Découvrir</a>
                         </div>
                     </div>
                     <div class="category-description" data-category="armoire">
                         <h3 class="text-xl sm:text-2xl mb-4 text-accent text-center md:text-left">Armoires</h3>
                         <p class="text-base sm:text-lg leading-relaxed mb-6 md:mb-8 text-textColor text-center md:text-left">Des armoires élégantes offrant des solutions de rangement pratiques et esthétiques.</p>
                         <div class="text-center md:text-left">
-                            <a href="categories.php?category=armoire" class="discover-btn inline-block px-[20px] sm:px-[30px] py-2 sm:py-3 bg-accent text-white no-underline rounded-full transition-transform duration-300 hover:translate-y-[-3px] text-sm sm:text-base">Découvrir</a>
+                            <a href="categories.php?category=armoires" class="discover-btn inline-block px-[20px] sm:px-[30px] py-2 sm:py-3 bg-accent text-white no-underline rounded-full transition-transform duration-300 hover:translate-y-[-3px] text-sm sm:text-base">Découvrir</a>
                         </div>
                     </div>
                 </div>

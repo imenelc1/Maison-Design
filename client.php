@@ -147,7 +147,7 @@ if (isset($_SESSION['user_id'])) {
                     </div>
                 </div>
                 
-                <!-- Onglet Favoris - VERSION CORRIGÉE -->
+                <!-- Onglet Favoris  -->
                 <div id="wishlist-tab" class="tab-pane <?php echo $activeTab === 'wishlist' ? 'block' : 'hidden'; ?>">
                     <div class="space-y-6">
                         <!-- En-tête des favoris -->

@@ -3,7 +3,7 @@ session_start();
 
 // Vérification de l'authentification (optionnel)
 // if (!isset($_SESSION['admin_logged_in'])) {
-//     header('Location: php/connexion.php');
+//     header('Location: connexion.php');
 //     exit();
 // }
 ?>
@@ -22,68 +22,71 @@ session_start();
 </head>
 
 <body>
+    <!-- Header avec le même style que l'original -->
     <header class="fixed top-0 left-0 w-full h-20 bg-white/90 backdrop-blur-sm flex items-center z-50 shadow-md">
-        <div class="w-[90%] max-w-[1200px] mx-auto flex items-center justify-between">
-        <!-- Logo à gauche -->
+        <div class="w-[90%] max-w-[1200px] mx-auto flex items-center justify-between relative">
+            <!-- Logo à gauche -->
             <div class="w-[20%] flex items-center">
-                <a href="index.php" class="logo-content flex items-center">
+                <a class="logo-content flex items-center">
                     <img src="images/Logo3.png" alt="Logo Maison Design" class="w-[60px] md:w-[70px] h-auto">
                 </a>
             </div>
 
-        <!-- Navigation tabs -->
-            <nav class="flex items-center gap-6">
-                <button class="tab-trigger active px-4 py-2 rounded-md font-medium text-textColor hover:bg-accent/10 transition-colors" data-tab="clients">
+            <!-- Navigation tabs centrée -->
+            <nav class="absolute left-1/2 transform -translate-x-1/2 flex items-center gap-6">
+                <button class="tab-trigger active" data-tab="clients">
                     Clients
                 </button>
-                <button class="tab-trigger px-4 py-2 rounded-md font-medium text-textColor hover:bg-accent/10 transition-colors" data-tab="produits">
+                <button class="tab-trigger" data-tab="produits">
                     Produits
                 </button>
-                <button class="tab-trigger px-4 py-2 rounded-md font-medium text-textColor hover:bg-accent/10 transition-colors" data-tab="commandes">
+                <button class="tab-trigger" data-tab="commandes">
                     Commandes
                 </button>
             </nav>
 
-        <!-- Profil à droite -->
+            <!-- Profil à droite -->
             <div class="relative">
                 <button id="profile-toggle" class="profile-btn p-2 rounded-full hover:bg-primary/20 transition-colors">
                     <i class='bx bx-user-circle text-3xl text-textColor'></i>
                 </button>
-            
                 <div id="profile-dropdown" class="absolute right-0 top-full mt-2 bg-white rounded-lg shadow-lg p-2 w-48 hidden">
                     <div class="px-4 py-2 text-sm text-gray-700 border-b">Admin</div>
-                        <a href="#" id="logout-btn" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
-                            <i class="fas fa-sign-out-alt mr-2"></i>Déconnexion
-                        </a>
+                    <a href="index.php" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                        Retour au site
+                    </a>
+                    <a href="php/deconnexion.php" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
+                        Déconnexion
+                    </a>
                 </div>
             </div>
         </div>
-   </header>
+    </header>
 
     <main class="container mx-auto px-4 py-6">
         <!-- Tabs -->
         <div class="tabs mt-8">
             <!-- Clients Tab -->
             <div id="clients-tab" class="tab-content active">
-                <div class="bg-white rounded-lg shadow-sm border p-6">
+                <section>
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-                        <h2 class="text-xl font-bold mb-4 md:mb-0">Clients</h2>  
+                        <h2>Gestion des Clients</h2>  
                     </div>
                     
                     <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200 align-top"> 
-                            <thead class="bg-gray-50">
+                        <table class="min-w-full"> 
+                            <thead>
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prenom</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Email</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Téléphone</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Adresse</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                    <th>ID</th>
+                                    <th>Nom</th>
+                                    <th>Prenom</th>
+                                    <th class="hidden md:table-cell">Email</th>
+                                    <th class="hidden md:table-cell">Téléphone</th>
+                                    <th class="hidden lg:table-cell">Adresse</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
-                            <tbody class="bg-white divide-y divide-gray-200" id="clients-table-body">
+                            <tbody id="clients-table-body">
                                 <!-- Client rows will be inserted here by JavaScript -->
                             </tbody>
                         </table>
@@ -98,33 +101,33 @@ session_start();
                             <i class="fas fa-chevron-right"></i>
                         </button>
                     </div>
-                </div>
+                </section>
             </div>
 
             <!-- Products Tab -->
             <div id="produits-tab" class="tab-content hidden">
-                <div class="bg-white rounded-lg shadow-sm border p-6">
+                <section>
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-                        <h2 class="text-xl font-bold mb-4 md:mb-0">Produits</h2>
-                        <button id="add-product-btn" class="btn-ajouter px-4 py-2 rounded-md flex items-center">
+                        <h2>Gestion des Produits</h2>
+                        <button id="add-product-btn" class="btn-ajouter flex items-center">
                             <i class="fas fa-plus-circle mr-2"></i>
                             <span>Ajouter un produit</span>
                         </button>
                     </div>
                     
                     <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200 align-top">
-                            <thead class="bg-gray-50">
+                        <table class="min-w-full">
+                            <thead>
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Catégorie</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prix</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Stock</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                    <th>ID</th>
+                                    <th>Nom</th>
+                                    <th class="hidden md:table-cell">Catégorie</th>
+                                    <th>Prix</th>
+                                    <th class="hidden md:table-cell">Stock</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
-                            <tbody class="bg-white divide-y divide-gray-200" id="products-table-body">
+                            <tbody id="products-table-body">
                                 <!-- Product rows will be inserted here by JavaScript -->
                             </tbody>
                         </table>
@@ -139,29 +142,29 @@ session_start();
                             <i class="fas fa-chevron-right"></i>
                         </button>
                     </div>
-                </div>
+                </section>
             </div>
 
             <!-- Orders Tab -->
             <div id="commandes-tab" class="tab-content hidden">
-                <div class="bg-white rounded-lg shadow-sm border p-6">
+                <section>
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-                        <h2 class="text-xl font-bold mb-4 md:mb-0">Commandes</h2>
+                        <h2>Gestion des Commandes</h2>
                     </div>
                     
                     <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
+                        <table class="min-w-full">
+                            <thead>
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Date</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                    <th>ID</th>
+                                    <th>Client</th>
+                                    <th class="hidden md:table-cell">Date</th>
+                                    <th>Statut</th>
+                                    <th>Total</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
-                            <tbody class="bg-white divide-y divide-gray-200" id="orders-table-body">
+                            <tbody id="orders-table-body">
                                 <!-- Order rows will be inserted here by JavaScript -->
                             </tbody>
                         </table>
@@ -176,7 +179,7 @@ session_start();
                             <i class="fas fa-chevron-right"></i>
                         </button>
                     </div>
-                </div>
+                </section>
             </div>
         </div>
     </main>
@@ -193,8 +196,8 @@ session_start();
             <form id="delete-client-form">
                 <input type="hidden" name="id">
                 <div class="flex justify-end gap-2">
-                    <button type="button" class="modal-close px-4 py-2 border rounded-md">Annuler</button>
-                    <button type="submit" class="px-4 py-2 btn-supprimer rounded-md">Supprimer</button>
+                    <button type="button" class="modal-close btn-fermer">Annuler</button>
+                    <button type="submit" class="btn-supprimer">Supprimer</button>
                 </div>
             </form>
         </div>
@@ -213,17 +216,18 @@ session_start();
                     <input type="text" name="nom" class="w-full px-3 py-2 border rounded-md" required>
                 </div>
                 <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea name="description" rows="3" class="w-full px-3 py-2 border rounded-md" ></textarea>
+                </div>
+                <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Catégorie</label>
                     <select name="categorie" class="w-full px-3 py-2 border rounded-md" required>
                         <option value="">Sélectionner une catégorie</option>
+                        <option value="Lits">Lits</option>
+                        <option value="Armoires">Armoires</option>
+                        <option value="Canapés">Canapés</option>
                         <option value="Chaises">Chaises</option>
                         <option value="Tables">Tables</option>
-                        <option value="Canapés">Canapés</option>
-                        <option value="Lits">Lits</option>
-                        <option value="Rangements">Rangements</option>
-                        <option value="Bureaux">Bureaux</option>
-                        <option value="Décorations">Décorations</option>
-                        <option value="Luminaires">Luminaires</option>
                     </select>
                 </div>
                 <div class="mb-4">
@@ -234,13 +238,13 @@ session_start();
                     <label class="block text-sm font-medium text-gray-700 mb-1">Stock</label>
                     <input type="number" name="stock" class="w-full px-3 py-2 border rounded-md" required>
                 </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Image</label>
+                    <input type="file" name="image" accept="image/*" class="w-full px-3 py-2 border rounded-md">
+                </div>
                 <div class="flex justify-end gap-2 mt-6">
-                    <button type="button" class="modal-close px-4 py-2 border rounded-md">Annuler</button>
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Image</label>
-                        <input type="file" name="image" accept="image/*" class="w-full px-3 py-2 border rounded-md">
-                    </div>                    
-                    <button type="submit" class="px-4 py-2 btn-ajouter rounded-md">Ajouter</button>
+                    <button type="button" class="btn-fermer">Annuler</button>
+                    <button type="submit" class="btn-ajouter">Ajouter</button>
                 </div>
             </form>
         </div>
@@ -260,17 +264,18 @@ session_start();
                     <input type="text" name="nom" class="w-full px-3 py-2 border rounded-md" required>
                 </div>
                 <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea name="description" rows="3" class="w-full px-3 py-2 border rounded-md" placeholder="Description du produit..."></textarea>
+                </div>
+                <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Catégorie</label>
                     <select name="categorie" class="w-full px-3 py-2 border rounded-md" required>
                         <option value="">Sélectionner une catégorie</option>
+                        <option value="Lits">Lits</option>
+                        <option value="Armoires">Armoires</option>
+                        <option value="Canapés">Canapés</option>
                         <option value="Chaises">Chaises</option>
                         <option value="Tables">Tables</option>
-                        <option value="Canapés">Canapés</option>
-                        <option value="Lits">Lits</option>
-                        <option value="Rangements">Rangements</option>
-                        <option value="Bureaux">Bureaux</option>
-                        <option value="Décorations">Décorations</option>
-                        <option value="Luminaires">Luminaires</option>
                     </select>
                 </div>
                 <div class="mb-4">
@@ -281,13 +286,13 @@ session_start();
                     <label class="block text-sm font-medium text-gray-700 mb-1">Stock</label>
                     <input type="number" name="stock" class="w-full px-3 py-2 border rounded-md" required>
                 </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Image</label>
+                    <input type="file" name="image" accept="image/*" class="w-full px-3 py-2 border rounded-md">
+                </div>
                 <div class="flex justify-end gap-2 mt-6">
-                    <button type="button" class="modal-close px-4 py-2 border rounded-md">Annuler</button>
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Image</label>
-                        <input type="file" name="image" accept="image/*" class="w-full px-3 py-2 border rounded-md">
-                    </div>                    
-                    <button type="submit" class="px-4 py-2 btn-modifier rounded-md">Enregistrer</button>
+                    <button type="button" class="modal-close btn-fermer">Annuler</button>
+                    <button type="submit" class="btn-modifier">Enregistrer</button>
                 </div>
             </form>
         </div>
@@ -304,8 +309,8 @@ session_start();
             <form id="delete-product-form">
                 <input type="hidden" name="id">
                 <div class="flex justify-end gap-2">
-                    <button type="button" class="modal-close px-4 py-2 border rounded-md">Annuler</button>
-                    <button type="submit" class="px-4 py-2 btn-supprimer rounded-md">Supprimer</button>
+                    <button type="button" class="modal-close btn-fermer">Annuler</button>
+                    <button type="submit" class="btn-supprimer">Supprimer</button>
                 </div>
             </form>
         </div>
@@ -339,22 +344,22 @@ session_start();
 
             <h4 class="font-semibold mb-2">Produits commandés</h4>
             <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
+                <table class="min-w-full">
+                    <thead>
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Produit</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantité</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prix unitaire</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                            <th>Produit</th>
+                            <th>Quantité</th>
+                            <th>Prix unitaire</th>
+                            <th>Total</th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white divide-y divide-gray-200" id="order-details-body">
+                    <tbody id="order-details-body">
                         <!-- Order details will be inserted here by JavaScript -->
                     </tbody>
                 </table>
             </div>
             <div class="flex justify-end mt-6">
-                <button type="button" class="modal-close px-4 py-2 btn-fermer rounded-md">Fermer</button>
+                <button type="button" class="modal-close btn-fermer">Fermer</button>
             </div>
         </div>
     </div>
@@ -378,15 +383,15 @@ session_start();
                     </select>
                 </div>
                 <div class="flex justify-end gap-2 mt-6">
-                    <button type="button" class="modal-close px-4 py-2 border rounded-md">Annuler</button>
-                    <button type="submit" class="px-4 py-2 btn-modifier rounded-md">Enregistrer</button>
+                    <button type="button" class="btn-fermer">Annuler</button>
+                    <button type="submit" class="btn-modifier">Enregistrer</button>
                 </div>
             </form>
         </div>
     </div>
 
     <!-- Toast Notification -->
-    <div id="toast" class="hidden fixed bottom-4 right-4 bg-gray-800 text-white px-4 py-2 rounded-md shadow-lg z-50">
+    <div id="toast" class="hidden fixed bottom-4 right-4 px-4 py-2 rounded-md shadow-lg z-50">
         <p id="toast-message"></p>
     </div>
 

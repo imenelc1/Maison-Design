@@ -42,13 +42,13 @@ if (isset($_SESSION['user_id'])) {
                         <a href="index.php#apropos" class="text-textColor font-normal text-base xl:text-lg hover:text-accent transition-colors">À propos</a>
                     </li>
                     <li class="relative group">
-                        <a href="categories.php" class="text-textColor font-normal text-base xl:text-lg hover:text-accent transition-colors">Catégories</a>
+                        <a href="index.php#categories" class="text-textColor font-normal text-base xl:text-lg hover:text-accent transition-colors">Catégories</a>
                         <ul class="absolute top-full left-0 bg-white list-none py-2.5 px-0 m-0 min-w-[120px] rounded-lg shadow-md z-10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
-                            <li class="px-4 py-2 hover:bg-secondary"><a href="categories.php?category=lit" class="no-underline text-textColor text-sm block">Lits</a></li>
-                            <li class="px-4 py-2 hover:bg-secondary"><a href="categories.php?category=chaise" class="no-underline text-textColor text-sm block">Chaises</a></li>
-                            <li class="px-4 py-2 hover:bg-secondary"><a href="categories.php?category=table" class="no-underline text-textColor text-sm block">Tables</a></li>
-                            <li class="px-4 py-2 hover:bg-secondary"><a href="categories.php?category=canapé" class="no-underline text-textColor text-sm block">Canapés</a></li>
-                            <li class="px-4 py-2 hover:bg-secondary"><a href="categories.php?category=armoire" class="no-underline text-textColor text-sm block">Armoires</a></li>
+                            <li class="px-4 py-2 hover:bg-secondary"><a href="categories.php?category=lits" class="no-underline text-textColor text-sm block">Lits</a></li>
+                            <li class="px-4 py-2 hover:bg-secondary"><a href="categories.php?category=chaises" class="no-underline text-textColor text-sm block">Chaises</a></li>
+                            <li class="px-4 py-2 hover:bg-secondary"><a href="categories.php?category=tables" class="no-underline text-textColor text-sm block">Tables</a></li>
+                            <li class="px-4 py-2 hover:bg-secondary"><a href="categories.php?category=canapés" class="no-underline text-textColor text-sm block">Canapés</a></li>
+                            <li class="px-4 py-2 hover:bg-secondary"><a href="categories.php?category=armoires" class="no-underline text-textColor text-sm block">Armoires</a></li>
                         </ul>
                     </li>
                     <li class="relative">
@@ -75,13 +75,14 @@ if (isset($_SESSION['user_id'])) {
                     </div>
                 </div>
                 
-                <!-- Panier avec notification -->
+                <!-- Panier avec notification  -->
                 <div class="cart-container relative">
                     <a href="cart.php" class="cart-toggle-btn bg-transparent border-none cursor-pointer text-textColor text-xl sm:text-2xl flex items-center justify-center hover:text-accent transition-colors p-1.5 sm:p-2 rounded-full hover:bg-primary/30 relative" title="Panier">
                         <i class='bx bx-cart'></i>
-                        <?php if ($nombreArticles > 0): ?>
-                        <span class="absolute -top-1 -right-1 bg-accent text-white text-xs w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center rounded-full font-medium min-w-[16px] sm:min-w-[20px]"><?php echo $nombreArticles > 99 ? '99+' : $nombreArticles; ?></span>
-                        <?php endif; ?>
+                        <!-- SOLUTION TAILWIND: Badge avec positionnement fixe -->
+                        <span id="cart-counter" class="absolute -top-1 -right-1 bg-accent text-white text-xs min-w-[18px] h-[18px] flex items-center justify-center rounded-full font-medium leading-none" style="<?php echo $nombreArticles > 0 ? '' : 'display: none;'; ?>">
+                            <?php echo $nombreArticles > 99 ? '99+' : $nombreArticles; ?>
+                        </span>
                     </a>
                 </div>
                 
@@ -209,11 +210,11 @@ if (isset($_SESSION['user_id'])) {
                         <i class='bx bx-chevron-down text-lg transition-transform duration-300' id="chevron-mobile"></i>
                     </button>
                     <ul class="bg-gray-50 rounded-lg mt-2 overflow-hidden max-h-0 transition-all duration-300" id="mobile-submenu">
-                        <li><a href="categories.php?category=lit" class="block px-6 py-2 text-textColor hover:bg-accent/10 hover:text-accent transition-colors text-sm">Lits</a></li>
-                        <li><a href="categories.php?category=chaise" class="block px-6 py-2 text-textColor hover:bg-accent/10 hover:text-accent transition-colors text-sm">Chaises</a></li>
-                        <li><a href="categories.php?category=table" class="block px-6 py-2 text-textColor hover:bg-accent/10 hover:text-accent transition-colors text-sm">Tables</a></li>
-                        <li><a href="categories.php?category=canapé" class="block px-6 py-2 text-textColor hover:bg-accent/10 hover:text-accent transition-colors text-sm">Canapés</a></li>
-                        <li><a href="categories.php?category=armoire" class="block px-6 py-2 text-textColor hover:bg-accent/10 hover:text-accent transition-colors text-sm">Armoires</a></li>
+                        <li><a href="categories.php?category=lits" class="block px-6 py-2 text-textColor hover:bg-accent/10 hover:text-accent transition-colors text-sm">Lits</a></li>
+                        <li><a href="categories.php?category=chaises" class="block px-6 py-2 text-textColor hover:bg-accent/10 hover:text-accent transition-colors text-sm">Chaises</a></li>
+                        <li><a href="categories.php?category=tables" class="block px-6 py-2 text-textColor hover:bg-accent/10 hover:text-accent transition-colors text-sm">Tables</a></li>
+                        <li><a href="categories.php?category=canapés" class="block px-6 py-2 text-textColor hover:bg-accent/10 hover:text-accent transition-colors text-sm">Canapés</a></li>
+                        <li><a href="categories.php?category=armoires" class="block px-6 py-2 text-textColor hover:bg-accent/10 hover:text-accent transition-colors text-sm">Armoires</a></li>
                     </ul>
                 </li>
                 <li>
@@ -228,9 +229,10 @@ if (isset($_SESSION['user_id'])) {
                             <i class='bx bx-cart text-xl mr-3'></i>
                             Mon Panier
                         </div>
-                        <?php if ($nombreArticles > 0): ?>
-                        <span class="bg-accent text-white text-xs w-6 h-6 flex items-center justify-center rounded-full font-medium"><?php echo $nombreArticles > 99 ? '99+' : $nombreArticles; ?></span>
-                        <?php endif; ?>
+                        <!-- SOLUTION TAILWIND: Badge mobile -->
+                        <span id="cart-counter-mobile" class="absolute -top-1 -right-1 bg-accent text-white text-xs min-w-[18px] h-[18px] flex items-center justify-center rounded-full font-medium leading-none" style="<?php echo $nombreArticles > 0 ? '' : 'display: none;'; ?>">
+                            <?php echo $nombreArticles > 99 ? '99+' : $nombreArticles; ?>
+                        </span>
                     </a>
                 </li>
             </ul>
@@ -307,4 +309,6 @@ if (isset($_SESSION['user_id'])) {
     </div>
 </div>
 
+<!-- Fonctions partagées pour la gestion du panier -->
+<script src="js/shared-cart-functions.js"></script>
 <script src="js/header-menu.js"></script>

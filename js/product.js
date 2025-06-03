@@ -1,204 +1,97 @@
-// Fichier JavaScript pour la page produit
+// Script pour la page produit - Solution directe
 document.addEventListener("DOMContentLoaded", () => {
-  // Initialiser les interactions UI
-  initImageGallery()
-  initQuantityButtons()
-  initProductActions()
-})
-
-// Fonction pour initialiser la galerie d'images
-function initImageGallery() {
-  const thumbnails = document.querySelectorAll(".thumbnail-item img")
-  const mainImage = document.getElementById("main-product-image")
-
-  if (!thumbnails.length || !mainImage) return
-
-  thumbnails.forEach((thumbnail, index) => {
-    thumbnail.addEventListener("click", function () {
-      // Changer l'image principale
-      mainImage.src = this.dataset.fullImage || this.src
-
-      // Mettre à jour les bordures des miniatures
-      document.querySelectorAll(".thumbnail-item").forEach((item) => {
-        item.classList.remove("border-accent")
-        item.classList.add("border-transparent")
-      })
-
-      // Ajouter la bordure à la miniature sélectionnée
-      this.closest(".thumbnail-item").classList.remove("border-transparent")
-      this.closest(".thumbnail-item").classList.add("border-accent")
-    })
-  })
-}
-
-// Fonction pour initialiser les boutons de quantité
-function initQuantityButtons() {
-  const decreaseBtn = document.getElementById("decrease-quantity")
-  const increaseBtn = document.getElementById("increase-quantity")
-  const quantityInput = document.getElementById("quantity")
-
-  if (!decreaseBtn || !increaseBtn || !quantityInput) return
-
-  decreaseBtn.addEventListener("click", () => {
-    const currentValue = Number.parseInt(quantityInput.value)
-    if (currentValue > 1) {
-      quantityInput.value = currentValue - 1
-    }
-  })
-
-  increaseBtn.addEventListener("click", () => {
-    const currentValue = Number.parseInt(quantityInput.value)
-    const maxStock = Number.parseInt(quantityInput.max)
-    if (currentValue < maxStock) {
-      quantityInput.value = currentValue + 1
-    }
-  })
-
-  // Validation de la quantité lors de la saisie manuelle
-  quantityInput.addEventListener("input", function () {
-    const max = Number.parseInt(this.getAttribute("max"))
-    const min = Number.parseInt(this.getAttribute("min"))
-    const value = Number.parseInt(this.value)
-
-    if (value > max) this.value = max
-    if (value < min) this.value = min
-  })
-}
-
-// Fonction pour initialiser les actions du produit (panier, favoris)
-function initProductActions() {
+  // Bouton d'ajout au panier
   const addToCartBtn = document.getElementById("add-to-cart-btn")
-  const favoriteBtn = document.getElementById("favorite-btn")
-
-  // Ajouter au panier
   if (addToCartBtn) {
-    addToCartBtn.addEventListener("click", addToCart)
-  }
+    addToCartBtn.addEventListener("click", function () {
+      // Récupérer les données du produit
+      const productId = window.productData?.id
+      const quantityInput = document.getElementById("quantity")
+      const quantity = quantityInput ? Number.parseInt(quantityInput.value) || 1 : 1
 
-  // Toggle favoris
-  if (favoriteBtn) {
-    favoriteBtn.addEventListener("click", () => {
-      const productId = Number.parseInt(favoriteBtn.getAttribute("data-product-id"))
-      toggleFavorite(productId)
-    })
-  }
-}
-
-// Fonction pour ajouter au panier
-function addToCart() {
-  const quantityInput = document.getElementById("quantity")
-  const quantity = quantityInput ? quantityInput.value : 1
-  const productId = window.productData.id
-
-  if (!productId) {
-    showNotification("Erreur: ID du produit non trouvé", "error")
-    return
-  }
-
-  fetch("php/cart_actions.php", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: `action=ajouter&produitId=${productId}&quantite=${quantity}`,
-  })
-    .then((response) => response.json())
-    .then((data) => {
-      if (data.success) {
-        showNotification("Produit ajouté au panier !", "success")
-      } else {
-        showNotification("Erreur: " + data.message, "error")
+      if (!productId) {
+        alert("Erreur: ID du produit non trouvé")
+        return
       }
+
+      // Désactiver le bouton pendant la requête
+      this.disabled = true
+      const originalText = this.innerHTML
+      this.innerHTML = '<i class="bx bx-loader-alt animate-spin"></i> Ajout en cours...'
+
+      // Requête AJAX directe vers votre fichier PHP existant
+      fetch("php/cart_actions.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "X-Requested-With": "XMLHttpRequest",
+        },
+        body: `action=ajouter&produitId=${productId}&quantite=${quantity}`,
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            // SOLUTION DIRECTE: Utiliser cartCount de la réponse
+            const cartCount = data.cartCount
+
+            // Mettre à jour tous les compteurs possibles
+            updateAllCartCounters(cartCount)
+
+            // Notification
+            afficherNotification(data.message || "Produit ajouté au panier !")
+          } else {
+            afficherNotification(data.message || "Erreur lors de l'ajout au panier")
+          }
+        })
+        .catch((error) => {
+          console.error("Erreur:", error)
+          afficherNotification("Une erreur est survenue")
+        })
+        .finally(() => {
+          // Réactiver le bouton
+          this.disabled = false
+          this.innerHTML = originalText
+        })
     })
-    .catch((error) => {
-      console.error("Erreur:", error)
-      showNotification("Une erreur est survenue", "error")
+  }
+
+  // Fonction pour mettre à jour tous les compteurs de panier
+  function updateAllCartCounters(count) {
+    // Cibler tous les compteurs possibles
+    const counters = [
+      document.getElementById("cart-counter"),
+      document.getElementById("cart-counter-mobile"),
+      ...document.querySelectorAll(".cart-badge"),
+    ].filter(Boolean)
+
+    // Mettre à jour chaque compteur
+    counters.forEach((counter) => {
+      counter.textContent = count > 99 ? "99+" : count
+      counter.style.display = count > 0 ? "flex" : "none"
     })
-}
 
-// Fonction pour toggle favoris
-function toggleFavorite(productId) {
-  console.log("toggleFavorite appelé pour produit:", productId)
+    console.log(`Compteur panier mis à jour: ${count} (${counters.length} compteurs trouvés)`)
+  }
 
-  const button = document.getElementById("favorite-btn")
-  const icon = button.querySelector("i")
+  // Utiliser votre fonction existante pour les notifications
+  function afficherNotification(message) {
+    // Créer l'élément de notification s'il n'existe pas
+    let notification = document.getElementById("notification")
+    if (!notification) {
+      notification = document.createElement("div")
+      notification.id = "notification"
+      notification.className =
+        "fixed bottom-4 right-4 bg-accent text-white px-4 py-2 rounded-lg shadow-lg transform translate-y-10 opacity-0 transition-all duration-300 z-50"
+      document.body.appendChild(notification)
+    }
 
-  if (!window.sessionData.isLoggedIn) {
-    showNotification("Veuillez vous connecter pour ajouter des produits aux favoris", "error")
+    // Afficher le message
+    notification.textContent = message
+    notification.classList.remove("translate-y-10", "opacity-0")
+
+    // Masquer après 3 secondes
     setTimeout(() => {
-      window.location.href = "connexion.php"
-    }, 1500)
-    return
+      notification.classList.add("translate-y-10", "opacity-0")
+    }, 3000)
   }
-
-  button.disabled = true
-
-  fetch("php/favorites_actions.php", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: `action=toggle&produitId=${productId}`,
-  })
-    .then((response) => response.json())
-    .then((data) => {
-      if (data.success) {
-        if (data.action === "added") {
-          icon.classList.remove("far", "fa-heart")
-          icon.classList.add("fas", "fa-heart", "text-red-600")
-          button.classList.remove("bg-gray-100", "text-gray-600")
-          button.classList.add("bg-red-100", "text-red-600")
-          button.title = "Retirer des favoris"
-          showNotification("Produit ajouté aux favoris !", "success")
-          window.productData.isFavorite = true
-        } else {
-          icon.classList.remove("fas", "fa-heart", "text-red-600")
-          icon.classList.add("far", "fa-heart")
-          button.classList.remove("bg-red-100", "text-red-600")
-          button.classList.add("bg-gray-100", "text-gray-600")
-          button.title = "Ajouter aux favoris"
-          showNotification("Produit retiré des favoris", "info")
-          window.productData.isFavorite = false
-        }
-      } else {
-        showNotification("Erreur: " + data.message, "error")
-      }
-    })
-    .catch((error) => {
-      console.error("Erreur:", error)
-      showNotification("Une erreur est survenue", "error")
-    })
-    .finally(() => {
-      button.disabled = false
-    })
-}
-
-// Fonction pour afficher les notifications
-function showNotification(message, type = "info") {
-  // Supprimer les notifications existantes
-  const existingNotifications = document.querySelectorAll(".notification")
-  existingNotifications.forEach((notif) => notif.remove())
-
-  const notification = document.createElement("div")
-  notification.className = `notification fixed top-4 right-4 z-50 px-4 py-2 rounded-lg text-white ${
-    type === "success" ? "bg-green-500" : type === "error" ? "bg-red-500" : "bg-blue-500"
-  } transition-all duration-300 transform translate-x-full`
-  notification.textContent = message
-
-  document.body.appendChild(notification)
-
-  // Animation d'entrée
-  setTimeout(() => {
-    notification.classList.remove("translate-x-full")
-  }, 100)
-
-  // Animation de sortie
-  setTimeout(() => {
-    notification.classList.add("translate-x-full")
-    setTimeout(() => {
-      if (notification.parentNode) {
-        notification.parentNode.removeChild(notification)
-      }
-    }, 300)
-  }, 3000)
-}
+})
