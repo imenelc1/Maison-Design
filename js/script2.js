@@ -488,49 +488,72 @@ function initAdminPanel() {
     }
   }
 
-  // View order details
+ 
+
+
   async function viewOrderDetails(id) {
-    console.log("Affichage des détails de la commande:", id)
     try {
-      const response = await fetch(`php/commandes.php?details=true&id=${id}`)
-      const data = await response.json()
-      console.log("Détails de la commande:", data)
-
-      if (data.success) {
-        // Populate order details modal
-        const detailsBody = document.getElementById("order-details-body")
-        if (detailsBody) {
-          detailsBody.innerHTML = ""
-
-          if (data.data.length === 0) {
-            detailsBody.innerHTML = `
-              <tr>
-                <td colspan="4" class="px-6 py-4 text-center">Aucun détail disponible</td>
-              </tr>
-            `
-          } else {
-            data.data.forEach((item) => {
-              const row = document.createElement("tr")
-              row.innerHTML = `
-                <td class="px-6 py-4 whitespace-nowrap">${item.produit}</td>
-                <td class="px-6 py-4 whitespace-nowrap">${item.quantite}</td>
-                <td class="px-6 py-4 whitespace-nowrap">${item.prix} DA</td>
-                <td class="px-6 py-4 whitespace-nowrap">${item.total} DA</td>
-              `
-              detailsBody.appendChild(row)
-            })
-          }
+        console.log(`Tentative de récupération de la commande #${id}...`);
+        const response = await fetch(`php/commandes.php?details=true&id=${id}`);
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Erreur HTTP ${response.status}: ${errorText}`);
         }
+        
+        const data = await response.json();
+        console.log('Réponse du serveur:', data);
 
-        openModal("view-order-modal")
-      } else {
-        showToast("Erreur lors du chargement des détails")
-      }
+        if (!data.success) {
+            throw new Error(data.error || 'Erreur inconnue du serveur');
+        }
+    console.log("Affichage des détails de la commande:", id);
+  
+        if (data.success) {
+            // 1. Afficher les infos générales
+            const orderInfo = data.orderInfo;
+            document.getElementById("order-id").textContent = orderInfo.IdCommande || orderInfo.id;
+            document.getElementById("order-client").textContent = orderInfo.client;
+            document.getElementById("order-date").textContent = orderInfo.date;
+            document.getElementById("order-status").textContent = orderInfo.statut || orderInfo.Status;
+            document.getElementById("order-total").textContent = (orderInfo.total || orderInfo.TotalPrix) + " DA";
+
+            // 2. Afficher les articles
+            const detailsBody = document.getElementById("order-details-body");
+            detailsBody.innerHTML = "";
+
+            if (!data.data || data.data.length === 0) {
+                detailsBody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="px-6 py-4 text-center">Aucun détail disponible</td>
+                    </tr>
+                `;
+            } else {
+                data.data.forEach((item) => {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap">${item.produit}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${item.quantite}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${item.prix} DA</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${item.total} DA</td>
+                    `;
+                    detailsBody.appendChild(row);
+                });
+            }
+
+            openModal("view-order-modal");
+        } else {
+            showToast(data.error || "Erreur lors du chargement des détails");
+        }
     } catch (error) {
-      console.error("Erreur lors du chargement des détails:", error)
-      showToast("Erreur de connexion")
+        console.error('ERREUR COMPLÈTE:', {
+            message: error.message,
+            stack: error.stack,
+            name: error.name
+        });
+        showToast("Erreur technique détaillée dans la console");
     }
-  }
+}
 
   // Initialize form handlers - VERSION COMPLÈTE
   function initFormHandlers() {

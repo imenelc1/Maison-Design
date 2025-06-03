@@ -158,7 +158,7 @@ function updateActiveTabContent() {
 }
 
 /**
- * Met à jour l'onglet profil
+ * Met à jour l'onglet profil - AVEC ADRESSE
  */
 function updateProfileTab() {
   const client = clientData.client
@@ -183,6 +183,10 @@ function updateProfileTab() {
           <p class="text-sm text-gray-500 mb-1">Téléphone</p>
           <p class="font-medium">${client.telephone || "Non renseigné"}</p>
         </div>
+        <div class="md:col-span-2">
+          <p class="text-sm text-gray-500 mb-1">Adresse</p>
+          <p class="font-medium">${client.adresse || "Non renseignée"}</p>
+        </div>
         <div>
           <p class="text-sm text-gray-500 mb-1">Date d'inscription</p>
           <p class="font-medium">${formatDate(client.dateInscription)}</p>
@@ -199,7 +203,7 @@ function updateProfileTab() {
 }
 
 /**
- * Active le mode édition du profil
+ * Active le mode édition du profil - AVEC ADRESSE
  */
 function editProfile() {
   const client = clientData.client
@@ -252,6 +256,16 @@ function editProfile() {
               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
             >
           </div>
+          <div class="md:col-span-2">
+            <label for="adresse" class="block text-sm font-medium text-gray-700 mb-2">Adresse</label>
+            <textarea 
+              id="adresse" 
+              name="adresse" 
+              rows="3"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+              placeholder="Votre adresse complète"
+            >${client.adresse || ""}</textarea>
+          </div>
         </div>
         
         <div class="flex justify-end gap-2 pt-4">
@@ -301,6 +315,7 @@ async function handleProfileSubmit(e) {
     nom: formData.get("nom"),
     email: formData.get("email"),
     telephone: formData.get("telephone"),
+    adresse: formData.get("adresse"),
   }
 
   // Validation simple
@@ -362,7 +377,7 @@ async function handleProfileSubmit(e) {
 }
 
 /**
- * Met à jour l'onglet commandes
+ * Met à jour l'onglet commandes - PRIX CORRIGES
  */
 function updateOrdersTab() {
   const commandes = clientData.commandes || []
@@ -430,7 +445,6 @@ function updateOrdersTab() {
   ordersHTML += "</div>"
   document.getElementById("orders-tab").innerHTML = ordersHTML
 }
-
 
 /**
  * Met à jour l'onglet favoris avec les données dynamiques
@@ -555,12 +569,6 @@ async function updateWishlistTab() {
       </div>
     `
   }
-}
-
-// Placeholder function for initFavoritesHandlers
-function initFavoritesHandlers() {
-  // Implement the logic to initialize event handlers for favorite buttons
-  console.log("Initializing favorites handlers...");
 }
 
 /**
@@ -887,13 +895,16 @@ function getStatusClass(status) {
   switch (status?.toLowerCase()) {
     case "en attente":
       return "bg-yellow-100 text-yellow-800"
-    case "expédié":
-    case "expedie":
+    case "confirmée":
+    case "confirme":
       return "bg-blue-100 text-blue-800"
-    case "livré":
+    case "expédiée":
+    case "expedie":
+      return "bg-purple-100 text-purple-800"
+    case "livrée":
     case "livre":
       return "bg-green-100 text-green-800"
-    case "annulé":
+    case "annulée":
     case "annule":
       return "bg-red-100 text-red-800"
     default:
@@ -1107,5 +1118,14 @@ window.addEventListener("focus", () => {
     updateWishlistTab()
   }
 })
+
+/**
+ * Met à jour l'onglet adresses
+ */
+function updateAddressesTab() {
+  // Implémentation de la fonction updateAddressesTab
+  // Cette fonction doit être implémentée pour charger et afficher les adresses du client
+  console.log("Mise à jour de l'onglet adresses...")
+}
 
 console.log("Script client.js complet chargé avec succès")

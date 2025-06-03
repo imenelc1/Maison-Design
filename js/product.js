@@ -1,97 +1,164 @@
-// Script pour la page produit - Solution directe
+// Script pour la page produit - Version corrigée
 document.addEventListener("DOMContentLoaded", () => {
-  // Bouton d'ajout au panier
-  const addToCartBtn = document.getElementById("add-to-cart-btn")
-  if (addToCartBtn) {
-    addToCartBtn.addEventListener("click", function () {
-      // Récupérer les données du produit
-      const productId = window.productData?.id
-      const quantityInput = document.getElementById("quantity")
-      const quantity = quantityInput ? Number.parseInt(quantityInput.value) || 1 : 1
+  console.log("Page produit chargée")
 
-      if (!productId) {
-        alert("Erreur: ID du produit non trouvé")
-        return
+  // Gestion de la galerie d'images
+  initImageGallery()
+
+  // Gestion des boutons de quantité
+  initQuantityControls()
+
+  // Gestion du bouton d'ajout au panier
+  initAddToCartButton()
+
+  // Gestion du bouton favoris
+  initFavoriteButton()
+})
+
+function initImageGallery() {
+  const mainImage = document.getElementById("main-product-image")
+  const thumbnails = document.querySelectorAll(".thumbnail-item img")
+
+  thumbnails.forEach((thumbnail, index) => {
+    thumbnail.addEventListener("click", () => {
+      if (mainImage) {
+        mainImage.src = thumbnail.getAttribute("data-full-image") || thumbnail.src
       }
 
-      // Désactiver le bouton pendant la requête
-      this.disabled = true
-      const originalText = this.innerHTML
-      this.innerHTML = '<i class="bx bx-loader-alt animate-spin"></i> Ajout en cours...'
-
-      // Requête AJAX directe vers votre fichier PHP existant
-      fetch("php/cart_actions.php", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-          "X-Requested-With": "XMLHttpRequest",
-        },
-        body: `action=ajouter&produitId=${productId}&quantite=${quantity}`,
+      // Mettre à jour les bordures des miniatures
+      document.querySelectorAll(".thumbnail-item").forEach((item) => {
+        item.classList.remove("border-accent")
+        item.classList.add("border-transparent")
       })
-        .then((response) => response.json())
-        .then((data) => {
-          if (data.success) {
-            // SOLUTION DIRECTE: Utiliser cartCount de la réponse
-            const cartCount = data.cartCount
+      thumbnail.parentElement.classList.remove("border-transparent")
+      thumbnail.parentElement.classList.add("border-accent")
+    })
+  })
+}
 
-            // Mettre à jour tous les compteurs possibles
-            updateAllCartCounters(cartCount)
+function initQuantityControls() {
+  const quantityInput = document.getElementById("quantity")
+  const decreaseBtn = document.getElementById("decrease-quantity")
+  const increaseBtn = document.getElementById("increase-quantity")
 
-            // Notification
-            afficherNotification(data.message || "Produit ajouté au panier !")
-          } else {
-            afficherNotification(data.message || "Erreur lors de l'ajout au panier")
-          }
-        })
-        .catch((error) => {
-          console.error("Erreur:", error)
-          afficherNotification("Une erreur est survenue")
-        })
-        .finally(() => {
-          // Réactiver le bouton
-          this.disabled = false
-          this.innerHTML = originalText
-        })
+  if (!quantityInput) return
+
+  const maxStock = window.productData?.stock || 1
+
+  if (decreaseBtn) {
+    decreaseBtn.addEventListener("click", () => {
+      const currentValue = Number.parseInt(quantityInput.value) || 1
+      if (currentValue > 1) {
+        quantityInput.value = currentValue - 1
+      }
     })
   }
 
-  // Fonction pour mettre à jour tous les compteurs de panier
-  function updateAllCartCounters(count) {
-    // Cibler tous les compteurs possibles
-    const counters = [
-      document.getElementById("cart-counter"),
-      document.getElementById("cart-counter-mobile"),
-      ...document.querySelectorAll(".cart-badge"),
-    ].filter(Boolean)
-
-    // Mettre à jour chaque compteur
-    counters.forEach((counter) => {
-      counter.textContent = count > 99 ? "99+" : count
-      counter.style.display = count > 0 ? "flex" : "none"
+  if (increaseBtn) {
+    increaseBtn.addEventListener("click", () => {
+      const currentValue = Number.parseInt(quantityInput.value) || 1
+      if (currentValue < maxStock) {
+        quantityInput.value = currentValue + 1
+      }
     })
-
-    console.log(`Compteur panier mis à jour: ${count} (${counters.length} compteurs trouvés)`)
   }
 
-  // Utiliser votre fonction existante pour les notifications
-  function afficherNotification(message) {
-    // Créer l'élément de notification s'il n'existe pas
-    let notification = document.getElementById("notification")
-    if (!notification) {
-      notification = document.createElement("div")
-      notification.id = "notification"
-      notification.className =
-        "fixed bottom-4 right-4 bg-accent text-white px-4 py-2 rounded-lg shadow-lg transform translate-y-10 opacity-0 transition-all duration-300 z-50"
-      document.body.appendChild(notification)
+  // Validation de la saisie
+  quantityInput.addEventListener("input", () => {
+    let value = Number.parseInt(quantityInput.value) || 1
+    if (value < 1) value = 1
+    if (value > maxStock) value = maxStock
+    quantityInput.value = value
+  })
+}
+
+function initAddToCartButton() {
+  const addToCartBtn = document.getElementById("add-to-cart-btn")
+  if (!addToCartBtn) return
+
+  // Stocker le contenu original
+  addToCartBtn.setAttribute("data-original-content", addToCartBtn.innerHTML)
+
+  addToCartBtn.addEventListener("click", function (e) {
+    e.preventDefault()
+
+    const productId = window.productData?.id
+    const quantityInput = document.getElementById("quantity")
+    const quantity = quantityInput ? Number.parseInt(quantityInput.value) || 1 : 1
+
+    if (!productId) {
+      window.cartManager.showNotification("Erreur: ID du produit non trouvé", "error")
+      return
     }
 
-    // Afficher le message
-    notification.textContent = message
-    notification.classList.remove("translate-y-10", "opacity-0")
+    // Utiliser le CartManager global
+    window.cartManager.addToCart(productId, quantity, this)
+  })
+}
 
-    // Masquer après 3 secondes
-    setTimeout(() => {
-      notification.classList.add("translate-y-10", "opacity-0")
-    }, 3000)
-  }
-})
+function initFavoriteButton() {
+  const favoriteBtn = document.getElementById("favorite-btn")
+  if (!favoriteBtn) return
+
+  favoriteBtn.addEventListener("click", function (e) {
+    e.preventDefault()
+
+    const productId = window.productData?.id
+
+    if (!window.sessionData?.isLoggedIn) {
+      window.cartManager.showNotification("Veuillez vous connecter pour ajouter des produits aux favoris", "error")
+      setTimeout(() => {
+        window.location.href = "connexion.php"
+      }, 1500)
+      return
+    }
+
+    if (!productId) {
+      window.cartManager.showNotification("Erreur: ID du produit non trouvé", "error")
+      return
+    }
+
+    const icon = this.querySelector("i")
+    const originalContent = this.innerHTML
+    this.disabled = true
+    this.innerHTML = '<i class="bx bx-loader-alt animate-spin"></i> Traitement...'
+
+    fetch("php/favorites_actions.php", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: `action=toggle&produitId=${productId}`,
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          if (data.action === "added") {
+            icon.classList.remove("far", "fa-heart")
+            icon.classList.add("fas", "fa-heart", "text-red-600")
+            this.classList.remove("bg-gray-100", "text-gray-600")
+            this.classList.add("bg-red-100", "text-red-600")
+            this.title = "Retirer des favoris"
+            window.cartManager.showNotification("Produit ajouté aux favoris !", "success")
+          } else {
+            icon.classList.remove("fas", "fa-heart", "text-red-600")
+            icon.classList.add("far", "fa-heart")
+            this.classList.remove("bg-red-100", "text-red-600")
+            this.classList.add("bg-gray-100", "text-gray-600")
+            this.title = "Ajouter aux favoris"
+            window.cartManager.showNotification("Produit retiré des favoris", "success")
+          }
+        } else {
+          window.cartManager.showNotification("Erreur: " + data.message, "error")
+        }
+      })
+      .catch((error) => {
+        console.error("Erreur:", error)
+        window.cartManager.showNotification("Une erreur est survenue", "error")
+      })
+      .finally(() => {
+        this.disabled = false
+        this.innerHTML = originalContent
+      })
+  })
+}

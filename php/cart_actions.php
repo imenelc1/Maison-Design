@@ -1,13 +1,11 @@
 <?php
-// Nettoyer complètement la sortie et désactiver les erreurs
+// Version corrigée pour éviter les doublons et améliorer la fiabilité
 ob_clean();
 ini_set('display_errors', 0);
 error_reporting(0);
 
-// Démarrer la session pour pouvoir accéder aux variables de session
 session_start();
 
-// Connexion à la base de données
 try {
     require_once 'db.php';
 } catch (Exception $e) {
@@ -21,7 +19,7 @@ if (!isset($_SESSION['panier'])) {
     $_SESSION['panier'] = [];
 }
 
-// Fonction pour ajouter un produit au panier
+// Fonction pour ajouter un produit au panier - VERSION CORRIGÉE
 function ajouterAuPanier($produitId, $quantite = 1) {
     global $pdo;
     
@@ -50,37 +48,38 @@ function ajouterAuPanier($produitId, $quantite = 1) {
             return ['success' => false, 'message' => 'Ce produit n\'est plus disponible en stock'];
         }
 
-        // Vérifier si le produit est déjà dans le panier
+        // CORRECTION: Vérifier si le produit est déjà dans le panier
+        $produitExiste = false;
         $quantiteActuelle = 0;
-        foreach ($_SESSION['panier'] as $item) {
+        
+        foreach ($_SESSION['panier'] as $key => &$item) {
             if ($item['id'] == $produitId) {
                 $quantiteActuelle = $item['quantite'];
-                break;
-            }
-        }
-
-        // Vérifier si la quantité demandée ne dépasse pas le stock
-        if (($quantiteActuelle + $quantite) > $stockDisponible) {
-            $quantiteRestante = $stockDisponible - $quantiteActuelle;
-            if ($quantiteRestante <= 0) {
-                return ['success' => false, 'message' => 'Vous avez déjà le maximum disponible de ce produit dans votre panier'];
-            } else {
-                return ['success' => false, 'message' => "Stock insuffisant. Il ne reste que {$quantiteRestante} exemplaire(s) disponible(s)"];
-            }
-        }
-        
-        // Vérifier si le produit est déjà dans le panier
-        $produitExiste = false;
-        foreach ($_SESSION['panier'] as &$item) {
-            if ($item['id'] == $produitId) {
-                $item['quantite'] += $quantite;
                 $produitExiste = true;
+                
+                // Vérifier si la quantité demandée ne dépasse pas le stock
+                if (($quantiteActuelle + $quantite) > $stockDisponible) {
+                    $quantiteRestante = $stockDisponible - $quantiteActuelle;
+                    if ($quantiteRestante <= 0) {
+                        return ['success' => false, 'message' => 'Vous avez déjà le maximum disponible de ce produit dans votre panier'];
+                    } else {
+                        return ['success' => false, 'message' => "Stock insuffisant. Il ne reste que {$quantiteRestante} exemplaire(s) disponible(s)"];
+                    }
+                }
+                
+                // Augmenter la quantité
+                $item['quantite'] += $quantite;
                 break;
             }
         }
         
         // Si le produit n'est pas dans le panier, l'ajouter
         if (!$produitExiste) {
+            // Vérifier si la quantité demandée ne dépasse pas le stock
+            if ($quantite > $stockDisponible) {
+                return ['success' => false, 'message' => "Stock insuffisant. Il ne reste que {$stockDisponible} exemplaire(s) disponible(s)"];
+            }
+            
             // Traiter l'image
             $imageUrl = $produit['image'] ?? 'images/placeholder.jpeg';
             if (!empty($imageUrl) && strpos($imageUrl, 'images/') !== 0) {
@@ -109,6 +108,7 @@ function ajouterAuPanier($produitId, $quantite = 1) {
         ];
         
     } catch (Exception $e) {
+        error_log("Erreur ajouterAuPanier: " . $e->getMessage());
         return ['success' => false, 'message' => 'Une erreur est survenue lors de l\'ajout au panier'];
     }
 }
@@ -169,6 +169,7 @@ function modifierQuantite($produitId, $delta) {
         ];
         
     } catch (Exception $e) {
+        error_log("Erreur modifierQuantite: " . $e->getMessage());
         return ['success' => false, 'message' => 'Une erreur est survenue'];
     }
 }
@@ -219,16 +220,13 @@ function redirectAfterAction() {
 
 // Fonction pour envoyer une réponse JSON propre
 function sendJsonResponse($response) {
-    // Nettoyer complètement la sortie
     while (ob_get_level()) {
         ob_end_clean();
     }
     
-    // Envoyer les headers JSON
     header('Content-Type: application/json; charset=utf-8');
     header('Cache-Control: no-cache, must-revalidate');
     
-    // Envoyer la réponse JSON
     echo json_encode($response, JSON_UNESCAPED_UNICODE);
     exit();
 }
@@ -285,7 +283,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             redirectAfterAction();
             break;
             
-                case 'modifier':
+        case 'modifier':
             $produitId = isset($_GET['produitId']) ? intval($_GET['produitId']) : 0;
             $delta = isset($_GET['delta']) ? intval($_GET['delta']) : 0;
             $response = modifierQuantite($produitId, $delta);

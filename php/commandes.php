@@ -1,4 +1,10 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+header('Content-Type: text/plain'); // Pour voir les erreurs brutes
+
+
 require_once 'db.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
@@ -96,46 +102,57 @@ function getOrderDetails() {
     global $pdo;
     
     try {
-        $orderId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-        
-        if ($orderId <= 0) {
-            http_response_code(400);
-            echo json_encode(['error' => 'ID commande invalide']);
-            return;
-        }
-        
-        // Récupérer les détails de la commande - CORRECTION ICI
-        $sql = "SELECT p.NomProduit as produit, pa.Qtt as quantite, 
-                p.Prix as prix, (pa.Qtt * p.Prix) as total
-                FROM panier pa
-                JOIN produit p ON pa.IdProd = p.IdProduit
-                WHERE pa.IdCom = :order_id";
+        $orderId = (int)($_GET['id'] ?? 0);
+        if ($orderId <= 0) throw new Exception('ID invalide');
+
+        // Requête test minimaliste
+        $test = $pdo->prepare("SELECT 1 FROM commande WHERE IdCommande = ? LIMIT 1");
+        $test->execute([$orderId]);
+        if (!$test->fetch()) throw new Exception('Commande introuvable');
+
+        // Version ultra-sécurisée avec vérification des colonnes
+        $sql = "SELECT 
+            p.NomProduit as produit,
+            pa.Qtt as quantite,
+            p.Prix as prix,
+            (pa.Qtt * p.Prix) as total
+            FROM panier pa
+            JOIN produit p ON pa.IdProd = p.IdProduit
+            WHERE pa.IdCom = ?";
         
         $stmt = $pdo->prepare($sql);
-        $stmt->execute([':order_id' => $orderId]);
-        $details = $stmt->fetchAll();
-        
-        // Récupérer les infos de base de la commande
-        $orderSql = "SELECT c.IdCommande, CONCAT(cl.PrenomClient, ' ', cl.NomClient) as client, 
-                    DATE_FORMAT(c.DateCommande, '%Y-%m-%d') as date, c.Status as statut, 
-                    c.TotalPrix as total
-                    FROM commande c
-                    JOIN client cl ON c.IdClient = cl.IdClient
-                    WHERE c.IdCommande = :order_id";
+        $stmt->execute([$orderId]);
+        $details = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $orderSql = "SELECT 
+            c.IdCommande as id,
+            CONCAT(cl.PrenomClient, ' ', cl.NomClient) as client,
+            DATE_FORMAT(c.DateCommande, '%d/%m/%Y') as date,
+            c.Status as statut,
+            c.TotalPrix as total
+            FROM commande c
+            JOIN client cl ON c.IdClient = cl.IdClient
+            WHERE c.IdCommande = ?";
         
         $orderStmt = $pdo->prepare($orderSql);
-        $orderStmt->execute([':order_id' => $orderId]);
-        $orderInfo = $orderStmt->fetch();
-        
+        $orderStmt->execute([$orderId]);
+        $orderInfo = $orderStmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$orderInfo) throw new Exception('Infos commande introuvables');
+
         echo json_encode([
             'success' => true,
             'data' => $details,
             'orderInfo' => $orderInfo
         ]);
-        
-    } catch(PDOException $e) {
+
+    } catch(Exception $e) {
         http_response_code(500);
-        echo json_encode(['error' => 'Erreur lors de la récupération des détails: ' . $e->getMessage()]);
+        echo json_encode([
+            'error' => 'Erreur technique',
+            'debug' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
     }
 }
 

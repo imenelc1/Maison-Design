@@ -119,6 +119,11 @@ if (isset($_SESSION['user_id'])) {
                                 <p class="text-sm text-gray-500 mb-1">Téléphone</p>
                                 <p class="font-medium"><?php echo htmlspecialchars($_SESSION['telephone'] ?? ''); ?></p>
                             </div>
+                            <!-- AJOUTÉ: Adresse -->
+                            <div class="md:col-span-2">
+                                <p class="text-sm text-gray-500 mb-1">Adresse</p>
+                                <p class="font-medium"><?php echo htmlspecialchars($_SESSION['adresse'] ?? 'Non renseignée'); ?></p>
+                            </div>
                             <div>
                                 <p class="text-sm text-gray-500 mb-1">Date d'inscription</p>
                                 <p class="font-medium"><?php echo isset($_SESSION['date_inscription']) ? date('d/m/Y', strtotime($_SESSION['date_inscription'])) : ''; ?></p>

@@ -1,5 +1,5 @@
 <?php
-// Version corrigée basée sur la vraie structure de votre base de données
+// Version corrigée - SANS division des prix
 session_start();
 header('Content-Type: application/json');
 
@@ -52,32 +52,40 @@ try {
         // Formater la date
         $commande['date'] = date('d/m/Y à H:i', strtotime($commande['date']));
         
-        // Formater le montant (diviser par 1000 car stocké en millièmes)
-        $montant = floatval($commande['montant_total']) / 1000;
-        $commande['montant_total'] = number_format($montant, 0, ',', ' ');
+        // CORRIGÉ: Formater le montant SANS division
+        $montant = floatval($commande['montant_total']);
+        $commande['montant_total'] = number_format($montant, 2, ',', ' ');
         
         // Traduire le statut
-        switch ($commande['statut']) {
+        switch (strtolower(trim($commande['statut']))) {
+            case 'en_attente':
             case 'en attente':
+            case 'pending':
+            case '':
                 $commande['statut'] = 'En attente';
                 break;
-            case 'expe?die?':
+            case 'confirme':
+            case 'confirmé':
+            case 'confirmed':
+                $commande['statut'] = 'Confirmée';
+                break;
             case 'expedie':
             case 'expédié':
-                $commande['statut'] = 'Expédié';
+            case 'shipped':
+                $commande['statut'] = 'Expédiée';
                 break;
-            case 'livre?':
             case 'livre':
             case 'livré':
-                $commande['statut'] = 'Livré';
+            case 'delivered':
+                $commande['statut'] = 'Livrée';
                 break;
-            case 'annule?':
             case 'annule':
             case 'annulé':
-                $commande['statut'] = 'Annulé';
+            case 'cancelled':
+                $commande['statut'] = 'Annulée';
                 break;
             default:
-                $commande['statut'] = ucfirst($commande['statut']);
+                $commande['statut'] = 'En attente';
         }
         
         // Ajouter l'adresse de livraison
@@ -100,9 +108,9 @@ try {
         
         // Traiter les produits
         foreach ($produits as &$produit) {
-            // Formater le prix unitaire (diviser par 1000)
-            $prix = floatval($produit['prix_unitaire']) / 1000;
-            $produit['prix_unitaire'] = number_format($prix, 0, ',', ' ');
+            // CORRIGÉ: Formater le prix unitaire SANS division
+            $prix = floatval($produit['prix_unitaire']);
+            $produit['prix_unitaire'] = number_format($prix, 2, ',', ' ');
             
             // Corriger le chemin de l'image
             if (empty($produit['image'])) {

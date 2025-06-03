@@ -1,473 +1,297 @@
-class CategoryManager {
-  constructor() {
-    this.currentCategory = window.initialData.selectedCategory || "all"
-    this.categories = window.initialData.categories || []
-    this.isLoggedIn = window.sessionData ? window.sessionData.isLoggedIn : false
-    this.clientId = window.sessionData ? window.sessionData.clientId : null
-    this.productsCache = new Map()
-    this.init()
-  }
+// Script pour la page catégories - Version corrigée
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("Page catégories chargée")
 
-  init() {
-    console.log("Initialisation du gestionnaire de catégories...")
-    console.log("Utilisateur connecté:", this.isLoggedIn)
-    console.log("ID client:", this.clientId)
-    this.setupEventListeners()
-    this.updateActiveFilter(this.currentCategory)
-  }
+  const categoryFilters = document.querySelectorAll(".category-filter")
+  const productsContainer = document.getElementById("products-container")
+  const productsTitle = document.getElementById("products-title")
+  const loading = document.getElementById("loading")
+  const errorMessage = document.getElementById("error-message")
 
-  setupEventListeners() {
-    const categoryFilters = document.getElementById("category-filters")
-    if (!categoryFilters) {
-      console.error("Container des filtres non trouvé")
-      return
-    }
+  let currentCategory = window.initialData?.selectedCategory || "all"
 
-    categoryFilters.addEventListener("click", (e) => {
-      if (e.target.classList.contains("category-filter")) {
-        e.preventDefault()
-        const category = e.target.getAttribute("data-category")
-        console.log("Filtre cliqué:", category)
-        this.filterByCategory(category)
+  // Attacher les événements aux boutons favoris existants
+  attachFavoriteEvents()
+
+  // Attacher les événements aux boutons d'ajout au panier existants
+  attachCartEvents()
+
+  // Gestion des filtres de catégories
+  categoryFilters.forEach((filter) => {
+    filter.addEventListener("click", function (e) {
+      e.preventDefault()
+      const category = this.getAttribute("data-category")
+
+      if (category === currentCategory) {
+        console.log("Catégorie déjà sélectionnée:", category)
+        return
       }
-    })
 
-    // Gestionnaire pour les boutons d'ajout au panier
-    document.addEventListener("click", (e) => {
-      if (e.target.closest(".add-to-cart-btn")) {
-        e.preventDefault()
-        const button = e.target.closest(".add-to-cart-btn")
-        const productId = button.getAttribute("data-product-id")
-        this.addToCart(productId, button)
-      }
-    })
+      // Mettre à jour l'apparence des filtres
+      categoryFilters.forEach((f) => {
+        f.classList.remove("bg-accent", "text-white")
+        f.classList.add("bg-primary", "text-textColor")
+      })
+      this.classList.remove("bg-primary", "text-textColor")
+      this.classList.add("bg-accent", "text-white")
 
-    window.addEventListener("popstate", (e) => {
-      const urlParams = new URLSearchParams(window.location.search)
-      const categoryParam = urlParams.get("category") || "all"
-      this.filterByCategory(categoryParam, false)
+      // Charger les produits
+      loadProducts(category)
     })
-  }
+  })
 
-  async filterByCategory(category, updateURL = true) {
-    if (category === this.currentCategory && this.productsCache.has(category)) {
-      console.log("Utilisation du cache pour la catégorie:", category)
-      this.renderProducts(this.productsCache.get(category))
-      return
-    }
+  async function loadProducts(category) {
+    currentCategory = category
 
     try {
-      this.showLoading(true)
-      this.hideError()
-      this.currentCategory = category
-      this.updateActiveFilter(category)
+      loading.classList.remove("hidden")
+      errorMessage.classList.add("hidden")
 
       const url =
         category === "all" ? "categories.php?ajax=1" : `categories.php?category=${encodeURIComponent(category)}&ajax=1`
 
-      const response = await fetch(url, {
-        headers: {
-          "Cache-Control": "no-cache",
-          Pragma: "no-cache",
-        },
-      })
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
+      const response = await fetch(url)
       const data = await response.json()
-      console.log("Données reçues pour", category, ":", data)
+
+      loading.classList.add("hidden")
 
       if (data.success) {
-        const uniqueProducts = this.removeDuplicates(data.products)
-        this.productsCache.set(category, uniqueProducts)
-        this.renderProducts(uniqueProducts)
-        this.updateTitle(category, uniqueProducts.length)
+        // Mettre à jour les favoris globaux
+        window.userFavorites = data.userFavorites || []
 
-        if (updateURL) {
-          this.updateURL(category)
-        }
+        // Mettre à jour le titre
+        productsTitle.textContent =
+          category === "all"
+            ? `Tous nos produits (${data.products.length})`
+            : `Nos ${category} (${data.products.length})`
+
+        // Mettre à jour l'URL
+        const newUrl = category === "all" ? "categories.php" : `categories.php?category=${encodeURIComponent(category)}`
+        window.history.pushState({}, "", newUrl)
+
+        // Afficher les produits
+        updateProductsDisplay(data.products)
       } else {
-        throw new Error(data.message || "Erreur inconnue")
+        showError(data.message || "Erreur lors du chargement")
       }
     } catch (error) {
-      console.error("Erreur lors du filtrage:", error)
-      this.showError("Erreur lors du chargement des produits: " + error.message)
-    } finally {
-      this.showLoading(false)
+      loading.classList.add("hidden")
+      showError("Une erreur est survenue lors du chargement")
+      console.error("Erreur:", error)
     }
   }
 
-  removeDuplicates(products) {
+  function updateProductsDisplay(products) {
+    if (!products || products.length === 0) {
+      productsContainer.innerHTML = `
+                <div class="col-span-full text-center py-12">
+                    <p class="text-xl text-textColor/70">Aucun produit trouvé dans cette catégorie.</p>
+                </div>
+            `
+      return
+    }
+
+    // Éliminer les doublons côté client
     const uniqueProducts = []
     const seenIds = new Set()
 
-    for (const product of products) {
+    products.forEach((product) => {
       if (!seenIds.has(product.IdProduit)) {
         seenIds.add(product.IdProduit)
         uniqueProducts.push(product)
       }
-    }
+    })
 
-    return uniqueProducts
+    let html = ""
+    uniqueProducts.forEach((product) => {
+      const isFavorite = product.isFavorite || false
+      const isInStock = product.Stock > 0
+
+      html += `
+                <div class="product-item bg-white rounded-xl overflow-hidden shadow-md transition-transform hover:-translate-y-1" 
+                     data-product-id="${product.IdProduit}">
+                    
+                    <a href="produit.php?id=${product.IdProduit}" class="block">
+                        <div class="product-image h-48 overflow-hidden relative group">
+                            <img src="${product.image}" 
+                                 alt="${product.NomProduit}" 
+                                 class="w-full h-full object-cover transition-transform group-hover:scale-105"
+                                 onerror="this.src='images/placeholder.jpeg'">
+                            <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
+                                <span class="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-medium">
+                                    Voir détails
+                                </span>
+                            </div>
+                        </div>
+                    </a>
+                    
+                    <div class="product-info p-4">
+                        <h3 class="text-lg font-medium text-textColor mb-1">${product.NomProduit}</h3>
+                        <p class="text-accent font-bold text-xl">${Number.parseFloat(product.Prix).toLocaleString("fr-FR", { minimumFractionDigits: 2 })} DA</p>
+                        
+                        ${
+                          isInStock
+                            ? `<div class="flex items-center gap-1 mt-2 text-green-600">
+                                <i class='bx bx-check'></i>
+                                <span class="text-sm">Disponible (${product.Stock})</span>
+                            </div>`
+                            : `<div class="flex items-center gap-1 mt-2 text-red-600">
+                                <i class='bx bx-x'></i>
+                                <span class="text-sm">Indisponible</span>
+                            </div>`
+                        }
+                    </div>
+                    
+                    <div class="p-4 pt-0 flex flex-col gap-2">
+                        <a href="produit.php?id=${product.IdProduit}" 
+                           class="w-full px-3 py-2 bg-primary text-textColor rounded-full hover:bg-accent hover:text-white transition-colors text-sm flex items-center justify-center gap-2 font-medium">
+                            Voir détails
+                        </a>
+                        
+                        <div class="flex gap-2">
+                            ${
+                              isInStock
+                                ? `<button class="add-to-cart-btn flex-1 px-3 py-2 bg-accent text-white rounded-full hover:bg-accent/80 transition-colors text-sm flex items-center justify-center gap-1"
+                                        data-product-id="${product.IdProduit}"
+                                        data-original-content="<i class='bx bx-cart-add'></i> Ajouter">
+                                    <i class='bx bx-cart-add'></i> Ajouter
+                                </button>`
+                                : `<button disabled 
+                                        class="flex-1 px-3 py-2 bg-gray-300 text-gray-500 rounded-full cursor-not-allowed text-sm flex items-center justify-center gap-1">
+                                    <i class='bx bx-cart-add'></i> Ajouter
+                                </button>`
+                            }
+                            
+                            <button class="favorite-btn px-3 py-2 ${isFavorite ? "bg-red-100 text-red-600" : "bg-gray-100 text-gray-600"} rounded-full hover:bg-red-100 hover:text-red-600 transition-colors text-sm flex items-center justify-center"
+                                    title="${isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}"
+                                    data-product-id="${product.IdProduit}">
+                                <i class='${isFavorite ? "fas fa-heart text-red-600" : "far fa-heart"}'></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `
+    })
+
+    productsContainer.innerHTML = html
+
+    // Réattacher les événements
+    attachFavoriteEvents()
+    attachCartEvents()
+
+    console.log(`Produits affichés: ${uniqueProducts.length}`)
   }
 
-  renderProducts(products) {
-    const productsContainer = document.getElementById("products-container")
-    if (!productsContainer) {
-      console.error("Container des produits non trouvé")
-      return
-    }
+  function attachCartEvents() {
+    const cartButtons = document.querySelectorAll(".add-to-cart-btn")
+    cartButtons.forEach((button) => {
+      // Supprimer les anciens événements
+      const newButton = button.cloneNode(true)
+      button.parentNode.replaceChild(newButton, button)
 
-    let productHTML = ""
-    if (products && products.length > 0) {
-      products.forEach((product) => {
-        const isInStock = product.Stock > 0
-        const stockClass = isInStock ? "text-green-600" : "text-red-600"
-        const stockText = isInStock ? `En stock (${product.Stock})` : "Rupture de stock"
+      newButton.addEventListener("click", function (e) {
+        e.preventDefault()
+        const productId = Number.parseInt(this.getAttribute("data-product-id"))
 
-        productHTML += `
-          <div class="w-full sm:w-1/2 md:w-1/3 lg:w-1/4 xl:w-1/4 p-2">
-            <div class="bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:-translate-y-1">
-              <div class="relative">
-                <img src="${this.escapeHtml(product.Image || product.image)}" 
-                     alt="${this.escapeHtml(product.Nom || product.NomProduit)}" 
-                     class="w-full h-48 object-cover"
-                     onerror="this.src='images/placeholder.jpeg'">
-                <span class="absolute top-2 right-2 ${stockClass} bg-white px-2 py-1 rounded-full text-xs font-medium">
-                  ${stockText}
-                </span>
-              </div>
-              <div class="p-4">
-                <h3 class="text-lg font-semibold mb-2 line-clamp-2">${this.escapeHtml(product.Nom || product.NomProduit)}</h3>
-                <p class="text-gray-600 text-sm mb-3 line-clamp-2">${this.escapeHtml(product.DescriptionCourte || product.Description || "")}</p>
-                <div class="flex items-center justify-between mb-3">
-                  <span class="text-accent font-bold text-lg">${this.formatPrice(product.Prix)} DA</span>
-                </div>
-                <div class="flex gap-2">
-                  <a href="produit.php?id=${product.IdProduit}" 
-                     class="flex-1 px-3 py-2 bg-gray-100 text-textColor rounded-full hover:bg-gray-200 transition-colors text-sm flex items-center justify-center gap-2 font-medium">
-                    <i class='bx bx-show'></i> Détails
-                  </a>
-                  ${
-                    isInStock
-                      ? `
-                    <button class="add-to-cart-btn flex-1 px-3 py-2 bg-accent text-white rounded-full hover:bg-accent/80 transition-colors text-sm flex items-center justify-center gap-2 font-medium"
-                            data-product-id="${product.IdProduit}">
-                      <i class='bx bx-cart-add'></i> Ajouter
-                    </button>
-                  `
-                      : `
-                    <button disabled class="flex-1 px-3 py-2 bg-gray-300 text-gray-500 rounded-full cursor-not-allowed text-sm flex items-center justify-center gap-2 font-medium">
-                      <i class='bx bx-cart-add'></i> Indisponible
-                    </button>
-                  `
-                  }
-                </div>
-              </div>
-            </div>
-          </div>
-        `
+        if (!productId) {
+          window.cartManager.showNotification("Erreur: ID du produit non trouvé", "error")
+          return
+        }
+
+        // Utiliser le CartManager global
+        window.cartManager.addToCart(productId, 1, this)
       })
-    } else {
-      productHTML = `
-        <div class="col-span-full text-center py-12">
-          <i class='bx bx-package text-6xl text-gray-300 mb-4'></i>
-          <p class="text-gray-500 text-lg">Aucun produit trouvé dans cette catégorie.</p>
-        </div>
-      `
-    }
-
-    productsContainer.innerHTML = productHTML
-    this.attachFavoriteEvents()
+    })
   }
 
-  // MÉTHODE CORRIGÉE: Ajouter au panier - IDENTIQUE À product.js
-  async addToCart(productId, button) {
-    if (!productId) {
-      this.afficherNotification("Erreur: ID du produit non trouvé")
-      return
-    }
+  function attachFavoriteEvents() {
+    const favoriteButtons = document.querySelectorAll(".favorite-btn")
+    favoriteButtons.forEach((button) => {
+      // Supprimer les anciens événements
+      const newButton = button.cloneNode(true)
+      button.parentNode.replaceChild(newButton, button)
 
-    console.log("Ajout au panier - Produit ID:", productId)
+      newButton.addEventListener("click", function (e) {
+        e.preventDefault()
+        const productId = Number.parseInt(this.getAttribute("data-product-id"))
 
-    // Désactiver le bouton pendant la requête
-    button.disabled = true
+        if (!window.sessionData?.isLoggedIn) {
+          window.cartManager.showNotification("Veuillez vous connecter pour ajouter des produits aux favoris", "error")
+          setTimeout(() => {
+            window.location.href = "connexion.php"
+          }, 1500)
+          return
+        }
+
+        toggleFavorite(productId, this)
+      })
+    })
+  }
+
+  async function toggleFavorite(productId, button) {
+    const icon = button.querySelector("i")
     const originalContent = button.innerHTML
-    button.innerHTML = '<i class="bx bx-loader-alt animate-spin"></i> Ajout en cours...'
+    button.disabled = true
+    button.innerHTML = '<i class="bx bx-loader-alt animate-spin"></i>'
 
     try {
-      const response = await fetch("php/cart_actions.php", {
+      const response = await fetch("php/favorites_actions.php", {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
-          "X-Requested-With": "XMLHttpRequest",
         },
-        body: `action=ajouter&produitId=${productId}&quantite=1`,
+        body: `action=toggle&produitId=${productId}`,
       })
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
       const data = await response.json()
-      console.log("Réponse du serveur:", data)
 
       if (data.success) {
-        // CORRECTION PRINCIPALE: Utiliser la même méthode que dans product.js
-        const cartCount = data.cartCount
-        this.updateAllCartCounters(cartCount)
-        this.afficherNotification(data.message || "Produit ajouté au panier !")
+        if (data.action === "added") {
+          icon.classList.remove("far", "fa-heart")
+          icon.classList.add("fas", "fa-heart", "text-red-600")
+          button.classList.remove("bg-gray-100", "text-gray-600")
+          button.classList.add("bg-red-100", "text-red-600")
+          button.title = "Retirer des favoris"
+          window.cartManager.showNotification("Produit ajouté aux favoris !", "success")
+
+          if (!window.userFavorites.includes(productId)) {
+            window.userFavorites.push(productId)
+          }
+        } else {
+          icon.classList.remove("fas", "fa-heart", "text-red-600")
+          icon.classList.add("far", "fa-heart")
+          button.classList.remove("bg-red-100", "text-red-600")
+          button.classList.add("bg-gray-100", "text-gray-600")
+          button.title = "Ajouter aux favoris"
+          window.cartManager.showNotification("Produit retiré des favoris", "success")
+
+          window.userFavorites = window.userFavorites.filter((id) => id !== productId)
+        }
       } else {
-        this.afficherNotification(data.message || "Erreur lors de l'ajout au panier")
+        window.cartManager.showNotification("Erreur: " + data.message, "error")
       }
     } catch (error) {
-      console.error("Erreur lors de l'ajout au panier:", error)
-      this.afficherNotification("Une erreur est survenue")
+      console.error("Erreur:", error)
+      window.cartManager.showNotification("Une erreur est survenue", "error")
     } finally {
-      // Réactiver le bouton
       button.disabled = false
       button.innerHTML = originalContent
     }
   }
 
-  // NOUVELLE MÉTHODE: Identique à celle de product.js
-  updateAllCartCounters(count) {
-    // Cibler tous les compteurs possibles
-    const counters = [
-      document.getElementById("cart-counter"),
-      document.getElementById("cart-counter-mobile"),
-      ...document.querySelectorAll(".cart-badge"),
-    ].filter(Boolean)
-
-    // Mettre à jour chaque compteur
-    counters.forEach((counter) => {
-      counter.textContent = count > 99 ? "99+" : count
-      counter.style.display = count > 0 ? "flex" : "none"
-    })
-
-    console.log(`Compteur panier mis à jour: ${count} (${counters.length} compteurs trouvés)`)
-  }
-
-  // NOUVELLE MÉTHODE: Identique à celle de product.js
-  afficherNotification(message) {
-    // Créer l'élément de notification s'il n'existe pas
-    let notification = document.getElementById("notification")
-    if (!notification) {
-      notification = document.createElement("div")
-      notification.id = "notification"
-      notification.className =
-        "fixed bottom-4 right-4 bg-accent text-white px-4 py-2 rounded-lg shadow-lg transform translate-y-10 opacity-0 transition-all duration-300 z-50"
-      document.body.appendChild(notification)
-    }
-
-    // Afficher le message
-    notification.textContent = message
-    notification.classList.remove("translate-y-10", "opacity-0")
-
-    // Masquer après 3 secondes
-    setTimeout(() => {
-      notification.classList.add("translate-y-10", "opacity-0")
-    }, 3000)
-  }
-
-  updateActiveFilter(category) {
-    const filters = document.querySelectorAll(".category-filter")
-    filters.forEach((filter) => {
-      const filterCategory = filter.getAttribute("data-category")
-      if (filterCategory === category) {
-        filter.classList.remove("bg-primary", "text-textColor")
-        filter.classList.add("bg-accent", "text-white")
-      } else {
-        filter.classList.remove("bg-accent", "text-white")
-        filter.classList.add("bg-primary", "text-textColor")
+  function showError(message) {
+    if (errorMessage) {
+      const errorText = document.getElementById("error-text")
+      if (errorText) {
+        errorText.textContent = message
       }
-    })
-  }
-
-  updateTitle(category, productCount) {
-    const title = document.getElementById("products-title")
-    if (!title) return
-
-    if (category === "all") {
-      title.textContent = `Tous nos produits (${productCount})`
-    } else {
-      const categoryObj = this.categories.find((cat) => cat.NomCategorie.toLowerCase() === category.toLowerCase())
-      title.textContent = `Nos ${categoryObj ? categoryObj.NomCategorie : category} (${productCount})`
+      errorMessage.classList.remove("hidden")
     }
   }
-
-  updateURL(category) {
-    const url = new URL(window.location)
-    if (category === "all") {
-      url.searchParams.delete("category")
-    } else {
-      url.searchParams.set("category", category)
-    }
-    window.history.pushState({}, "", url)
-  }
-
-  showLoading(show) {
-    const loading = document.getElementById("loading")
-    if (loading) {
-      loading.classList.toggle("hidden", !show)
-    }
-  }
-
-  showError(message) {
-    const errorDiv = document.getElementById("error-message")
-    const errorText = document.getElementById("error-text")
-
-    if (errorDiv && errorText) {
-      errorText.textContent = message
-      errorDiv.classList.remove("hidden")
-    }
-    console.error("Erreur affichée:", message)
-  }
-
-  hideError() {
-    const errorDiv = document.getElementById("error-message")
-    if (errorDiv) {
-      errorDiv.classList.add("hidden")
-    }
-  }
-
-  escapeHtml(text) {
-    if (!text) return ""
-    const div = document.createElement("div")
-    div.textContent = text
-    return div.innerHTML
-  }
-
-  formatPrice(price) {
-    return new Intl.NumberFormat("fr-FR", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(price)
-  }
-
-  attachFavoriteEvents() {
-    const favoriteButtons = document.querySelectorAll(".favorite-btn")
-    favoriteButtons.forEach((button) => {
-      button.addEventListener("click", (e) => {
-        e.preventDefault()
-        const productId = Number.parseInt(button.getAttribute("data-product-id"), 10)
-        this.toggleFavorite(productId, button)
-      })
-    })
-  }
-
-  toggleFavorite(productId, button) {
-    if (!this.isLoggedIn) {
-      this.afficherNotification("Veuillez vous connecter pour ajouter des produits aux favoris")
-      setTimeout(() => {
-        window.location.href = "connexion.php"
-      }, 1500)
-      return
-    }
-
-    const icon = button.querySelector("i")
-    button.disabled = true
-
-    fetch("php/favorites_actions.php", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: `action=toggle&produitId=${productId}`,
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.success) {
-          if (data.action === "added") {
-            icon.classList.remove("far", "fa-heart")
-            icon.classList.add("fas", "fa-heart", "text-red-600")
-            button.classList.remove("bg-gray-100", "text-gray-600")
-            button.classList.add("bg-red-100", "text-red-600")
-            button.title = "Retirer des favoris"
-            this.afficherNotification("Produit ajouté aux favoris !")
-          } else {
-            icon.classList.remove("fas", "fa-heart", "text-red-600")
-            icon.classList.add("far", "fa-heart")
-            button.classList.remove("bg-red-100", "text-red-600")
-            button.classList.add("bg-gray-100", "text-gray-600")
-            button.title = "Ajouter aux favoris"
-            this.afficherNotification("Produit retiré des favoris")
-          }
-
-          this.productsCache.clear()
-          this.filterByCategory(this.currentCategory, false)
-        } else {
-          this.afficherNotification("Erreur: " + data.message)
-        }
-      })
-      .catch((error) => {
-        console.error("Erreur:", error)
-        this.afficherNotification("Une erreur est survenue")
-      })
-      .finally(() => {
-        button.disabled = false
-      })
-  }
-}
-
-// Initialisation
-document.addEventListener("DOMContentLoaded", () => {
-  console.log("DOM chargé, initialisation du CategoryManager...")
-  new CategoryManager()
 })
 
-// Fonction globale pour compatibilité avec le code existant
-window.addToCart = (productId) => {
-  const button = document.querySelector(`.add-to-cart-btn[data-product-id="${productId}"]`)
-  if (window.categoryManager) {
-    window.categoryManager.addToCart(productId, button || null)
-  } else {
-    // Fallback si le gestionnaire n'est pas disponible
-    fetch("php/cart_actions.php", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        "X-Requested-With": "XMLHttpRequest",
-      },
-      body: `action=ajouter&produitId=${productId}&quantite=1`,
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.success) {
-          // Mettre à jour tous les compteurs possibles
-          const counters = [
-            document.getElementById("cart-counter"),
-            document.getElementById("cart-counter-mobile"),
-            ...document.querySelectorAll(".cart-badge"),
-          ].filter(Boolean)
-
-          counters.forEach((counter) => {
-            counter.textContent = data.cartCount > 99 ? "99+" : data.cartCount
-            counter.style.display = data.cartCount > 0 ? "flex" : "none"
-          })
-
-          // Notification
-          let notification = document.getElementById("notification")
-          if (!notification) {
-            notification = document.createElement("div")
-            notification.id = "notification"
-            notification.className =
-              "fixed bottom-4 right-4 bg-accent text-white px-4 py-2 rounded-lg shadow-lg transform translate-y-10 opacity-0 transition-all duration-300 z-50"
-            document.body.appendChild(notification)
-          }
-
-          notification.textContent = "Produit ajouté au panier !"
-          notification.classList.remove("translate-y-10", "opacity-0")
-
-          setTimeout(() => {
-            notification.classList.add("translate-y-10", "opacity-0")
-          }, 3000)
-        }
-      })
-      .catch((error) => {
-        console.error("Erreur:", error)
-      })
-  }
+// Fonction globale pour compatibilité
+window.addToCart = (productId, quantity = 1) => {
+  const button = document.querySelector(`[data-product-id="${productId}"].add-to-cart-btn`)
+  window.cartManager.addToCart(productId, quantity, button)
 }
