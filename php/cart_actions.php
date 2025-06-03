@@ -1,5 +1,5 @@
 <?php
-// Version corrigée pour éviter les doublons et améliorer la fiabilité
+// Version corrigée pour éviter les doublons et la duplication
 ob_clean();
 ini_set('display_errors', 0);
 error_reporting(0);
@@ -19,11 +19,19 @@ if (!isset($_SESSION['panier'])) {
     $_SESSION['panier'] = [];
 }
 
-// Fonction pour ajouter un produit au panier - VERSION CORRIGÉE
+// Fonction pour ajouter un produit au panier - VERSION CORRIGÉE ANTI-DUPLICATION
 function ajouterAuPanier($produitId, $quantite = 1) {
     global $pdo;
     
     try {
+        // CORRECTION 1: S'assurer que $produitId est un entier
+        $produitId = (int)$produitId;
+        $quantite = (int)$quantite;
+        
+        if ($produitId <= 0 || $quantite <= 0) {
+            return ['success' => false, 'message' => 'Paramètres invalides'];
+        }
+        
         // Vérifier si le produit existe et récupérer ses informations
         $stmt = $pdo->prepare("
             SELECT p.*, i.URL as image
@@ -48,33 +56,40 @@ function ajouterAuPanier($produitId, $quantite = 1) {
             return ['success' => false, 'message' => 'Ce produit n\'est plus disponible en stock'];
         }
 
-        // CORRECTION: Vérifier si le produit est déjà dans le panier
-        $produitExiste = false;
-        $quantiteActuelle = 0;
+        // CORRECTION 2: Vérifier si le produit est déjà dans le panier avec une comparaison stricte
+        $produitTrouve = false;
+        $indexProduit = -1;
         
-        foreach ($_SESSION['panier'] as $key => &$item) {
-            if ($item['id'] == $produitId) {
-                $quantiteActuelle = $item['quantite'];
-                $produitExiste = true;
-                
-                // Vérifier si la quantité demandée ne dépasse pas le stock
-                if (($quantiteActuelle + $quantite) > $stockDisponible) {
-                    $quantiteRestante = $stockDisponible - $quantiteActuelle;
-                    if ($quantiteRestante <= 0) {
-                        return ['success' => false, 'message' => 'Vous avez déjà le maximum disponible de ce produit dans votre panier'];
-                    } else {
-                        return ['success' => false, 'message' => "Stock insuffisant. Il ne reste que {$quantiteRestante} exemplaire(s) disponible(s)"];
-                    }
-                }
-                
-                // Augmenter la quantité
-                $item['quantite'] += $quantite;
+        for ($i = 0; $i < count($_SESSION['panier']); $i++) {
+            // CORRECTION 3: Comparaison stricte avec conversion en entier
+            if ((int)$_SESSION['panier'][$i]['id'] === $produitId) {
+                $produitTrouve = true;
+                $indexProduit = $i;
                 break;
             }
         }
         
-        // Si le produit n'est pas dans le panier, l'ajouter
-        if (!$produitExiste) {
+        if ($produitTrouve) {
+            // Le produit existe déjà, augmenter la quantité
+            $quantiteActuelle = (int)$_SESSION['panier'][$indexProduit]['quantite'];
+            $nouvelleQuantite = $quantiteActuelle + $quantite;
+            
+            // Vérifier si la nouvelle quantité ne dépasse pas le stock
+            if ($nouvelleQuantite > $stockDisponible) {
+                $quantiteRestante = $stockDisponible - $quantiteActuelle;
+                if ($quantiteRestante <= 0) {
+                    return ['success' => false, 'message' => 'Vous avez déjà le maximum disponible de ce produit dans votre panier'];
+                } else {
+                    return ['success' => false, 'message' => "Stock insuffisant. Il ne reste que {$quantiteRestante} exemplaire(s) disponible(s)"];
+                }
+            }
+            
+            // CORRECTION 4: Mise à jour directe par index
+            $_SESSION['panier'][$indexProduit]['quantite'] = $nouvelleQuantite;
+            
+        } else {
+            // Le produit n'existe pas dans le panier, l'ajouter
+            
             // Vérifier si la quantité demandée ne dépasse pas le stock
             if ($quantite > $stockDisponible) {
                 return ['success' => false, 'message' => "Stock insuffisant. Il ne reste que {$stockDisponible} exemplaire(s) disponible(s)"];
@@ -86,25 +101,36 @@ function ajouterAuPanier($produitId, $quantite = 1) {
                 $imageUrl = 'images/' . basename($imageUrl);
             }
             
+            // CORRECTION 5: Ajouter le nouveau produit avec des types cohérents
             $_SESSION['panier'][] = [
-                'id' => $produit['IdProduit'],
+                'id' => $produitId, // Entier
                 'nom' => $produit['NomProduit'],
-                'prix' => $produit['Prix'],
+                'prix' => (float)$produit['Prix'], // Float
                 'image' => $imageUrl,
-                'quantite' => $quantite
+                'quantite' => $quantite // Entier
             ];
         }
         
-        // Calculer le nouveau nombre total d'articles
+        // CORRECTION 6: Calculer le total avec vérification
         $totalItems = 0;
         foreach ($_SESSION['panier'] as $item) {
-            $totalItems += $item['quantite'];
+            $totalItems += (int)$item['quantite'];
         }
+        
+        // Debug pour vérifier l'état du panier
+        error_log("Panier après ajout: " . json_encode($_SESSION['panier']));
+        error_log("Total items: " . $totalItems);
         
         return [
             'success' => true, 
             'message' => 'Produit ajouté au panier avec succès',
-            'cartCount' => $totalItems
+            'cartCount' => $totalItems,
+            'debug' => [
+                'produitId' => $produitId,
+                'quantiteAjoutee' => $quantite,
+                'produitExistait' => $produitTrouve,
+                'totalItems' => $totalItems
+            ]
         ];
         
     } catch (Exception $e) {
@@ -113,11 +139,14 @@ function ajouterAuPanier($produitId, $quantite = 1) {
     }
 }
 
-// Fonction pour modifier la quantité d'un produit dans le panier
+// Fonction pour modifier la quantité d'un produit dans le panier - CORRIGÉE
 function modifierQuantite($produitId, $delta) {
     global $pdo;
     
     try {
+        $produitId = (int)$produitId;
+        $delta = (int)$delta;
+        
         // Vérifier le stock disponible
         $stmt = $pdo->prepare("SELECT Stock FROM produit WHERE IdProduit = ?");
         $stmt->execute([$produitId]);
@@ -128,38 +157,38 @@ function modifierQuantite($produitId, $delta) {
         }
         
         $stockDisponible = (int)$produit['Stock'];
-        $produitExiste = false;
+        $produitTrouve = false;
         
-        foreach ($_SESSION['panier'] as $key => &$item) {
-            if ($item['id'] == $produitId) {
-                $nouvelleQuantite = $item['quantite'] + $delta;
+        for ($i = 0; $i < count($_SESSION['panier']); $i++) {
+            if ((int)$_SESSION['panier'][$i]['id'] === $produitId) {
+                $nouvelleQuantite = (int)$_SESSION['panier'][$i]['quantite'] + $delta;
                 
                 // Vérifier le stock si on augmente la quantité
                 if ($delta > 0 && $nouvelleQuantite > $stockDisponible) {
                     return ['success' => false, 'message' => "Stock insuffisant. Il ne reste que {$stockDisponible} exemplaire(s) disponible(s)"];
                 }
                 
-                $item['quantite'] = $nouvelleQuantite;
-                
-                // Supprimer le produit si la quantité est 0 ou moins
-                if ($item['quantite'] <= 0) {
-                    unset($_SESSION['panier'][$key]);
-                    $_SESSION['panier'] = array_values($_SESSION['panier']); // Réindexer le tableau
+                if ($nouvelleQuantite <= 0) {
+                    // Supprimer le produit
+                    array_splice($_SESSION['panier'], $i, 1);
+                } else {
+                    // Mettre à jour la quantité
+                    $_SESSION['panier'][$i]['quantite'] = $nouvelleQuantite;
                 }
                 
-                $produitExiste = true;
+                $produitTrouve = true;
                 break;
             }
         }
         
-        if (!$produitExiste) {
+        if (!$produitTrouve) {
             return ['success' => false, 'message' => 'Produit non trouvé dans le panier'];
         }
         
         // Calculer le nouveau nombre total d'articles
         $totalItems = 0;
         foreach ($_SESSION['panier'] as $item) {
-            $totalItems += $item['quantite'];
+            $totalItems += (int)$item['quantite'];
         }
         
         return [
@@ -174,17 +203,18 @@ function modifierQuantite($produitId, $delta) {
     }
 }
 
-// Fonction pour supprimer un produit du panier
+// Fonction pour supprimer un produit du panier - CORRIGÉE
 function supprimerDuPanier($produitId) {
-    foreach ($_SESSION['panier'] as $key => $item) {
-        if ($item['id'] == $produitId) {
-            unset($_SESSION['panier'][$key]);
-            $_SESSION['panier'] = array_values($_SESSION['panier']); // Réindexer le tableau
+    $produitId = (int)$produitId;
+    
+    for ($i = 0; $i < count($_SESSION['panier']); $i++) {
+        if ((int)$_SESSION['panier'][$i]['id'] === $produitId) {
+            array_splice($_SESSION['panier'], $i, 1);
             
             // Calculer le nouveau nombre total d'articles
             $totalItems = 0;
             foreach ($_SESSION['panier'] as $item) {
-                $totalItems += $item['quantite'];
+                $totalItems += (int)$item['quantite'];
             }
             
             return [
@@ -305,14 +335,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $panier = $_SESSION['panier'];
             $sousTotal = 0;
             foreach ($panier as $item) {
-                $sousTotal += $item['prix'] * $item['quantite'];
+                $sousTotal += (float)$item['prix'] * (int)$item['quantite'];
             }
             $fraisLivraison = 1000;
             $total = $sousTotal + $fraisLivraison;
             
             $totalItems = 0;
             foreach ($panier as $item) {
-                $totalItems += $item['quantite'];
+                $totalItems += (int)$item['quantite'];
             }
             
             $response = [

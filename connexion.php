@@ -88,46 +88,71 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body class="font-cormorant bg-background">
     <!-- HEADER -->
     <?php include 'header.php'; ?>
-
-    <main class="min-h-screen pt-28 pb-16 px-4 md:px-[10%] bg-background">
-        <div class="max-w-md mx-auto">
-            <div class="bg-white rounded-xl shadow-md overflow-hidden p-8">
-                <h1 class="text-3xl font-frunchy text-textColor text-center mb-8">Connexion</h1>
+  <main class="min-h-screen py-24 px-4 bg-background flex items-center justify-center">
+        <div class="w-full max-w-md">
+            <div class="bg-white rounded-3xl shadow-lg p-8 flex flex-col items-center">
+                <h2 class="text-3xl font-frunchy text-textColor mb-8">Connexion</h2>
                 
-                <?php if (isset($error)): ?>
-                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
-                    <?php echo htmlspecialchars($error); ?>
+                <?php if (!empty($error)): ?>
+                <div id="error-message" class="w-full mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+                    <?php echo $error; ?>
                 </div>
                 <?php endif; ?>
                 
-                <form method="POST" class="space-y-6">
-                    <div>
-                        <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                        <input type="email" id="email" name="email" required
-                               value="<?php echo htmlspecialchars($email ?? ''); ?>"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent">
+                <form class="w-full space-y-6" action="php/login.php" method="POST">
+                    <div class="space-y-2">
+                        <label for="email" class="block text-textColor">Email</label>
+                        <div class="relative">
+                            <i class='bx bx-envelope absolute left-4 top-1/2 transform -translate-y-1/2 text-accent text-xl'></i>
+                            <input 
+                                type="email" 
+                                id="email" 
+                                name="email" 
+                                required 
+                                placeholder="Votre email" 
+                                class="w-full pl-12 pr-4 py-3 rounded-full border border-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition"
+                                value="<?php echo isset($_GET['email']) ? htmlspecialchars($_GET['email']) : ''; ?>"
+                            >
+                        </div>
                     </div>
                     
-                    <div>
-                        <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Mot de passe</label>
-                        <input type="password" id="password" name="password" required
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent">
+                    <div class="space-y-2">
+                        <label for="password" class="block text-textColor">Mot de passe</label>
+                        <div class="relative">
+                            <i class='bx bx-lock-alt absolute left-4 top-1/2 transform -translate-y-1/2 text-accent text-xl'></i>
+                            <input 
+                                type="password" 
+                                id="password" 
+                                name="password" 
+                                required 
+                                placeholder="Votre mot de passe" 
+                                class="w-full pl-12 pr-4 py-3 rounded-full border border-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition"
+                            >
+                        </div>
                     </div>
                     
-                    <button type="submit" 
-                            class="w-full px-6 py-3 bg-accent text-white rounded-full hover:bg-accent/90 transition-colors">
+                    <div class="flex justify-between items-center text-sm">
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" name="remember" class="rounded text-accent focus:ring-accent">
+                            <span class="text-textColor">Se souvenir de moi</span>
+                        </label>
+                        <a href="mot-de-passe-oublie.php" class="text-accent hover:underline">Mot de passe oublié ?</a>
+                    </div>
+                    
+                    <button 
+                        type="submit" 
+                        class="w-full py-3 bg-accent text-white rounded-full hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
+                    >
                         Se connecter
                     </button>
+                    
+                    <div class="text-center text-sm text-textColor">
+                        Pas encore de compte ? <a href="inscription.html" class="text-accent font-semibold hover:underline">S'inscrire</a>
+                    </div>
                 </form>
-                
-                <div class="text-center mt-6">
-                    <p class="text-gray-600">Pas encore de compte ?</p>
-                    <a href="inscription.php" class="text-accent hover:underline">S'inscrire</a>
-                </div>
             </div>
         </div>
     </main>
-
     <!-- FOOTER -->
     <?php include 'footer.php'; ?>
 </body>

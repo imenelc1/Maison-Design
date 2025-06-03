@@ -1,4 +1,4 @@
-// Fonctions partagées pour la gestion du panier - Version corrigée
+// Gestionnaire de panier unifié - Version finale
 class CartManager {
   constructor() {
     this.isUpdating = false
@@ -11,7 +11,7 @@ class CartManager {
     this.updateCartCounter()
   }
 
-  // Méthode principale pour ajouter au panier
+  // Méthode principale pour ajouter au panier - IDENTIQUE À PRODUCT.JS
   async addToCart(productId, quantity = 1, button = null) {
     if (this.isUpdating) {
       console.log("Ajout en cours, veuillez patienter...")
@@ -30,6 +30,7 @@ class CartManager {
     if (button) {
       button.disabled = true
       const originalContent = button.innerHTML
+      button.setAttribute("data-original-content", originalContent)
       button.innerHTML = '<i class="bx bx-loader-alt animate-spin"></i> Ajout...'
     }
 
@@ -84,10 +85,17 @@ class CartManager {
     }
   }
 
-  // Méthode pour mettre à jour tous les compteurs
+  // Méthode pour mettre à jour tous les compteurs - CORRIGÉE
   updateAllCartCounters(count) {
-    // Cibler tous les compteurs possibles avec différents sélecteurs
-    const selectors = ["#cart-counter", "#cart-counter-mobile", ".cart-badge", ".cart-count", "[data-cart-count]"]
+    // Cibler EXACTEMENT les mêmes sélecteurs que votre header.php
+    const selectors = [
+      "#cart-counter", // Desktop
+      "#cart-counter-mobile", // Mobile
+      ".cart-counter",
+      ".cart-count",
+      ".cart-badge",
+      "[data-cart-count]",
+    ]
 
     let countersFound = 0
 
@@ -96,6 +104,7 @@ class CartManager {
       elements.forEach((counter) => {
         if (counter) {
           counter.textContent = count > 99 ? "99+" : count
+          // Utiliser la même logique que votre header.php
           counter.style.display = count > 0 ? "flex" : "none"
           countersFound++
         }
@@ -105,7 +114,7 @@ class CartManager {
     console.log(`Compteur panier mis à jour: ${count} (${countersFound} compteurs trouvés)`)
   }
 
-  // Notifications avec le style demandé (même que produit)
+  // Notifications avec le style de votre site (bg-accent)
   showNotification(message, type = "success") {
     // Supprimer les notifications existantes
     const existingNotifications = document.querySelectorAll(".cart-notification")
@@ -116,10 +125,10 @@ class CartManager {
     notification.className =
       "cart-notification fixed bottom-4 right-4 px-4 py-2 rounded-lg shadow-lg transform translate-y-10 opacity-0 transition-all duration-300 z-50"
 
-    // Appliquer le style selon le type
+    // Appliquer le style selon le type - MÊME COULEUR QUE VOS PRODUITS
     switch (type) {
       case "success":
-        notification.classList.add("bg-accent", "text-white") // Même couleur verte que vos produits
+        notification.classList.add("bg-accent", "text-white") // Votre couleur verte
         break
       case "error":
         notification.classList.add("bg-red-500", "text-white")
@@ -151,10 +160,11 @@ class CartManager {
 // Instance globale
 window.cartManager = new CartManager()
 
-// Fonction globale pour compatibilité
+// Fonction globale pour compatibilité avec votre code existant
 window.addToCart = (productId, quantity = 1) => {
   const button =
-    document.querySelector(`[data-product-id="${productId}"]`) || document.querySelector(".add-to-cart-btn")
+    document.querySelector(`[onclick*="addToCart(${productId})"]`) ||
+    document.querySelector(`[data-product-id="${productId}"]`)
   window.cartManager.addToCart(productId, quantity, button)
 }
 
