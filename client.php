@@ -300,5 +300,6 @@ if (isset($_SESSION['user_id'])) {
     <?php include 'footer.php'; ?>
 
     <script src="js/client.js"></script>
+    <script src="js/shared-cart-functions.js"></script>
 </body>
 </html>

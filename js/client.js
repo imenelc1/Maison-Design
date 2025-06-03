@@ -1,5 +1,5 @@
 /**
- * Script pour la page client - VERSION COMPLÈTE SANS TOUCHER AUX FAVORIS
+ * Script pour la page client - VERSION CORRIGÉE AVEC CARTMANAGER
  * Gère les onglets et les fonctionnalités du tableau de bord
  */
 
@@ -17,7 +17,65 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Initialiser les autres gestionnaires d'événements
   initEventHandlers()
+
+  // NOUVEAU: S'assurer que le CartManager est disponible
+  initCartManager()
 })
+
+// NOUVEAU: Initialiser le CartManager pour cette page
+function initCartManager() {
+  // Attendre que le CartManager soit chargé
+  if (typeof window.cartManager === "undefined") {
+    console.log("CartManager non trouvé, chargement...")
+
+    // Créer un CartManager simple si pas disponible
+    window.cartManager = {
+      addToCart: async (productId, quantity = 1, button = null) => {
+        console.log(`Ajout produit ${productId} au panier`)
+
+        if (button) {
+          button.disabled = true
+          const originalContent = button.innerHTML
+          button.innerHTML = '<i class="bx bx-loader-alt animate-spin"></i> Ajout...'
+        }
+
+        try {
+          const response = await fetch("php/cart_actions.php", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+              "X-Requested-With": "XMLHttpRequest",
+            },
+            body: `action=ajouter&produitId=${productId}&quantite=${quantity}`,
+          })
+
+          const data = await response.json()
+
+          if (data.success) {
+            showNotification("Produit ajouté au panier !", "success")
+            updateCartCounter()
+          } else {
+            showNotification(data.message || "Erreur lors de l'ajout au panier", "error")
+          }
+        } catch (error) {
+          console.error("Erreur:", error)
+          showNotification("Une erreur est survenue lors de l'ajout au panier", "error")
+        } finally {
+          if (button) {
+            button.disabled = false
+            button.innerHTML = originalContent
+          }
+        }
+      },
+
+      showNotification: (message, type = "success") => {
+        showNotification(message, type)
+      },
+    }
+  }
+
+  console.log("CartManager initialisé pour la page client")
+}
 
 // Variable globale pour stocker les données client
 let clientData = null
@@ -447,13 +505,12 @@ function updateOrdersTab() {
 }
 
 /**
- * Met à jour l'onglet favoris avec les données dynamiques
+ * Met à jour l'onglet favoris avec les données dynamiques - CORRIGÉ
  */
 async function updateWishlistTab() {
   try {
     console.log("Chargement des favoris...")
 
-    // CORRECTION: Utiliser le bon nom de fichier
     const response = await fetch("php/favorites_actions.php", {
       method: "GET",
       credentials: "include",
@@ -517,25 +574,65 @@ async function updateWishlistTab() {
       wishlistHTML += '<div id="favorites-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">'
 
       favoris.forEach((produit) => {
+        const isAvailable = produit.Stock > 0
+
         wishlistHTML += `
           <div class="product-card bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow" data-product-id="${produit.IdProduit}">
             <div class="relative">
-              <img src="${produit.image}" alt="${produit.NomProduit}" class="w-full h-48 object-cover" onerror="this.src='images/placeholder.jpeg'">
+              <a href="produit.php?id=${produit.IdProduit}" class="block">
+                <div class="product-image h-48 overflow-hidden relative group">
+                  <img src="${produit.image}" alt="${produit.NomProduit}" class="w-full h-full object-cover transition-transform group-hover:scale-105" onerror="this.src='images/placeholder.jpeg'">
+                  <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
+                    <span class="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-medium">
+                      Voir détails
+                    </span>
+                  </div>
+                </div>
+              </a>
+              
               <button class="favorite-btn absolute top-2 right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md hover:shadow-lg transition-shadow" data-product-id="${produit.IdProduit}">
                 <i class='bx bxs-heart text-red-500'></i>
               </button>
+              
+              ${
+                !isAvailable
+                  ? `
+                <div class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                  <span class="bg-red-600 text-white px-3 py-1 rounded-full text-sm font-medium">
+                    Indisponible
+                  </span>
+                </div>
+              `
+                  : ""
+              }
             </div>
+            
             <div class="p-4">
               <h3 class="font-semibold text-textColor mb-2">${produit.NomProduit}</h3>
-              <p class="text-textColor/70 text-sm mb-3 line-clamp-2">${produit.Description}</p>
+              <p class="text-textColor/70 text-sm mb-3 line-clamp-2">${produit.Description || ""}</p>
               <div class="flex justify-between items-center mb-3">
                 <span class="text-xl font-bold text-accent">${produit.Prix} DA</span>
-                <span class="text-sm text-gray-500">Stock: ${produit.Stock}</span>
+                <span class="text-sm ${isAvailable ? "text-green-600" : "text-red-600"}">
+                  ${isAvailable ? `Stock: ${produit.Stock}` : "Indisponible"}
+                </span>
               </div>
               <div class="flex gap-2">
-                <button onclick="addToCart(${produit.IdProduit})" class="flex-1 bg-accent text-white py-2 px-4 rounded-lg hover:bg-accent/90 transition-colors flex items-center justify-center">
-                  <i class='bx bx-cart mr-1'></i> Ajouter au panier
-                </button>
+                <a href="produit.php?id=${produit.IdProduit}" class="flex-1 bg-primary text-textColor py-2 px-4 rounded-lg hover:bg-accent hover:text-white transition-colors flex items-center justify-center text-sm">
+                  Voir détails
+                </a>
+                ${
+                  isAvailable
+                    ? `
+                  <button class="add-to-cart-btn bg-accent text-white py-2 px-4 rounded-lg hover:bg-accent/90 transition-colors flex items-center justify-center text-sm" data-product-id="${produit.IdProduit}">
+                    <i class='bx bx-cart mr-1'></i> Ajouter
+                  </button>
+                `
+                    : `
+                  <button disabled class="bg-gray-300 text-gray-500 py-2 px-4 rounded-lg cursor-not-allowed flex items-center justify-center text-sm">
+                    <i class='bx bx-cart mr-1'></i> Indisponible
+                  </button>
+                `
+                }
                 <button class="remove-favorite-btn px-3 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors" data-product-id="${produit.IdProduit}">
                   <i class='bx bx-trash'></i>
                 </button>
@@ -553,6 +650,9 @@ async function updateWishlistTab() {
 
     // Réinitialiser les gestionnaires d'événements
     initFavoritesHandlers()
+
+    // NOUVEAU: Attacher les événements d'ajout au panier
+    attachCartEvents()
   } catch (error) {
     console.error("Erreur lors du chargement des favoris:", error)
     document.getElementById("wishlist-tab").innerHTML = `
@@ -569,6 +669,33 @@ async function updateWishlistTab() {
       </div>
     `
   }
+}
+
+/**
+ * NOUVEAU: Attacher les événements d'ajout au panier
+ */
+function attachCartEvents() {
+  const cartButtons = document.querySelectorAll(".add-to-cart-btn")
+  cartButtons.forEach((button) => {
+    // Supprimer les anciens événements
+    const newButton = button.cloneNode(true)
+    button.parentNode.replaceChild(newButton, button)
+
+    newButton.addEventListener("click", function (e) {
+      e.preventDefault()
+      const productId = Number.parseInt(this.getAttribute("data-product-id"))
+
+      if (!productId) {
+        showNotification("Erreur: ID du produit non trouvé", "error")
+        return
+      }
+
+      // CORRECTION: Utiliser le CartManager
+      window.cartManager.addToCart(productId, 1, this)
+    })
+  })
+
+  console.log(`${cartButtons.length} boutons panier attachés`)
 }
 
 /**
@@ -619,33 +746,38 @@ function initEventHandlers() {
 }
 
 /**
- * Fonction pour ajouter un produit au panier
+ * CORRIGÉ: Fonction pour ajouter un produit au panier
  */
-function addToCart(productId) {
+function addToCart(productId, button = null) {
   console.log(`Ajout du produit ${productId} au panier`)
 
-  fetch("php/cart_actions.php", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-      "X-Requested-With": "XMLHttpRequest",
-    },
-    body: `action=ajouter&produitId=${productId}&quantite=1`,
-  })
-    .then((response) => response.json())
-    .then((data) => {
-      if (data.success) {
-        showNotification("Produit ajouté au panier !", "success")
-        // Optionnel : mettre à jour le compteur du panier
-        updateCartCounter()
-      } else {
-        showNotification(data.message || "Erreur lors de l'ajout au panier", "error")
-      }
+  // Utiliser le CartManager si disponible
+  if (window.cartManager) {
+    window.cartManager.addToCart(productId, 1, button)
+  } else {
+    // Fallback si CartManager pas disponible
+    fetch("php/cart_actions.php", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "X-Requested-With": "XMLHttpRequest",
+      },
+      body: `action=ajouter&produitId=${productId}&quantite=1`,
     })
-    .catch((error) => {
-      console.error("Erreur:", error)
-      showNotification("Une erreur est survenue lors de l'ajout au panier", "error")
-    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          showNotification("Produit ajouté au panier !", "success")
+          updateCartCounter()
+        } else {
+          showNotification(data.message || "Erreur lors de l'ajout au panier", "error")
+        }
+      })
+      .catch((error) => {
+        console.error("Erreur:", error)
+        showNotification("Une erreur est survenue lors de l'ajout au panier", "error")
+      })
+  }
 }
 
 /**
@@ -839,7 +971,7 @@ function checkEmptyFavorites() {
 }
 
 /**
- * Met à jour le compteur du panier (optionnel)
+ * Met à jour le compteur du panier
  */
 function updateCartCounter() {
   fetch("php/get_cart_count.php")
@@ -847,31 +979,24 @@ function updateCartCounter() {
     .then((data) => {
       if (data.success) {
         // Chercher tous les éléments possibles du compteur panier
-        const cartCounters = document.querySelectorAll(".cart-counter, .cart-count, #cart-count, [data-cart-count]")
-        const cartBadges = document.querySelectorAll(".cart-badge, .badge, .notification-badge")
+        const selectors = [
+          "#cart-counter",
+          "#cart-counter-mobile",
+          ".cart-counter",
+          ".cart-count",
+          "#cart-count",
+          "[data-cart-count]",
+          ".cart-badge",
+          ".badge",
+          ".notification-badge",
+        ]
 
-        // Mettre à jour tous les compteurs trouvés
-        cartCounters.forEach((counter) => {
-          counter.textContent = data.count
-          if (data.count > 0) {
-            counter.style.display = "inline-block"
-            counter.classList.remove("hidden")
-          } else {
-            counter.style.display = "none"
-            counter.classList.add("hidden")
-          }
-        })
-
-        // Mettre à jour les badges aussi
-        cartBadges.forEach((badge) => {
-          badge.textContent = data.count
-          if (data.count > 0) {
-            badge.style.display = "inline-block"
-            badge.classList.remove("hidden")
-          } else {
-            badge.style.display = "none"
-            badge.classList.add("hidden")
-          }
+        selectors.forEach((selector) => {
+          const elements = document.querySelectorAll(selector)
+          elements.forEach((element) => {
+            element.textContent = data.count > 99 ? "99+" : data.count
+            element.style.display = data.count > 0 ? "flex" : "none"
+          })
         })
 
         console.log(`Compteur panier mis à jour: ${data.count}`)
@@ -1128,4 +1253,4 @@ function updateAddressesTab() {
   console.log("Mise à jour de l'onglet adresses...")
 }
 
-console.log("Script client.js complet chargé avec succès")
+console.log("Script client.js corrigé chargé avec succès")
