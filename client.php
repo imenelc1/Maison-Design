@@ -10,7 +10,6 @@ if (!isset($_SESSION['user_id'])) {
 // Déterminer l'onglet actif
 $activeTab = isset($_GET['tab']) ? $_GET['tab'] : 'profile';
 
-// Récupérer les favoris de l'utilisateur avec correction du stock
 require_once 'php/db.php';
 
 $favoris = [];
@@ -191,7 +190,6 @@ if (isset($_SESSION['user_id'])) {
                                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                     <?php foreach ($favoris as $produit): ?>
                                         <?php 
-                                        // CORRECTION: Vérification correcte du stock
                                         $stock = (int)$produit['Stock']; // Conversion explicite en entier
                                         $isAvailable = $stock > 0;
                                         ?>
@@ -226,7 +224,6 @@ if (isset($_SESSION['user_id'])) {
                                                     <i class='fas fa-heart text-sm'></i>
                                                 </button>
                                                 
-                                                <!-- Overlay indisponible - CORRECTION -->
                                                 <?php if (!$isAvailable): ?>
                                                     <div class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
                                                         <span class="bg-red-600 text-white px-3 py-1 rounded-full text-sm font-medium">
@@ -240,7 +237,7 @@ if (isset($_SESSION['user_id'])) {
                                                 <h3 class="text-lg font-medium text-textColor mb-2 line-clamp-2"><?php echo htmlspecialchars($produit['NomProduit']); ?></h3>
                                                 <p class="text-accent font-bold text-xl mb-2"><?php echo number_format($produit['Prix'], 2, ',', ' '); ?> DA</p>
                                                 
-                                                <!-- Statut de disponibilité - CORRECTION -->
+                                                <!-- Statut de disponibilité  -->
                                                 <?php if ($isAvailable): ?>
                                                     <div class="flex items-center gap-1 mb-2 text-green-600">
                                                         <i class='bx bx-check'></i>
@@ -265,7 +262,7 @@ if (isset($_SESSION['user_id'])) {
                                                 </a>
                                                 
                                                 <div class="flex gap-2">
-                                                    <!-- Bouton ajouter au panier - CORRECTION -->
+                                                    <!-- Bouton ajouter au panier -->
                                                     <?php if ($isAvailable): ?>
                                                         <button onclick="addToCart(<?php echo $produit['IdProduit']; ?>)"
                                                                 class="flex-1 px-3 py-2 bg-accent text-white rounded-full hover:bg-accent/80 transition-colors text-sm flex items-center justify-center gap-1">

@@ -25,7 +25,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = "Veuillez remplir tous les champs";
     } else {
         try {
-            // Vérifier d'abord dans la table client - CORRECTION DES NOMS DE COLONNES
             $stmt = $pdo->prepare("SELECT IdClient as id, Email, MDP as MotDePasse, NomClient as Nom, PrenomClient as Prenom, 'client' as role FROM client WHERE Email = ?");
             $stmt->execute([$email]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -52,7 +51,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['user_prenom'] = $user['Prenom'];
                 $_SESSION['role'] = $user['role'];
                 
-                // CORRECTION: Utiliser les bonnes clés de session pour le header
                 $_SESSION['nom'] = $user['Nom'];
                 $_SESSION['prenom'] = $user['Prenom'];
                 $_SESSION['email'] = $user['Email'];

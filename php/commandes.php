@@ -2,8 +2,7 @@
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
-header('Content-Type: text/plain'); // Pour voir les erreurs brutes
-
+header('Content-Type: application/json'); // Changé pour JSON par défaut
 
 require_once 'db.php';
 
@@ -31,10 +30,15 @@ function getOrders() {
     
     try {
         $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-        $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 4;
-        $search = isset($_GET['search']) ? $_GET['search'] : '';
+        // SOLUTION 1: Augmenter la limite par défaut ou permettre "all"
+        $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10; // Changé de 4 à 10
         
-        $offset = ($page - 1) * $limit;
+        // SOLUTION 2: Permettre de récupérer toutes les commandes
+        if (isset($_GET['all']) && $_GET['all'] == 'true') {
+            $limit = null; // Pas de limite
+        }
+        
+        $search = isset($_GET['search']) ? $_GET['search'] : '';
         
         // Requête avec jointure pour récupérer le nom du client
         $sql = "SELECT c.IdCommande as id, 
@@ -59,8 +63,12 @@ function getOrders() {
         $countStmt->execute($params);
         $total = $countStmt->fetchColumn();
         
-        // Ajouter la pagination - CORRECTION ICI
-        $sql .= " ORDER BY c.DateCommande DESC LIMIT $limit OFFSET $offset";
+        // Ajouter la pagination seulement si une limite est définie
+        $sql .= " ORDER BY c.DateCommande DESC";
+        if ($limit !== null) {
+            $offset = ($page - 1) * $limit;
+            $sql .= " LIMIT $limit OFFSET $offset";
+        }
         
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
@@ -89,7 +97,8 @@ function getOrders() {
             'data' => $orders,
             'total' => $total,
             'page' => $page,
-            'totalPages' => ceil($total / $limit)
+            'totalPages' => $limit ? ceil($total / $limit) : 1,
+            'showing' => count($orders)
         ]);
         
     } catch(PDOException $e) {

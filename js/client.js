@@ -1,5 +1,5 @@
 /**
- * Script pour la page client - VERSION CORRIGÉE AVEC CARTMANAGER
+ * Script pour la page client 
  * Gère les onglets et les fonctionnalités du tableau de bord
  */
 
@@ -22,7 +22,6 @@ document.addEventListener("DOMContentLoaded", () => {
   initCartManager()
 })
 
-// NOUVEAU: Initialiser le CartManager pour cette page
 function initCartManager() {
   // Attendre que le CartManager soit chargé
   if (typeof window.cartManager === "undefined") {
@@ -162,7 +161,6 @@ function showLoading() {
  * Masque l'indicateur de chargement
  */
 function hideLoading() {
-  // Le contenu sera remplacé par les données réelles
 }
 
 /**
@@ -216,7 +214,7 @@ function updateActiveTabContent() {
 }
 
 /**
- * Met à jour l'onglet profil - AVEC ADRESSE
+ * Met à jour l'onglet profil 
  */
 function updateProfileTab() {
   const client = clientData.client
@@ -261,7 +259,7 @@ function updateProfileTab() {
 }
 
 /**
- * Active le mode édition du profil - AVEC ADRESSE
+ * Active le mode édition du profil 
  */
 function editProfile() {
   const client = clientData.client
@@ -435,7 +433,7 @@ async function handleProfileSubmit(e) {
 }
 
 /**
- * Met à jour l'onglet commandes - PRIX CORRIGES
+ * Met à jour l'onglet commandes
  */
 function updateOrdersTab() {
   const commandes = clientData.commandes || []
@@ -505,7 +503,7 @@ function updateOrdersTab() {
 }
 
 /**
- * Met à jour l'onglet favoris avec les données dynamiques - CORRIGÉ
+ * Met à jour l'onglet favoris avec les données dynamiques
  */
 async function updateWishlistTab() {
   try {
@@ -651,7 +649,6 @@ async function updateWishlistTab() {
     // Réinitialiser les gestionnaires d'événements
     initFavoritesHandlers()
 
-    // NOUVEAU: Attacher les événements d'ajout au panier
     attachCartEvents()
   } catch (error) {
     console.error("Erreur lors du chargement des favoris:", error)
@@ -671,9 +668,7 @@ async function updateWishlistTab() {
   }
 }
 
-/**
- * NOUVEAU: Attacher les événements d'ajout au panier
- */
+
 function attachCartEvents() {
   const cartButtons = document.querySelectorAll(".add-to-cart-btn")
   cartButtons.forEach((button) => {
@@ -690,7 +685,6 @@ function attachCartEvents() {
         return
       }
 
-      // CORRECTION: Utiliser le CartManager
       window.cartManager.addToCart(productId, 1, this)
     })
   })
@@ -745,9 +739,7 @@ function initEventHandlers() {
   })
 }
 
-/**
- * CORRIGÉ: Fonction pour ajouter un produit au panier
- */
+
 function addToCart(productId, button = null) {
   console.log(`Ajout du produit ${productId} au panier`)
 
@@ -1224,9 +1216,7 @@ window.editProfile = editProfile
 window.cancelEditProfile = cancelEditProfile
 window.updateWishlistTab = updateWishlistTab
 
-/**
- * Force le rechargement des favoris (appelé depuis d'autres pages)
- */
+
 window.refreshFavorites = () => {
   if (
     document.getElementById("wishlist-tab") &&
@@ -1248,8 +1238,7 @@ window.addEventListener("focus", () => {
  * Met à jour l'onglet adresses
  */
 function updateAddressesTab() {
-  // Implémentation de la fonction updateAddressesTab
-  // Cette fonction doit être implémentée pour charger et afficher les adresses du client
+
   console.log("Mise à jour de l'onglet adresses...")
 }
 

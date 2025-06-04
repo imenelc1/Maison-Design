@@ -23,6 +23,10 @@ foreach ($_SESSION['panier'] as $item) {
 $fraisLivraison = 1000;
 $total = $sousTotal + $fraisLivraison;
 
+// Variable pour indiquer le succès de la commande
+$commandeReussie = false;
+$commandeId = null;
+
 // Traitement de la commande - VERSION CORRIGÉE
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
@@ -53,8 +57,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // D'abord, essayer de déterminer la structure de la table
             $stmt = $pdo->query("DESCRIBE commande");
             $columns = $stmt->fetchAll(PDO::FETCH_COLUMN);
-            
-            echo "<!-- DEBUG: Colonnes table commande: " . implode(', ', $columns) . " -->";
             
             // Construire la requête selon les colonnes disponibles
             if (in_array('Status', $columns) && in_array('TotalPrix', $columns)) {
@@ -106,8 +108,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     VALUES (?, NOW())
                 ");
                 $result = $stmt->execute([$_SESSION['user_id']]);
-                
-                echo "<!-- ATTENTION: Aucune colonne de statut trouvée dans la table commande -->";
             }
             
         } catch (PDOException $e) {
@@ -176,24 +176,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Vider le panier
         $_SESSION['panier'] = [];
         
-        // CORRIGÉ: Redirection avec gestion d'erreurs
-        echo "<script>console.log('Commande créée avec succès, ID: " . $commandeId . "');</script>";
-        
-        // Nettoyer la sortie avant la redirection
-        ob_clean();
-        
-        // Rediriger vers votre fichier confirmation.php existant
-        header('Location: confirmation.php?id=' . $commandeId);
-        exit();
+        // NOUVEAU: Marquer la commande comme réussie
+        $commandeReussie = true;
         
     } catch (Exception $e) {
         $pdo->rollBack();
         $error = $e->getMessage();
         // Log l'erreur pour le debug
         error_log("Erreur checkout: " . $e->getMessage() . " - User ID: " . ($_SESSION['user_id'] ?? 'non connecté') . " - " . date('Y-m-d H:i:s'));
-        
-        // Debug: Afficher l'erreur pour voir ce qui se passe
-        echo "<script>console.log('Erreur checkout: " . addslashes($e->getMessage()) . "');</script>";
     }
 }
 
@@ -231,7 +221,6 @@ try {
                 <i class='bx bx-error-circle text-xl'></i>
                 <div>
                     <strong>Erreur:</strong> <?php echo htmlspecialchars($error); ?>
-                    <br><small>Consultez la console du navigateur pour plus de détails (F12)</small>
                 </div>
             </div>
             <?php endif; ?>
@@ -348,12 +337,37 @@ try {
     <!-- FOOTER -->
     <?php include 'footer.php'; ?>
 
-    <!-- Script amélioré pour éviter les doubles soumissions -->
+    <!-- IMPORTANT: Charger le CartManager d'abord -->
+    <script src="js/shared-cart-functions.js"></script>
+
+    <!-- Script avec notifications UNIFIÉES -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const form = document.getElementById('checkout-form');
             const submitBtn = document.getElementById('submit-btn');
             const submitText = document.getElementById('submit-text');
+            
+            // Attendre que le CartManager soit disponible
+            function waitForCartManager(callback) {
+                if (window.cartManager && window.cartManager.showNotification) {
+                    callback();
+                } else {
+                    setTimeout(() => waitForCartManager(callback), 100);
+                }
+            }
+            
+            // NOUVEAU: Vérifier si la commande a été créée avec succès
+            <?php if ($commandeReussie && $commandeId): ?>
+                waitForCartManager(() => {
+                    // Utiliser EXACTEMENT la même notification que product.js
+                    window.cartManager.showNotification("🎉 Commande confirmée avec succès !", "success");
+                    
+                    // Rediriger après 2 secondes pour laisser le temps de voir la notification
+                    setTimeout(() => {
+                        window.location.href = 'confirmation.php?id=<?php echo $commandeId; ?>';
+                    }, 2000);
+                });
+            <?php endif; ?>
             
             if (form && submitBtn) {
                 form.addEventListener('submit', function(e) {
@@ -363,7 +377,11 @@ try {
                     const termsCheckbox = document.getElementById('terms');
                     if (!termsCheckbox.checked) {
                         e.preventDefault();
-                        alert('Vous devez accepter les conditions générales de vente.');
+                        
+                        // Utiliser le CartManager pour la notification d'erreur
+                        waitForCartManager(() => {
+                            window.cartManager.showNotification('Vous devez accepter les conditions générales de vente.', 'error');
+                        });
                         return false;
                     }
                     
@@ -375,6 +393,11 @@ try {
                     // Ajouter un spinner
                     const icon = submitBtn.querySelector('i');
                     icon.className = 'bx bx-loader-alt animate-spin text-xl';
+                    
+                    // Afficher une notification de traitement avec le CartManager
+                    waitForCartManager(() => {
+                        window.cartManager.showNotification('Traitement de votre commande en cours...', 'info');
+                    });
                     
                     console.log('Bouton désactivé, envoi en cours...');
                     

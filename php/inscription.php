@@ -6,7 +6,7 @@ session_start();
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-require_once 'db.php'; // Chemin correct vers db.php
+require_once 'db.php'; 
 
 // Vérifier si le formulaire a été soumis
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {

@@ -52,7 +52,6 @@ class CartManager {
       console.log("Réponse du serveur:", data)
 
       if (data.success) {
-        // CORRECTION PRINCIPALE: Utiliser cartCount de la réponse
         this.updateAllCartCounters(data.cartCount)
         this.showNotification(data.message || "Produit ajouté au panier !", "success")
       } else {

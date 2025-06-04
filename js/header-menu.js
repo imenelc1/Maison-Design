@@ -20,12 +20,12 @@ document.addEventListener("DOMContentLoaded", () => {
   // État du menu utilisateur
   let userMenuOpen = false
 
-  // Fonction pour ouvrir le menu mobile - CORRECTION AVEC TRANSFORM
+  // Fonction pour ouvrir le menu mobile
+  
   function openMobileMenu() {
     if (mobileMenu) {
       mobileMenu.style.transform = "translateX(0)"
-      // Positionner le menu à droite de l'écran
-      // mobileMenu.style.right = "0";
+    
     }
     if (menuOverlay) {
       menuOverlay.style.opacity = "1"
@@ -34,16 +34,11 @@ document.addEventListener("DOMContentLoaded", () => {
     document.body.style.overflow = "hidden"
   }
 
-  // Fonction pour fermer le menu mobile - CORRECTION AVEC TRANSFORM
+  // Fonction pour fermer le menu mobile 
   function closeMobileMenu() {
     if (mobileMenu) {
       mobileMenu.style.transform = "translateX(100%)"
-      // Optionnel: remettre right à auto après la transition
-      /*setTimeout(() => {
-        if (mobileMenu) {
-          mobileMenu.style.right = "auto"
-        }
-      }, 300)*/
+      
     }
     if (menuOverlay) {
       menuOverlay.style.opacity = "0"

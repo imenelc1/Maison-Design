@@ -6,7 +6,6 @@ error_reporting(0);
 // Inclure le fichier de connexion à la base de données
 require_once 'db.php';
 
-// Vérifier si l'ID du produit est fourni
 if (!isset($_GET['id']) || empty($_GET['id'])) {
     header('Content-Type: application/json');
     echo json_encode(['success' => false, 'message' => 'ID du produit non fourni']);

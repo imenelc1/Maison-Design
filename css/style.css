@@ -68,8 +68,8 @@
 
 @media screen and (max-width: 768px) {
     #mobile-menu {
-        right: -250px; /* Position initiale hors écran à droite */
-        left: auto; /* Désactiver le positionnement left */
+        right: -250px; 
+        left: auto; 
         transition: right 0.3s ease;
     }
     

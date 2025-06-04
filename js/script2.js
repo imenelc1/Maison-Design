@@ -1,5 +1,5 @@
 /**
- * Maison Design - Fonctionnalités du panneau d'administration avec PHP - VERSION COMPLÈTE
+ * Maison Design - Fonctionnalités du panneau d'administration avec PHP 
  */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -28,11 +28,11 @@ function initAdminPanel() {
     document.body.appendChild(toast)
   }
 
-  // Pagination state
+  // Pagination state - MODIFIÉ POUR PLUS DE FLEXIBILITÉ
   let clientsCurrentPage = 1
   let productsCurrentPage = 1
   let ordersCurrentPage = 1
-  const itemsPerPage = 4
+  const itemsPerPage = 10 // Augmenté de 4 à 10
 
   // DOM Elements
   const tabTriggers = document.querySelectorAll(".tab-trigger")
@@ -70,7 +70,7 @@ function initAdminPanel() {
     })
   }
 
-  // Initialize modals - VERSION COMPLÈTE
+  // Initialize modals
   function initModals() {
     const modals = document.querySelectorAll(".modal")
 
@@ -98,8 +98,8 @@ function initAdminPanel() {
         if (modal) {
           closeModal(modal.id)
         }
-      });
-    });
+      })
+    })
 
     // Fermeture en cliquant sur le fond
     modals.forEach((modal) => {
@@ -165,7 +165,7 @@ function initAdminPanel() {
     }
   }
 
-  // Load orders from PHP
+  // Load orders from PHP - VERSION SIMPLIFIÉE
   async function loadOrders() {
     console.log("Chargement des commandes...")
     try {
@@ -181,7 +181,7 @@ function initAdminPanel() {
       if (data.success) {
         renderOrders(data.data)
         updatePagination("orders", data.page, data.totalPages)
-        showToast(`${data.data.length} commandes chargées`)
+        showToast(`${data.showing || data.data.length} commandes chargées sur ${data.total} total`)
       } else {
         console.error("Erreur dans la réponse:", data)
         showToast("Erreur lors du chargement des commandes: " + (data.error || "Erreur inconnue"))
@@ -243,7 +243,7 @@ function initAdminPanel() {
     })
   }
 
-  // Render products table - ADAPTÉ À VOTRE HTML ACTUEL
+  // Render products table
   function renderProducts(products) {
     console.log("Rendu des produits:", products)
     const tableBody = document.getElementById("products-table-body")
@@ -266,7 +266,7 @@ function initAdminPanel() {
     products.forEach((product) => {
       const row = document.createElement("tr")
 
-      // Créer le nom avec image intégrée (comme dans votre structure actuelle)
+      // Créer le nom avec image intégrée
       let nomContent = product.nom || "N/A"
       if (product.image) {
         nomContent = `
@@ -401,13 +401,10 @@ function initAdminPanel() {
     })
   }
 
-  // NOUVELLES FONCTIONS POUR LES BOUTONS QUI MANQUAIENT
-
   // Fonction pour éditer un produit
   function editProduct(id, nom, categorie, prix, stock) {
     console.log("Édition du produit:", id)
 
-    // Remplir le formulaire de modification
     const form = document.getElementById("edit-product-form")
     if (form) {
       form.querySelector('input[name="id"]').value = id
@@ -424,7 +421,6 @@ function initAdminPanel() {
   function changeOrderStatus(id, currentStatus) {
     console.log("Changement de statut pour la commande:", id)
 
-    // Remplir le formulaire de changement de statut
     const form = document.getElementById("change-status-form")
     if (form) {
       form.querySelector('input[name="id"]').value = id
@@ -488,74 +484,70 @@ function initAdminPanel() {
     }
   }
 
- 
-
-
   async function viewOrderDetails(id) {
     try {
-        console.log(`Tentative de récupération de la commande #${id}...`);
-        const response = await fetch(`php/commandes.php?details=true&id=${id}`);
-        
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`Erreur HTTP ${response.status}: ${errorText}`);
-        }
-        
-        const data = await response.json();
-        console.log('Réponse du serveur:', data);
+      console.log(`Tentative de récupération de la commande #${id}...`)
+      const response = await fetch(`php/commandes.php?details=true&id=${id}`)
 
-        if (!data.success) {
-            throw new Error(data.error || 'Erreur inconnue du serveur');
-        }
-    console.log("Affichage des détails de la commande:", id);
-  
-        if (data.success) {
-            // 1. Afficher les infos générales
-            const orderInfo = data.orderInfo;
-            document.getElementById("order-id").textContent = orderInfo.IdCommande || orderInfo.id;
-            document.getElementById("order-client").textContent = orderInfo.client;
-            document.getElementById("order-date").textContent = orderInfo.date;
-            document.getElementById("order-status").textContent = orderInfo.statut || orderInfo.Status;
-            document.getElementById("order-total").textContent = (orderInfo.total || orderInfo.TotalPrix) + " DA";
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(`Erreur HTTP ${response.status}: ${errorText}`)
+      }
 
-            // 2. Afficher les articles
-            const detailsBody = document.getElementById("order-details-body");
-            detailsBody.innerHTML = "";
+      const data = await response.json()
+      console.log("Réponse du serveur:", data)
 
-            if (!data.data || data.data.length === 0) {
-                detailsBody.innerHTML = `
+      if (!data.success) {
+        throw new Error(data.error || "Erreur inconnue du serveur")
+      }
+
+      if (data.success) {
+        // 1. Afficher les infos générales
+        const orderInfo = data.orderInfo
+        document.getElementById("order-id").textContent = orderInfo.IdCommande || orderInfo.id
+        document.getElementById("order-client").textContent = orderInfo.client
+        document.getElementById("order-date").textContent = orderInfo.date
+        document.getElementById("order-status").textContent = orderInfo.statut || orderInfo.Status
+        document.getElementById("order-total").textContent = (orderInfo.total || orderInfo.TotalPrix) + " DA"
+
+        // 2. Afficher les articles
+        const detailsBody = document.getElementById("order-details-body")
+        detailsBody.innerHTML = ""
+
+        if (!data.data || data.data.length === 0) {
+          detailsBody.innerHTML = `
                     <tr>
                         <td colspan="4" class="px-6 py-4 text-center">Aucun détail disponible</td>
                     </tr>
-                `;
-            } else {
-                data.data.forEach((item) => {
-                    const row = document.createElement("tr");
-                    row.innerHTML = `
+                `
+        } else {
+          data.data.forEach((item) => {
+            const row = document.createElement("tr")
+            row.innerHTML = `
                         <td class="px-6 py-4 whitespace-nowrap">${item.produit}</td>
                         <td class="px-6 py-4 whitespace-nowrap">${item.quantite}</td>
                         <td class="px-6 py-4 whitespace-nowrap">${item.prix} DA</td>
                         <td class="px-6 py-4 whitespace-nowrap">${item.total} DA</td>
-                    `;
-                    detailsBody.appendChild(row);
-                });
-            }
-
-            openModal("view-order-modal");
-        } else {
-            showToast(data.error || "Erreur lors du chargement des détails");
+                    `
+            detailsBody.appendChild(row)
+          })
         }
-    } catch (error) {
-        console.error('ERREUR COMPLÈTE:', {
-            message: error.message,
-            stack: error.stack,
-            name: error.name
-        });
-        showToast("Erreur technique détaillée dans la console");
-    }
-}
 
-  // Initialize form handlers - VERSION COMPLÈTE
+        openModal("view-order-modal")
+      } else {
+        showToast(data.error || "Erreur lors du chargement des détails")
+      }
+    } catch (error) {
+      console.error("ERREUR COMPLÈTE:", {
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+      })
+      showToast("Erreur technique détaillée dans la console")
+    }
+  }
+
+  // Initialize form handlers
   function initFormHandlers() {
     console.log("Initialisation des gestionnaires de formulaires...")
 

@@ -7,12 +7,6 @@ document.addEventListener("DOMContentLoaded", () => {
   setupNotifications();
 });
 
-// Fonction pour initialiser les boutons de quantité
-function initQuantityButtons() {
-  // Cette fonction n'est nécessaire que si vous avez des boutons +/- qui doivent 
-  // fonctionner sans rechargement de page (AJAX)
-  // Sinon, les liens href vers cart_actions.php suffisent
-}
 
 // Fonction pour afficher une notification
 function afficherNotification(message) {

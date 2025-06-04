@@ -155,24 +155,8 @@ try {
     <link href="https://unpkg.com/boxicons@2.1.2/css/boxicons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'primary': '#EEE7DE',
-                        'accent': '#8E9675',
-                        'background': '#F5F5F5',
-                        'textColor': '#3D3D3D'
-                    },
-                    fontFamily: {
-                        'cormorant': ['Cormorant Garamond', 'serif'],
-                        'frunchy': ['Frunchy', 'serif']
-                    }
-                }
-            }
-        }
-    </script>
+    <script src="tailwind.config.js"></script>
+
     <link rel="stylesheet" href="css/style.css">
     <script>
         // Variables globales pour JavaScript
@@ -254,7 +238,6 @@ try {
                 </div>
                 <?php else: ?>
                     <?php 
-                    // CORRECTION: S'assurer qu'on itère sur les produits uniques
                     foreach ($produits as $index => $produit): 
                     ?>
                     <div class="product-item bg-white rounded-xl overflow-hidden shadow-md transition-transform hover:-translate-y-1" 
@@ -337,9 +320,9 @@ try {
     <?php include 'footer.php'; ?>
 
     <!-- Scripts -->
-    <script src="js/script.js"></script>
+    <script src="js/shared-cart-functions.js"></script>
     <script src="js/categories.js"></script>
-    <script src="js/categories-adapter.js"></script>
+    <script src="js/script.js"></script>
    
 </body>
 </html>

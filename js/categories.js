@@ -1,4 +1,4 @@
-// Script pour categories.php - Version corrigée qui utilise CartManager
+// Script pour la page catégories - Version corrigée
 document.addEventListener("DOMContentLoaded", () => {
   console.log("Page catégories chargée")
 
@@ -144,28 +144,32 @@ document.addEventListener("DOMContentLoaded", () => {
                     
                     <div class="p-4 pt-0 flex flex-col gap-2">
                         <a href="produit.php?id=${product.IdProduit}" 
-                           class="w-full px-3 py-2 bg-primary text-textColor rounded-full hover:bg-accent hover:text-white transition-colors text-sm flex items-center justify-center gap-2 font-medium">
+                           class="flex-1 bg-primary text-textColor py-2 px-3 rounded-full hover:bg-accent hover:text-white transition-colors flex items-center justify-center text-sm">
                             Voir détails
                         </a>
                         
                         <div class="flex gap-2">
                             ${
                               isInStock
-                                ? `<button class="add-to-cart-btn flex-1 px-3 py-2 bg-accent text-white rounded-full hover:bg-accent/80 transition-colors text-sm flex items-center justify-center gap-1"
-                                        data-product-id="${product.IdProduit}"
-                                        data-original-content="<i class='bx bx-cart-add'></i> Ajouter">
-                                    <i class='bx bx-cart-add'></i> Ajouter
-                                </button>`
-                                : `<button disabled 
-                                        class="flex-1 px-3 py-2 bg-gray-300 text-gray-500 rounded-full cursor-not-allowed text-sm flex items-center justify-center gap-1">
-                                    <i class='bx bx-cart-add'></i> Ajouter
-                                </button>`
+                                ? `
+    <button class="add-to-cart-btn flex-1 bg-accent text-white py-2 px-3 rounded-full hover:bg-accent/90 transition-colors flex items-center justify-center text-sm"
+            data-product-id="${product.IdProduit}"
+            data-original-content="<i class='bx bx-cart mr-1'></i> Ajouter">
+        <i class='bx bx-cart mr-1'></i> Ajouter
+    </button>
+`
+                                : `
+    <button disabled 
+            class="flex-1 bg-gray-300 text-gray-500 py-2 px-3 rounded-full cursor-not-allowed flex items-center justify-center text-sm">
+        <i class='bx bx-cart mr-1'></i> Indisponible
+    </button>
+`
                             }
                             
-                            <button class="favorite-btn px-3 py-2 ${isFavorite ? "bg-red-100 text-red-600" : "bg-gray-100 text-gray-600"} rounded-full hover:bg-red-100 hover:text-red-600 transition-colors text-sm flex items-center justify-center"
+                            <button class="favorite-btn px-3 py-2 ${isFavorite ? "bg-red-100 text-red-600" : "bg-gray-100 text-gray-600"} rounded-full hover:bg-red-100 hover:text-red-600 transition-colors flex items-center justify-center"
                                     title="${isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}"
                                     data-product-id="${product.IdProduit}">
-                                <i class='${isFavorite ? "fas fa-heart text-red-600" : "far fa-heart"}'></i>
+                                <i class='${isFavorite ? "bx bxs-heart text-red-600" : "bx bx-heart"}'></i>
                             </button>
                         </div>
                     </div>
@@ -198,7 +202,7 @@ document.addEventListener("DOMContentLoaded", () => {
           return
         }
 
-        // CORRECTION: Utiliser le CartManager global comme product.js
+        // Utiliser le CartManager global
         window.cartManager.addToCart(productId, 1, this)
       })
     })
@@ -290,7 +294,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 })
 
-// Fonction globale pour compatibilité avec votre code existant
+// Fonction globale pour compatibilité
 window.addToCart = (productId, quantity = 1) => {
   const button = document.querySelector(`[data-product-id="${productId}"].add-to-cart-btn`)
   window.cartManager.addToCart(productId, quantity, button)
