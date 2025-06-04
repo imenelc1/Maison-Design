@@ -13,17 +13,13 @@ $excludeId = isset($_GET['exclude']) ? intval($_GET['exclude']) : 0;
 $limit = isset($_GET['limit']) ? intval($_GET['limit']) : 4;
 
 try {
-    // Requête pour récupérer les produits similaires (même catégorie, mais pas le même produit)
+    // Requête corrigée pour éviter les doublons
     $stmt = $pdo->prepare("
-        SELECT p.IdProduit as id, p.NomProduit as nom, p.Prix as prix, p.Stock as stock, 
-               c.NomCategorie as categorie, i.URL as image
+        SELECT DISTINCT p.IdProduit as id, p.NomProduit as nom, p.Prix as prix, p.Stock as stock, 
+               c.NomCategorie as categorie, 
+               (SELECT MIN(URL) FROM imageprod WHERE IdProduit = p.IdProduit) as image
         FROM produit p
         LEFT JOIN categorie c ON p.IdCategorie = c.IdCategorie
-        LEFT JOIN (
-            SELECT IdProduit, MIN(URL) as URL
-            FROM imageprod
-            GROUP BY IdProduit
-        ) i ON p.IdProduit = i.IdProduit
         WHERE c.NomCategorie = ? AND p.IdProduit != ?
         ORDER BY RAND()
         LIMIT ?
@@ -34,15 +30,11 @@ try {
     // Si aucun produit n'est trouvé, essayer de récupérer des produits aléatoires
     if (empty($products)) {
         $stmt = $pdo->prepare("
-            SELECT p.IdProduit as id, p.NomProduit as nom, p.Prix as prix, p.Stock as stock, 
-                   c.NomCategorie as categorie, i.URL as image
+            SELECT DISTINCT p.IdProduit as id, p.NomProduit as nom, p.Prix as prix, p.Stock as stock, 
+                   c.NomCategorie as categorie,
+                   (SELECT MIN(URL) FROM imageprod WHERE IdProduit = p.IdProduit) as image
             FROM produit p
             LEFT JOIN categorie c ON p.IdCategorie = c.IdCategorie
-            LEFT JOIN (
-                SELECT IdProduit, MIN(URL) as URL
-                FROM imageprod
-                GROUP BY IdProduit
-            ) i ON p.IdProduit = i.IdProduit
             WHERE p.IdProduit != ?
             ORDER BY RAND()
             LIMIT ?
@@ -51,16 +43,29 @@ try {
         $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
     
-    // Pour chaque produit, s'assurer qu'il y a une image
-    foreach ($products as &$product) {
-        if (empty($product['image'])) {
-            $product['image'] = '../images/placeholder.jpeg';
+    // Supprimer les doublons basés sur l'ID du produit (sécurité supplémentaire)
+    $uniqueProducts = [];
+    $seenIds = [];
+    
+    foreach ($products as $product) {
+        if (!in_array($product['id'], $seenIds)) {
+            $seenIds[] = $product['id'];
+            
+            // S'assurer qu'il y a une image
+            if (empty($product['image'])) {
+                $product['image'] = '../images/placeholder.jpeg';
+            }
+            
+            $uniqueProducts[] = $product;
         }
     }
     
+    // Limiter à nouveau au cas où il y aurait encore des doublons
+    $uniqueProducts = array_slice($uniqueProducts, 0, $limit);
+    
     // Renvoyer les données au format JSON
     header('Content-Type: application/json');
-    echo json_encode($products);
+    echo json_encode($uniqueProducts);
     
 } catch (PDOException $e) {
     // Renvoyer une erreur en cas de problème avec la base de données

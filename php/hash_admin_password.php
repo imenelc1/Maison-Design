@@ -1,15 +1,13 @@
 <?php
 // Inclure la connexion à la base de données
-require_once 'db.php'; // Assurez-vous que ce chemin est correct
+require_once 'db.php'; 
 
-// Mot de passe admin actuel (non haché) dans la base de données
-$current_password = 'adminpass'; // Remplacez par votre mot de passe admin actuel
+$current_password = 'adminpass'; 
 
 // Hacher le mot de passe
 $hashed_password = password_hash($current_password, PASSWORD_DEFAULT);
 
 try {
-    // Mettre à jour le mot de passe admin dans la base de données
     $stmt = $pdo->prepare("UPDATE admin SET MotDePasse = :password WHERE Email = 'admin.pass@maison-design.com'");
     $stmt->bindParam(':password', $hashed_password);
     $result = $stmt->execute();

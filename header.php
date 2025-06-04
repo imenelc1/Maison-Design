@@ -160,7 +160,6 @@ if (isset($_SESSION['user_id'])) {
     </div>
 </header>
 
-<!-- Menu mobile amélioré - CORRECTION DU POSITIONNEMENT -->
 <div id="mobile-menu" class="fixed top-0 right-0 lg:hidden bg-white z-[1000] h-screen w-[85%] max-w-[320px] transition-all duration-300 shadow-xl overflow-y-auto transform translate-x-full">           
     <!-- En-tête du menu mobile -->
     <div class="sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between">

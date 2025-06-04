@@ -1,5 +1,5 @@
 <?php
-// Fichier produit.php corrigé - Version sans JavaScript inline
+// Fichier produit.php corrigé - Version sans doublons
 session_start();
 
 // Connexion à la base de données
@@ -31,22 +31,26 @@ try {
     
     // Récupérer toutes les images du produit
     $stmtImages = $pdo->prepare("
-        SELECT URL 
+        SELECT DISTINCT URL 
         FROM imageprod 
-        WHERE IdProduit = ?
+        WHERE IdProduit = ? AND URL IS NOT NULL AND URL != ''
         ORDER BY IdImage
     ");
     $stmtImages->execute([$productId]);
     $images = $stmtImages->fetchAll(PDO::FETCH_COLUMN);
     
-    // Traiter les images
+    // Traiter les images et supprimer les doublons
     $processedImages = [];
+    $seenImages = [];
+    
     foreach ($images as $image) {
         if (!empty($image)) {
-            if (strpos($image, 'images/') !== 0) {
-                $processedImages[] = 'images/' . basename($image);
-            } else {
-                $processedImages[] = $image;
+            $imagePath = (strpos($image, 'images/') !== 0) ? 'images/' . basename($image) : $image;
+            
+            // Éviter les doublons d'images
+            if (!in_array($imagePath, $seenImages)) {
+                $seenImages[] = $imagePath;
+                $processedImages[] = $imagePath;
             }
         }
     }
@@ -56,33 +60,44 @@ try {
         $processedImages[] = 'images/placeholder.jpeg';
     }
     
-    // Récupérer des produits similaires (même catégorie)
+    // Récupérer des produits similaires (même catégorie) - REQUÊTE CORRIGÉE
     $stmtSimilar = $pdo->prepare("
-        SELECT p.*, c.NomCategorie as categorie, i.URL as image
+        SELECT DISTINCT p.IdProduit, p.NomProduit, p.Prix, p.Stock, p.Description,
+               c.NomCategorie as categorie,
+               (SELECT MIN(URL) FROM imageprod WHERE IdProduit = p.IdProduit) as image
         FROM produit p
         LEFT JOIN categorie c ON p.IdCat = c.IdCategorie
-        LEFT JOIN (
-            SELECT IdProduit, MIN(URL) as URL
-            FROM imageprod
-            GROUP BY IdProduit
-        ) i ON p.IdProduit = i.IdProduit
         WHERE p.IdCat = ? AND p.IdProduit != ?
         ORDER BY RAND()
         LIMIT 4
     ");
     $stmtSimilar->execute([$product['IdCat'], $productId]);
-    $similarProducts = $stmtSimilar->fetchAll(PDO::FETCH_ASSOC);
+    $similarProductsRaw = $stmtSimilar->fetchAll(PDO::FETCH_ASSOC);
     
-    // Traiter les images des produits similaires
-    foreach ($similarProducts as &$similarProduct) {
-        if (!empty($similarProduct['image'])) {
-            if (strpos($similarProduct['image'], 'images/') !== 0) {
-                $similarProduct['image'] = 'images/' . basename($similarProduct['image']);
+    // Supprimer les doublons et traiter les images des produits similaires
+    $similarProducts = [];
+    $seenSimilarIds = [];
+    
+    foreach ($similarProductsRaw as $similarProduct) {
+        // Éviter les doublons basés sur l'ID
+        if (!in_array($similarProduct['IdProduit'], $seenSimilarIds)) {
+            $seenSimilarIds[] = $similarProduct['IdProduit'];
+            
+            // Traiter l'image
+            if (!empty($similarProduct['image'])) {
+                if (strpos($similarProduct['image'], 'images/') !== 0) {
+                    $similarProduct['image'] = 'images/' . basename($similarProduct['image']);
+                }
+            } else {
+                $similarProduct['image'] = 'images/placeholder.jpeg';
             }
-        } else {
-            $similarProduct['image'] = 'images/placeholder.jpeg';
+            
+            $similarProducts[] = $similarProduct;
         }
     }
+    
+    // Limiter à 4 produits maximum
+    $similarProducts = array_slice($similarProducts, 0, 4);
     
     // Vérifier si le produit est dans les favoris de l'utilisateur connecté
     $isFavorite = false;
@@ -97,6 +112,7 @@ try {
     error_log("Erreur produit.php: " . $e->getMessage());
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -107,9 +123,9 @@ try {
     <link href="https://unpkg.com/boxicons@2.1.2/css/boxicons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
-        <script src="tailwind.config.js"></script>
-
+    <script src="tailwind.config.js"></script>
     <link rel="stylesheet" href="css/style.css">
+    
     <script>
         // Variables globales pour JavaScript
         window.productData = {

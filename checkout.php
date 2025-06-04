@@ -27,12 +27,17 @@ $total = $sousTotal + $fraisLivraison;
 $commandeReussie = false;
 $commandeId = null;
 
-// Traitement de la commande - VERSION CORRIGÉE
+// Traitement de la commande
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         // Vérifier que les conditions sont acceptées
         if (!isset($_POST['terms']) || $_POST['terms'] !== 'on') {
             throw new Exception("Vous devez accepter les conditions générales de vente.");
+        }
+
+        // Vérifier que l'adresse de livraison est fournie
+        if (empty($_POST['adresse_livraison'])) {
+            throw new Exception("L'adresse de livraison est obligatoire.");
         }
 
         $pdo->beginTransaction();
@@ -52,67 +57,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         
-        // Insérer la commande avec le statut - VERSION CORRIGÉE
-        try {
-            // D'abord, essayer de déterminer la structure de la table
-            $stmt = $pdo->query("DESCRIBE commande");
-            $columns = $stmt->fetchAll(PDO::FETCH_COLUMN);
-            
-            // Construire la requête selon les colonnes disponibles
-            if (in_array('Status', $columns) && in_array('TotalPrix', $columns)) {
-                // Structure avec Status et TotalPrix
-                $stmt = $pdo->prepare("
-                    INSERT INTO commande (IdClient, DateCommande, TotalPrix, Status) 
-                    VALUES (?, NOW(), ?, 'en_attente')
-                ");
-                $result = $stmt->execute([$_SESSION['user_id'], $total]);
-            } elseif (in_array('Statut', $columns) && in_array('MontantTotal', $columns)) {
-                // Structure avec Statut et MontantTotal
-                $stmt = $pdo->prepare("
-                    INSERT INTO commande (IdClient, DateCommande, MontantTotal, Statut) 
-                    VALUES (?, NOW(), ?, 'en_attente')
-                ");
-                $result = $stmt->execute([$_SESSION['user_id'], $total]);
-            } elseif (in_array('Status', $columns)) {
-                // Seulement Status disponible
-                $stmt = $pdo->prepare("
-                    INSERT INTO commande (IdClient, DateCommande, Status) 
-                    VALUES (?, NOW(), 'en_attente')
-                ");
-                $result = $stmt->execute([$_SESSION['user_id']]);
-                
-                // Mettre à jour le total séparément si possible
-                if (in_array('TotalPrix', $columns)) {
-                    $commandeId = $pdo->lastInsertId();
-                    $stmt = $pdo->prepare("UPDATE commande SET TotalPrix = ? WHERE IdCommande = ?");
-                    $stmt->execute([$total, $commandeId]);
-                }
-            } elseif (in_array('Statut', $columns)) {
-                // Seulement Statut disponible
-                $stmt = $pdo->prepare("
-                    INSERT INTO commande (IdClient, DateCommande, Statut) 
-                    VALUES (?, NOW(), 'en_attente')
-                ");
-                $result = $stmt->execute([$_SESSION['user_id']]);
-                
-                // Mettre à jour le total séparément si possible
-                if (in_array('MontantTotal', $columns)) {
-                    $commandeId = $pdo->lastInsertId();
-                    $stmt = $pdo->prepare("UPDATE commande SET MontantTotal = ? WHERE IdCommande = ?");
-                    $stmt->execute([$total, $commandeId]);
-                }
-            } else {
-                // Aucune colonne de statut trouvée, insertion basique
-                $stmt = $pdo->prepare("
-                    INSERT INTO commande (IdClient, DateCommande) 
-                    VALUES (?, NOW())
-                ");
-                $result = $stmt->execute([$_SESSION['user_id']]);
-            }
-            
-        } catch (PDOException $e) {
-            throw new Exception("Erreur lors de la création de la commande: " . $e->getMessage());
-        }
+        // Créer la commande
+        $stmt = $pdo->prepare("
+            INSERT INTO commande (IdClient, DateCommande, TotalPrix, Status) 
+            VALUES (?, NOW(), ?, 'en attente')
+        ");
+        $result = $stmt->execute([$_SESSION['user_id'], $total]);
         
         if (!$result) {
             throw new Exception("Erreur lors de la création de la commande dans la base de données.");
@@ -124,41 +74,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             throw new Exception("Impossible de récupérer l'ID de la commande créée.");
         }
         
-        // Nettoyer d'abord les anciens enregistrements pour cette commande (au cas où)
-        try {
-            $stmt = $pdo->prepare("DELETE FROM panier WHERE IdCom = ?");
-            $stmt->execute([$commandeId]);
-        } catch (PDOException $e) {
-            // Ignorer si la table n'existe pas ou autre erreur
+        // Créer l'entrée de livraison
+        $stmt = $pdo->prepare("
+            INSERT INTO livraison (Adresse, DateLivraison, StatutLivraison, Frais, IdComm) 
+            VALUES (?, NOW(), 'En attente', ?, ?)
+        ");
+        $result = $stmt->execute([$_POST['adresse_livraison'], $fraisLivraison, $commandeId]);
+        
+        if (!$result) {
+            throw new Exception("Erreur lors de la création de la livraison.");
         }
         
-        // Insérer les détails de la commande et mettre à jour le stock
+        // SOLUTION SIMPLE: Consolider les produits identiques avant insertion
+        $produitsConsolides = [];
+        
+        // Regrouper les produits identiques et additionner leurs quantités
         foreach ($_SESSION['panier'] as $item) {
-            // Utiliser REPLACE INTO pour éviter les doublons
-            try {
-                $stmt = $pdo->prepare("
-                    REPLACE INTO panier (IdCom, IdProd, Qtt) 
-                    VALUES (?, ?, ?)
-                ");
-                $result = $stmt->execute([$commandeId, $item['id'], $item['quantite']]);
-            } catch (PDOException $e) {
-                try {
-                    // Fallback vers detailcommande
-                    $stmt = $pdo->prepare("
-                        INSERT INTO detailcommande (IdCommande, IdProduit, Quantite, PrixUnitaire) 
-                        VALUES (?, ?, ?, ?)
-                    ");
-                    $result = $stmt->execute([$commandeId, $item['id'], $item['quantite'], $item['prix']]);
-                } catch (PDOException $e2) {
-                    throw new Exception("Impossible d'ajouter le produit '{$item['nom']}' à la commande. Erreur: " . $e2->getMessage());
-                }
+            $produitId = $item['id'];
+            
+            if (isset($produitsConsolides[$produitId])) {
+                // Si le produit existe déjà, additionner la quantité
+                $produitsConsolides[$produitId]['quantite'] += $item['quantite'];
+            } else {
+                // Sinon, ajouter le produit
+                $produitsConsolides[$produitId] = $item;
             }
+        }
+        
+        // Insérer les produits consolidés
+        foreach ($produitsConsolides as $item) {
+            $stmt = $pdo->prepare("
+                INSERT INTO panier (IdCom, IdProd, Qtt, DatePanier) 
+                VALUES (?, ?, ?, NOW())
+            ");
+            $result = $stmt->execute([$commandeId, $item['id'], $item['quantite']]);
             
             if (!$result) {
                 throw new Exception("Erreur lors de l'ajout du produit '{$item['nom']}' à la commande.");
             }
             
-            // Mettre à jour le stock avec vérification
+            // Mettre à jour le stock
             $stmt = $pdo->prepare("
                 UPDATE produit 
                 SET Stock = Stock - ? 
@@ -176,18 +131,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Vider le panier
         $_SESSION['panier'] = [];
         
-        // NOUVEAU: Marquer la commande comme réussie
+        // Marquer la commande comme réussie
         $commandeReussie = true;
         
     } catch (Exception $e) {
         $pdo->rollBack();
         $error = $e->getMessage();
-        // Log l'erreur pour le debug
         error_log("Erreur checkout: " . $e->getMessage() . " - User ID: " . ($_SESSION['user_id'] ?? 'non connecté') . " - " . date('Y-m-d H:i:s'));
     }
 }
 
-// Récupérer les informations du client avec gestion des erreurs
+// Récupérer les informations complètes du client
 $client = null;
 try {
     $stmt = $pdo->prepare("SELECT * FROM client WHERE IdClient = ?");
@@ -270,42 +224,70 @@ try {
                     <!-- Afficher les infos client -->
                     <?php if ($client): ?>
                     <div class="bg-gray-50 rounded-lg p-4 mb-6">
-                        <h3 class="font-medium text-gray-800 mb-2">Informations de livraison</h3>
-                        <div class="text-sm text-gray-700">
-                            <?php
-                            // Construire le nom complet
-                            $nomComplet = '';
-                            if (isset($client['Nom']) && isset($client['Prenom'])) {
-                                $nomComplet = $client['Nom'] . ' ' . $client['Prenom'];
-                            } elseif (isset($client['nom']) && isset($client['prenom'])) {
-                                $nomComplet = $client['nom'] . ' ' . $client['prenom'];
-                            } elseif (isset($client['username'])) {
-                                $nomComplet = $client['username'];
-                            } elseif (isset($client['Username'])) {
-                                $nomComplet = $client['Username'];
-                            }
+                        <h3 class="font-medium text-gray-800 mb-3 flex items-center gap-2">
+                            <i class='bx bx-user text-accent'></i>
+                            Informations client
+                        </h3>
+                        <div class="text-sm text-gray-700 space-y-2">
+                            <p class="flex items-center gap-2">
+                                <i class='bx bx-user-circle text-gray-500'></i>
+                                <span class="font-medium"><?php echo htmlspecialchars($client['NomClient'] . ' ' . $client['PrenomClient']); ?></span>
+                            </p>
                             
-                            if ($nomComplet): ?>
-                                <p class="font-medium"><?php echo htmlspecialchars($nomComplet); ?></p>
+                            <?php if (!empty($client['Email'])): ?>
+                            <p class="flex items-center gap-2">
+                                <i class='bx bx-envelope text-gray-500'></i>
+                                <span><?php echo htmlspecialchars($client['Email']); ?></span>
+                            </p>
                             <?php endif; ?>
                             
-                            <?php if (isset($client['Email']) && !empty($client['Email'])): ?>
-                                <p>Email: <?php echo htmlspecialchars($client['Email']); ?></p>
-                            <?php elseif (isset($client['email']) && !empty($client['email'])): ?>
-                                <p>Email: <?php echo htmlspecialchars($client['email']); ?></p>
+                            <?php if (!empty($client['NumTel'])): ?>
+                            <p class="flex items-center gap-2">
+                                <i class='bx bx-phone text-gray-500'></i>
+                                <span><?php echo htmlspecialchars($client['NumTel']); ?></span>
+                            </p>
+                            <?php endif; ?>
+                            
+                            <?php if (!empty($client['Adresse'])): ?>
+                            <p class="flex items-start gap-2">
+                                <i class='bx bx-map text-gray-500 mt-0.5'></i>
+                                <span><?php echo htmlspecialchars($client['Adresse']); ?></span>
+                            </p>
                             <?php endif; ?>
                         </div>
                     </div>
                     <?php endif; ?>
                     
                     <form method="POST" class="space-y-6" id="checkout-form">
+                        <div>
+                            <label for="adresse_livraison" class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class='bx bx-map-pin text-accent'></i>
+                                Adresse de livraison *
+                            </label>
+                            <textarea 
+                                id="adresse_livraison" 
+                                name="adresse_livraison" 
+                                required 
+                                rows="3"
+                                placeholder="Entrez votre adresse complète de livraison..."
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                            ><?php echo isset($client['Adresse']) ? htmlspecialchars($client['Adresse']) : ''; ?></textarea>
+                            <p class="text-xs text-gray-500 mt-1">
+                                Cette adresse sera utilisée pour la livraison de votre commande
+                            </p>
+                        </div>
+                        
                         <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                            <h3 class="font-medium text-blue-800 mb-2">Informations importantes</h3>
+                            <h3 class="font-medium text-blue-800 mb-2 flex items-center gap-2">
+                                <i class='bx bx-info-circle'></i>
+                                Informations importantes
+                            </h3>
                             <ul class="text-sm text-blue-700 space-y-1">
                                 <li>• Votre commande sera traitée dans les 24h</li>
                                 <li>• Vous recevrez un email de confirmation</li>
                                 <li>• La livraison se fait sous 3-5 jours ouvrables</li>
-                                <li>• Paiement à la livraison</li>
+                                <li>• Paiement à la livraison (espèces uniquement)</li>
+                                <li>• Frais de livraison: <?php echo number_format($fraisLivraison, 2, ',', ' '); ?> DA</li>
                             </ul>
                         </div>
                         
@@ -313,6 +295,7 @@ try {
                             <input type="checkbox" id="terms" name="terms" required class="rounded">
                             <label for="terms" class="text-sm text-gray-700">
                                 J'accepte les <a href="#" class="text-accent hover:underline">conditions générales de vente</a>
+                                et je confirme que les informations fournies sont exactes
                             </label>
                         </div>
                         
@@ -337,17 +320,14 @@ try {
     <!-- FOOTER -->
     <?php include 'footer.php'; ?>
 
-    <!-- IMPORTANT: Charger le CartManager d'abord -->
     <script src="js/shared-cart-functions.js"></script>
 
-    <!-- Script avec notifications UNIFIÉES -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const form = document.getElementById('checkout-form');
             const submitBtn = document.getElementById('submit-btn');
             const submitText = document.getElementById('submit-text');
             
-            // Attendre que le CartManager soit disponible
             function waitForCartManager(callback) {
                 if (window.cartManager && window.cartManager.showNotification) {
                     callback();
@@ -356,13 +336,10 @@ try {
                 }
             }
             
-            // NOUVEAU: Vérifier si la commande a été créée avec succès
             <?php if ($commandeReussie && $commandeId): ?>
                 waitForCartManager(() => {
-                    // Utiliser EXACTEMENT la même notification que product.js
-                    window.cartManager.showNotification("🎉 Commande confirmée avec succès !", "success");
+                    window.cartManager.showNotification("Commande confirmée avec succès !", "success");
                     
-                    // Rediriger après 2 secondes pour laisser le temps de voir la notification
                     setTimeout(() => {
                         window.location.href = 'confirmation.php?id=<?php echo $commandeId; ?>';
                     }, 2000);
@@ -371,44 +348,44 @@ try {
             
             if (form && submitBtn) {
                 form.addEventListener('submit', function(e) {
-                    console.log('Formulaire soumis...');
-                    
-                    // Vérifier que les conditions sont acceptées
                     const termsCheckbox = document.getElementById('terms');
                     if (!termsCheckbox.checked) {
                         e.preventDefault();
                         
-                        // Utiliser le CartManager pour la notification d'erreur
                         waitForCartManager(() => {
                             window.cartManager.showNotification('Vous devez accepter les conditions générales de vente.', 'error');
                         });
                         return false;
                     }
                     
-                    // Désactiver le bouton pour éviter les doubles soumissions
+                    const adresseField = document.getElementById('adresse_livraison');
+                    if (!adresseField.value.trim()) {
+                        e.preventDefault();
+                        
+                        waitForCartManager(() => {
+                            window.cartManager.showNotification('L\'adresse de livraison est obligatoire.', 'error');
+                        });
+                        adresseField.focus();
+                        return false;
+                    }
+                    
                     submitBtn.disabled = true;
                     submitText.textContent = 'Traitement en cours...';
                     submitBtn.classList.add('opacity-50');
                     
-                    // Ajouter un spinner
                     const icon = submitBtn.querySelector('i');
                     icon.className = 'bx bx-loader-alt animate-spin text-xl';
                     
-                    // Afficher une notification de traitement avec le CartManager
                     waitForCartManager(() => {
                         window.cartManager.showNotification('Traitement de votre commande en cours...', 'info');
                     });
                     
-                    console.log('Bouton désactivé, envoi en cours...');
-                    
-                    // Réactiver après 15 secondes en cas d'erreur de réseau
                     setTimeout(() => {
                         if (submitBtn.disabled) {
                             submitBtn.disabled = false;
                             submitText.textContent = 'Confirmer la commande';
                             submitBtn.classList.remove('opacity-50');
                             icon.className = 'bx bx-check-circle text-xl';
-                            console.log('Timeout atteint, bouton réactivé');
                         }
                     }, 15000);
                 });

@@ -2,7 +2,7 @@
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
-header('Content-Type: application/json'); // Changé pour JSON par défaut
+header('Content-Type: application/json');
 
 require_once 'db.php';
 
@@ -30,40 +30,42 @@ function getOrders() {
     
     try {
         $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-        // SOLUTION 1: Augmenter la limite par défaut ou permettre "all"
-        $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10; // Changé de 4 à 10
+        $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
         
-        // SOLUTION 2: Permettre de récupérer toutes les commandes
         if (isset($_GET['all']) && $_GET['all'] == 'true') {
-            $limit = null; // Pas de limite
+            $limit = null;
         }
         
         $search = isset($_GET['search']) ? $_GET['search'] : '';
         
-        // Requête avec jointure pour récupérer le nom du client
-        $sql = "SELECT c.IdCommande as id, 
-                CONCAT(cl.PrenomClient, ' ', cl.NomClient) as client,
+        $sql = "SELECT DISTINCT c.IdCommande as id, 
+                CONCAT(COALESCE(cl.PrenomClient, ''), ' ', COALESCE(cl.NomClient, '')) as client,
                 DATE_FORMAT(c.DateCommande, '%Y-%m-%d') as date,
-                c.Status as statut, c.TotalPrix as total
+                c.Status as statut, 
+                c.TotalPrix as total,
+                l.StatutLivraison as statut_livraison
                 FROM commande c 
-                LEFT JOIN client cl ON c.IdClient = cl.IdClient";
+                LEFT JOIN client cl ON c.IdClient = cl.IdClient
+                LEFT JOIN livraison l ON c.IdCommande = l.IdComm";
         
         $params = [];
         
-        // Ajouter la recherche si nécessaire
         if (!empty($search)) {
-            $sql .= " WHERE cl.NomClient LIKE :search OR cl.PrenomClient LIKE :search 
-                     OR c.Status LIKE :search OR c.IdCommande LIKE :search";
+            $sql .= " WHERE (cl.NomClient LIKE :search OR cl.PrenomClient LIKE :search 
+                     OR c.Status LIKE :search OR c.IdCommande LIKE :search)";
             $params[':search'] = "%$search%";
         }
         
-        // Compter le total
-        $countSql = str_replace("SELECT c.IdCommande as id, CONCAT(cl.PrenomClient, ' ', cl.NomClient) as client, DATE_FORMAT(c.DateCommande, '%Y-%m-%d') as date, c.Status as statut, c.TotalPrix as total", "SELECT COUNT(*)", $sql);
+        $countSql = "SELECT COUNT(DISTINCT c.IdCommande) FROM commande c LEFT JOIN client cl ON c.IdClient = cl.IdClient";
+        if (!empty($search)) {
+            $countSql .= " WHERE (cl.NomClient LIKE :search OR cl.PrenomClient LIKE :search 
+                         OR c.Status LIKE :search OR c.IdCommande LIKE :search)";
+        }
+        
         $countStmt = $pdo->prepare($countSql);
         $countStmt->execute($params);
         $total = $countStmt->fetchColumn();
         
-        // Ajouter la pagination seulement si une limite est définie
         $sql .= " ORDER BY c.DateCommande DESC";
         if ($limit !== null) {
             $offset = ($page - 1) * $limit;
@@ -72,23 +74,37 @@ function getOrders() {
         
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
-        $orders = $stmt->fetchAll();
+        $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
-        // Convertir les statuts pour correspondre au JS
         foreach ($orders as &$order) {
-            switch ($order['statut']) {
+            $order['client'] = trim($order['client']);
+            if (empty($order['client'])) {
+                $order['client'] = 'Client inconnu';
+            }
+            
+            switch (strtolower(trim($order['statut']))) {
                 case 'en attente':
+                case 'en_attente':
+                case '':
                     $order['statut'] = 'En attente';
                     break;
                 case 'expe?die?':
+                case 'expedie':
+                case 'expédié':
                     $order['statut'] = 'En cours';
                     break;
                 case 'livre?':
+                case 'livre':
+                case 'livré':
                     $order['statut'] = 'Livré';
                     break;
                 case 'annule?':
+                case 'annule':
+                case 'annulé':
                     $order['statut'] = 'Annulé';
                     break;
+                default:
+                    $order['statut'] = 'En attente';
             }
         }
         
@@ -112,55 +128,103 @@ function getOrderDetails() {
     
     try {
         $orderId = (int)($_GET['id'] ?? 0);
-        if ($orderId <= 0) throw new Exception('ID invalide');
+        if ($orderId <= 0) {
+            throw new Exception('ID de commande invalide');
+        }
 
-        // Requête test minimaliste
-        $test = $pdo->prepare("SELECT 1 FROM commande WHERE IdCommande = ? LIMIT 1");
-        $test->execute([$orderId]);
-        if (!$test->fetch()) throw new Exception('Commande introuvable');
+        $checkStmt = $pdo->prepare("SELECT IdCommande FROM commande WHERE IdCommande = ?");
+        $checkStmt->execute([$orderId]);
+        if (!$checkStmt->fetch()) {
+            throw new Exception('Commande introuvable');
+        }
 
-        // Version ultra-sécurisée avec vérification des colonnes
-        $sql = "SELECT 
+        $sql = "SELECT DISTINCT
             p.NomProduit as produit,
             pa.Qtt as quantite,
             p.Prix as prix,
-            (pa.Qtt * p.Prix) as total
+            (pa.Qtt * p.Prix) as total,
+            p.IdProduit,
+            pa.IdCom
             FROM panier pa
-            JOIN produit p ON pa.IdProd = p.IdProduit
-            WHERE pa.IdCom = ?";
+            INNER JOIN produit p ON pa.IdProd = p.IdProduit
+            WHERE pa.IdCom = ?
+            ORDER BY p.NomProduit";
         
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$orderId]);
         $details = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+        $productIds = [];
+        $cleanDetails = [];
+        
+        foreach ($details as $detail) {
+            $productId = $detail['IdProduit'];
+            
+            if (in_array($productId, $productIds)) {
+                error_log("DOUBLON DÉTECTÉ: Produit ID $productId dans commande $orderId");
+                continue;
+            }
+            
+            $productIds[] = $productId;
+            
+            $cleanDetail = [
+                'produit' => htmlspecialchars($detail['produit']),
+                'quantite' => (int)$detail['quantite'],
+                'prix' => (float)$detail['prix'],
+                'total' => (float)$detail['total']
+            ];
+            
+            $cleanDetails[] = $cleanDetail;
+        }
+
         $orderSql = "SELECT 
             c.IdCommande as id,
-            CONCAT(cl.PrenomClient, ' ', cl.NomClient) as client,
-            DATE_FORMAT(c.DateCommande, '%d/%m/%Y') as date,
+            CONCAT(COALESCE(cl.PrenomClient, ''), ' ', COALESCE(cl.NomClient, '')) as client,
+            DATE_FORMAT(c.DateCommande, '%d/%m/%Y à %H:%i') as date,
             c.Status as statut,
-            c.TotalPrix as total
+            c.TotalPrix as total,
+            l.Adresse as adresse_livraison,
+            l.StatutLivraison as statut_livraison
             FROM commande c
-            JOIN client cl ON c.IdClient = cl.IdClient
+            LEFT JOIN client cl ON c.IdClient = cl.IdClient
+            LEFT JOIN livraison l ON c.IdCommande = l.IdComm
             WHERE c.IdCommande = ?";
         
         $orderStmt = $pdo->prepare($orderSql);
         $orderStmt->execute([$orderId]);
         $orderInfo = $orderStmt->fetch(PDO::FETCH_ASSOC);
 
-        if (!$orderInfo) throw new Exception('Infos commande introuvables');
+        if (!$orderInfo) {
+            throw new Exception('Informations de commande introuvables');
+        }
+
+        $orderInfo['client'] = trim($orderInfo['client']);
+        if (empty($orderInfo['client'])) {
+            $orderInfo['client'] = 'Client inconnu';
+        }
+
+        $totalCalcule = array_sum(array_column($cleanDetails, 'total'));
+        
+        $debug = [
+            'produits_trouves' => count($cleanDetails),
+            'total_commande' => (float)$orderInfo['total'],
+            'total_calcule' => $totalCalcule,
+            'difference' => abs((float)$orderInfo['total'] - $totalCalcule)
+        ];
 
         echo json_encode([
             'success' => true,
-            'data' => $details,
-            'orderInfo' => $orderInfo
+            'data' => $cleanDetails,
+            'orderInfo' => $orderInfo,
+            'debug' => $debug
         ]);
 
     } catch(Exception $e) {
         http_response_code(500);
         echo json_encode([
-            'error' => 'Erreur technique',
-            'debug' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
+            'error' => 'Erreur lors de la récupération des détails',
+            'message' => $e->getMessage(),
+            'orderId' => $orderId ?? 'non défini'
         ]);
     }
 }
@@ -171,8 +235,8 @@ function updateOrderStatus() {
     try {
         $input = json_decode(file_get_contents('php://input'), true);
         
-        $id = $input['id'] ?? 0;
-        $statut = $input['statut'] ?? '';
+        $id = (int)($input['id'] ?? 0);
+        $statut = trim($input['statut'] ?? '');
         
         if ($id <= 0 || empty($statut)) {
             http_response_code(400);
@@ -180,45 +244,133 @@ function updateOrderStatus() {
             return;
         }
         
-        // Convertir le statut pour la base de données
-        $dbStatut = '';
-        switch ($statut) {
-            case 'En attente':
-                $dbStatut = 'en attente';
-                break;
-            case 'En cours':
-                $dbStatut = 'expe?die?';
-                break;
-            case 'Livré':
-                $dbStatut = 'livre?';
-                break;
-            case 'Annulé':
-                $dbStatut = 'annule?';
-                break;
-            default:
-                http_response_code(400);
-                echo json_encode(['error' => 'Statut invalide']);
-                return;
+        $statusMapping = [
+            'En attente' => 'en attente',
+            'En cours' => 'expe?die?',
+            'Livré' => 'livre?',
+            'Annulé' => 'annule?'
+        ];
+        
+        if (!isset($statusMapping[$statut])) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Statut invalide: ' . $statut]);
+            return;
         }
         
-        // Mettre à jour le statut
-        $stmt = $pdo->prepare("UPDATE commande SET Status = :statut WHERE IdCommande = :id");
-        $stmt->execute([':statut' => $dbStatut, ':id' => $id]);
+        $dbStatut = $statusMapping[$statut];
         
-        if ($stmt->rowCount() === 0) {
+        // Vérifier que la commande existe
+        $checkStmt = $pdo->prepare("SELECT IdCommande FROM commande WHERE IdCommande = ?");
+        $checkStmt->execute([$id]);
+        if (!$checkStmt->fetch()) {
             http_response_code(404);
             echo json_encode(['error' => 'Commande non trouvée']);
             return;
         }
         
-        echo json_encode([
-            'success' => true,
-            'message' => 'Statut de la commande #' . $id . ' modifié avec succès'
-        ]);
+        // Utiliser une transaction pour s'assurer que tout se passe bien
+        $pdo->beginTransaction();
+        
+        try {
+            // Mettre à jour le statut de la commande
+            $stmt = $pdo->prepare("UPDATE commande SET Status = ? WHERE IdCommande = ?");
+            $result1 = $stmt->execute([$dbStatut, $id]);
+            
+            if (!$result1) {
+                throw new Exception("Erreur lors de la mise à jour du statut de commande");
+            }
+            
+            //Vérifier d'abord si une entrée de livraison existe
+            $checkLivraison = $pdo->prepare("SELECT IdComm FROM livraison WHERE IdComm = ?");
+            $checkLivraison->execute([$id]);
+            $livraisonExists = $checkLivraison->fetch();
+            
+            if ($livraisonExists) {
+                // Mettre à jour le statut de livraison selon le statut de commande
+                $statutLivraison = '';
+                switch ($statut) {
+                    case 'En attente':
+                        $statutLivraison = 'En attente';
+                        break;
+                    case 'En cours':
+                        $statutLivraison = 'En route';
+                        break;
+                    case 'Livré':
+                        $statutLivraison = 'livre';
+                        break;
+                    case 'Annulé':
+                        $statutLivraison = 'Annulé';
+                        break;
+                }
+                
+                if (!empty($statutLivraison)) {
+                    $updateLivraison = $pdo->prepare("UPDATE livraison SET StatutLivraison = ? WHERE IdComm = ?");
+                    $result2 = $updateLivraison->execute([$statutLivraison, $id]);
+                    
+                    if (!$result2) {
+                        throw new Exception("Erreur lors de la mise à jour du statut de livraison");
+                    }
+                    
+                    // Log pour debug
+                    error_log("Statut de livraison mis à jour: Commande $id -> $statutLivraison");
+                }
+            } else {
+                //  Créer une entrée de livraison si elle n'existe pas
+                $createLivraison = $pdo->prepare("
+                    INSERT INTO livraison (Adresse, DateLivraison, StatutLivraison, Frais, IdComm) 
+                    VALUES ('Adresse non spécifiée', NOW(), ?, 1000, ?)
+                ");
+                
+                $statutLivraison = '';
+                switch ($statut) {
+                    case 'En attente':
+                        $statutLivraison = 'En attente';
+                        break;
+                    case 'En cours':
+                        $statutLivraison = 'En route';
+                        break;
+                    case 'Livré':
+                        $statutLivraison = 'livre';
+                        break;
+                    case 'Annulé':
+                        $statutLivraison = 'Annulé';
+                        break;
+                }
+                
+                if (!empty($statutLivraison)) {
+                    $result3 = $createLivraison->execute([$statutLivraison, $id]);
+                    
+                    if (!$result3) {
+                        throw new Exception("Erreur lors de la création de l'entrée de livraison");
+                    }
+                    
+                    error_log("Entrée de livraison créée: Commande $id -> $statutLivraison");
+                }
+            }
+            
+            $pdo->commit();
+            
+            echo json_encode([
+                'success' => true,
+                'message' => 'Statut de la commande #' . $id . ' modifié avec succès vers "' . $statut . '"',
+                'debug' => [
+                    'commande_updated' => $result1,
+                    'livraison_exists' => $livraisonExists ? true : false,
+                    'statut_livraison' => $statutLivraison ?? 'non défini'
+                ]
+            ]);
+            
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            throw $e;
+        }
         
     } catch(PDOException $e) {
         http_response_code(500);
         echo json_encode(['error' => 'Erreur lors de la modification: ' . $e->getMessage()]);
+    } catch(Exception $e) {
+        http_response_code(500);
+        echo json_encode(['error' => 'Erreur: ' . $e->getMessage()]);
     }
 }
 ?>

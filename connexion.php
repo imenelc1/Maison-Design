@@ -145,7 +145,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </button>
                     
                     <div class="text-center text-sm text-textColor">
-                        Pas encore de compte ? <a href="inscription.html" class="text-accent font-semibold hover:underline">S'inscrire</a>
+                        Pas encore de compte ? <a href="inscription.php" class="text-accent font-semibold hover:underline">S'inscrire</a>
                     </div>
                 </form>
             </div>
