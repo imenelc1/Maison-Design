@@ -13,7 +13,6 @@ use App\Application\AuthService;
 use App\Application\ProductService;
 use App\Application\CartService;
 use App\Application\OrderService;
-use PDO;
 
 $container = new Container();
 
