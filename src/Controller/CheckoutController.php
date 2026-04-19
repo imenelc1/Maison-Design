@@ -1,0 +1,107 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Controller;
+
+use App\Application\CartService;
+use App\Application\OrderService;
+
+class CheckoutController extends Controller
+{
+    private CartService  $cartService;
+    private OrderService $orderService;
+
+    public function __construct(
+        CartService  $cartService,
+        OrderService $orderService
+    ) {
+        parent::__construct();
+        $this->cartService  = $cartService;
+        $this->orderService = $orderService;
+    }
+
+    // GET /checkout
+    public function show(): void
+    {
+        $this->requireAuth();
+
+        if ($this->cartService->isEmpty()) {
+            $this->redirect('/panier');
+            return;
+        }
+
+        $items     = $this->cartService->getItems();
+        $sousTotal = $this->cartService->getSousTotal();
+        $livraison = 1000.0;
+        $total     = $sousTotal + $livraison;
+
+        $this->render('pages/checkout', [
+            'items'     => $items,
+            'sousTotal' => $sousTotal,
+            'livraison' => $livraison,
+            'total'     => $total,
+            'flash'     => $this->getFlash(),
+        ]);
+    }
+
+    // POST /checkout
+    public function process(): void
+    {
+        $this->requireAuth();
+
+        if ($this->cartService->isEmpty()) {
+            $this->redirect('/panier');
+            return;
+        }
+
+        $adresse = $this->request->getString('adresse_livraison');
+        $terms   = $this->request->post('terms');
+
+        if (empty($adresse)) {
+            $this->setFlash('error', "L'adresse de livraison est obligatoire");
+            $this->redirect('/checkout');
+            return;
+        }
+
+        if ($terms !== 'on') {
+            $this->setFlash('error', 'Vous devez accepter les conditions');
+            $this->redirect('/checkout');
+            return;
+        }
+
+        try {
+            $commandeId = $this->orderService->creerCommande(
+                $this->request->getUserId(),
+                $this->cartService->getItems()
+            );
+
+            // Vider le panier après commande réussie
+            $this->cartService->vider();
+
+            $this->redirect('/confirmation/' . $commandeId);
+
+        } catch (\RuntimeException $e) {
+            $this->setFlash('error', $e->getMessage());
+            $this->redirect('/checkout');
+        }
+    }
+
+    // GET /confirmation/{id}
+    public function confirmation(array $params = []): void
+    {
+        $this->requireAuth();
+
+        $commandeId = (int)($params['id'] ?? 0);
+        $commande   = $this->orderService->getCommande($commandeId);
+
+        if ($commande === null) {
+            $this->redirect('/compte');
+            return;
+        }
+
+        $this->render('pages/confirmation', [
+            'commande' => $commande,
+        ]);
+    }
+}
