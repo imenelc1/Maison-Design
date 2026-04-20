@@ -77,6 +77,18 @@ abstract class Controller
         }
     }
 
+    protected function requireClient(): void
+    {
+        if (!$this->request->isLoggedIn()) {
+            $this->redirect('/connexion');
+        }
+
+        if ($this->request->getUserRole() === 'admin') {
+            $this->setFlash('error', 'Cette section est reservee aux clients');
+            $this->redirect('/admin');
+        }
+    }
+
     /**
      * Stocker un message flash
      * Affiché une seule fois puis supprimé

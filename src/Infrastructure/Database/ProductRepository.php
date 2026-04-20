@@ -105,15 +105,28 @@ class ProductRepository implements ProductRepositoryInterface
         );
     }
 
-    public function save(Product $product): void
+    public function save(Product $product): int
     {
         if ($product->getId() === 0) {
-            $stmt = $this->pdo->prepare("
-                INSERT INTO produit 
-                    (NomProduit, Description, Prix, Stock, IdCat, DateAjout)
-                SELECT ?, ?, ?, ?, IdCategorie, NOW()
+            $categorieStmt = $this->pdo->prepare("
+                SELECT IdCategorie
                 FROM categorie
-                WHERE NomCategorie = ?
+                WHERE LOWER(TRIM(NomCategorie)) = LOWER(TRIM(?))
+                LIMIT 1
+            ");
+            $categorieStmt->execute([$product->getCategorie()]);
+            $categorieId = $categorieStmt->fetchColumn();
+
+            if ($categorieId === false) {
+                throw new \RuntimeException(
+                    "Categorie introuvable : {$product->getCategorie()}"
+                );
+            }
+
+            $stmt = $this->pdo->prepare("
+                INSERT INTO produit
+                    (NomProduit, Description, Prix, Stock, IdCat, DateAjout)
+                VALUES (?, ?, ?, ?, ?, NOW())
             ");
 
             $stmt->execute([
@@ -121,8 +134,10 @@ class ProductRepository implements ProductRepositoryInterface
                 $product->getDescription(),
                 $product->getPrix(),
                 $product->getStock(),
-                $product->getCategorie(),
+                (int)$categorieId,
             ]);
+
+            return (int)$this->pdo->lastInsertId();
         } else {
             $stmt = $this->pdo->prepare("
                 UPDATE produit SET
@@ -140,7 +155,19 @@ class ProductRepository implements ProductRepositoryInterface
                 $product->getStock(),
                 $product->getId(),
             ]);
+
+            return $product->getId();
         }
+    }
+
+    public function saveImage(int $productId, string $imagePath): void
+    {
+        $stmt = $this->pdo->prepare("
+            INSERT INTO imageprod (IdProduit, URL)
+            VALUES (?, ?)
+        ");
+
+        $stmt->execute([$productId, $imagePath]);
     }
 
     public function delete(int $id): void

@@ -61,11 +61,55 @@
         <div id="orders-tab"
              class="<?php echo $activeTab === 'orders' ? 'block' : 'hidden'; ?>">
             <div class="bg-white rounded-xl shadow-md p-6">
-                <h2 class="text-2xl text-accent mb-6">Mes commandes</h2>
-                <div class="text-center py-12">
-                    <i class='bx bx-package text-6xl text-gray-300'></i>
-                    <p class="text-gray-500 mt-4 mb-4">Chargement de vos commandes...</p>
-                </div>
+                <h2 class="text-2xl text-accent mb-6">
+                    Mes commandes (<?php echo count($orders ?? []); ?>)
+                </h2>
+
+                <?php if (empty($orders)): ?>
+                    <div class="text-center py-12">
+                        <i class='bx bx-package text-6xl text-gray-300'></i>
+                        <p class="text-gray-500 mt-4 mb-4">Vous n'avez pas encore passe de commande.</p>
+                        <a href="/categories"
+                           class="inline-flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-full hover:bg-accent/80">
+                            <i class='bx bx-shopping-bag'></i> Voir les produits
+                        </a>
+                    </div>
+                <?php else: ?>
+                    <div class="space-y-4">
+                        <?php foreach ($orders as $order): ?>
+                            <?php
+                            $status = strtolower($order->getStatus());
+                            $statusClasses = match ($status) {
+                                'livre', 'livré' => 'bg-green-100 text-green-700',
+                                'expedie', 'expediee', 'expédié', 'expédiée' => 'bg-blue-100 text-blue-700',
+                                'annule', 'annulee', 'annulé', 'annulée' => 'bg-red-100 text-red-700',
+                                default => 'bg-yellow-100 text-yellow-700',
+                            };
+                            ?>
+                            <div class="border border-gray-200 rounded-xl p-4">
+                                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                                    <div>
+                                        <p class="font-semibold text-textColor">
+                                            Commande #<?php echo str_pad((string)$order->getId(), 6, '0', STR_PAD_LEFT); ?>
+                                        </p>
+                                        <p class="text-sm text-gray-500">
+                                            Passee le <?php echo htmlspecialchars($order->getDateCommande()); ?>
+                                        </p>
+                                    </div>
+
+                                    <div class="flex flex-col md:items-end gap-2">
+                                        <span class="inline-flex px-3 py-1 rounded-full text-sm font-medium <?php echo $statusClasses; ?>">
+                                            <?php echo htmlspecialchars($order->getStatus()); ?>
+                                        </span>
+                                        <span class="font-bold text-accent">
+                                            <?php echo htmlspecialchars($order->getTotalFormate()); ?>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>

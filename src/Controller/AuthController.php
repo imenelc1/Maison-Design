@@ -5,15 +5,18 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Application\AuthService;
+use App\Application\OrderService;
 
 class AuthController extends Controller
 {
     private AuthService $authService;
+    private OrderService $orderService;
 
-    public function __construct(AuthService $authService)
+    public function __construct(AuthService $authService, OrderService $orderService)
     {
         parent::__construct();
         $this->authService = $authService;
+        $this->orderService = $orderService;
     }
 
     // GET /connexion
@@ -140,11 +143,17 @@ $this->redirect('/');
     // GET /compte
     public function compte(): void
     {
-        $this->requireAuth();
+        $this->requireClient();
+
+        $userId = $this->request->getUserId();
+        $orders = $userId !== null
+            ? $this->orderService->getCommandesUser($userId)
+            : [];
 
         $this->render('pages/client', [
             'flash'     => $this->getFlash(),
             'activeTab' => $this->request->get('tab', 'profile'),
+            'orders'    => $orders,
         ]);
     }
 }

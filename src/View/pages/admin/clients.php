@@ -53,11 +53,18 @@ async function loadClients() {
 
 async function deleteClient(id) {
     if (!confirm('Supprimer ce client ?')) return;
-    await fetch('/api/admin/clients/supprimer', {
+    const res = await fetch('/api/admin/clients/supprimer', {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: `id=${id}`
     });
+    const data = await res.json();
+
+    if (!data.success) {
+        alert(data.message || 'Suppression impossible');
+        return;
+    }
+
     loadClients();
 }
 

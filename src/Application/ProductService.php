@@ -81,8 +81,13 @@ class ProductService
         $this->productRepository->delete($id);
     }
 
-    public function saveProduct(Product $product): void
+    public function saveProduct(Product $product): int
     {
-        $this->productRepository->save($product);
+        return $this->productRepository->save($product);
+    }
+
+    public function saveProductImage(int $productId, string $imagePath): void
+    {
+        $this->productRepository->saveImage($productId, $imagePath);
     }
 }

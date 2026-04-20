@@ -128,6 +128,7 @@ $currentUri     = $_SERVER['REQUEST_URI'] ?? '/';
                 </div>
 
                 <!-- Panier -->
+                <?php if (!$isAdmin): ?>
                 <a href="/panier"
                    class="relative p-2 text-textColor hover:text-accent transition-colors rounded-full hover:bg-primary/30">
                     <i class='bx bx-cart text-xl sm:text-2xl'></i>
@@ -137,6 +138,7 @@ $currentUri     = $_SERVER['REQUEST_URI'] ?? '/';
                         <?php echo $nombreArticles > 99 ? '99+' : $nombreArticles; ?>
                     </span>
                 </a>
+                <?php endif; ?>
 
                 <!-- User Desktop -->
                 <div class="hidden lg:flex items-center">
@@ -155,16 +157,16 @@ $currentUri     = $_SERVER['REQUEST_URI'] ?? '/';
                                 <p class="text-xs text-gray-500"><?php echo htmlspecialchars($_SESSION['email'] ?? ''); ?></p>
                             </div>
                             <div class="py-2">
+                                <?php if ($isAdmin): ?>
+                                <a href="/admin" class="flex items-center px-4 py-2.5 text-sm text-textColor hover:bg-accent/10 hover:text-accent transition-colors">
+                                    <i class='bx bx-cog text-lg mr-3'></i> Administration
+                                </a>
+                                <?php else: ?>
                                 <a href="/compte" class="flex items-center px-4 py-2.5 text-sm text-textColor hover:bg-accent/10 hover:text-accent transition-colors">
                                     <i class='bx bx-user-circle text-lg mr-3'></i> Mon profil
                                 </a>
                                 <a href="/compte?tab=orders" class="flex items-center px-4 py-2.5 text-sm text-textColor hover:bg-accent/10 hover:text-accent transition-colors">
                                     <i class='bx bx-package text-lg mr-3'></i> Mes commandes
-                                </a>
-                                <?php if ($isAdmin): ?>
-                                <div class="border-t border-gray-100 my-1"></div>
-                                <a href="/admin" class="flex items-center px-4 py-2.5 text-sm text-textColor hover:bg-accent/10 hover:text-accent transition-colors">
-                                    <i class='bx bx-cog text-lg mr-3'></i> Administration
                                 </a>
                                 <?php endif; ?>
                                 <div class="border-t border-gray-100 my-1"></div>
@@ -225,22 +227,25 @@ $currentUri     = $_SERVER['REQUEST_URI'] ?? '/';
                 <li><a href="/#apropos"   class="flex items-center w-full px-3 py-3 text-textColor hover:bg-accent/10 hover:text-accent rounded-lg"><i class='bx bx-info-circle text-xl mr-3'></i> À propos</a></li>
                 <li><a href="/categories" class="flex items-center w-full px-3 py-3 text-textColor hover:bg-accent/10 hover:text-accent rounded-lg"><i class='bx bx-category text-xl mr-3'></i> Catégories</a></li>
                 <li><a href="/#contact"  class="flex items-center w-full px-3 py-3 text-textColor hover:bg-accent/10 hover:text-accent rounded-lg"><i class='bx bx-envelope text-xl mr-3'></i> Contact</a></li>
+                <?php if (!$isAdmin): ?>
                 <li><a href="/panier"    class="flex items-center justify-between w-full px-3 py-3 text-textColor hover:bg-accent/10 hover:text-accent rounded-lg">
                     <span class="flex items-center"><i class='bx bx-cart text-xl mr-3'></i> Mon Panier</span>
                     <?php if ($nombreArticles > 0): ?>
                     <span class="bg-accent text-white text-xs px-2 py-0.5 rounded-full"><?php echo $nombreArticles; ?></span>
                     <?php endif; ?>
                 </a></li>
+                <?php endif; ?>
             </ul>
         </nav>
 
         <?php if ($isLoggedIn): ?>
         <div class="border-t border-gray-200 pt-4 mb-4">
             <ul class="space-y-1">
-                <li><a href="/compte"          class="flex items-center w-full px-3 py-2 text-textColor hover:bg-accent/10 hover:text-accent rounded-lg text-sm"><i class='bx bx-user-circle text-lg mr-3'></i> Mon profil</a></li>
-                <li><a href="/compte?tab=orders" class="flex items-center w-full px-3 py-2 text-textColor hover:bg-accent/10 hover:text-accent rounded-lg text-sm"><i class='bx bx-package text-lg mr-3'></i> Mes commandes</a></li>
                 <?php if ($isAdmin): ?>
                 <li><a href="/admin" class="flex items-center w-full px-3 py-2 text-textColor hover:bg-accent/10 hover:text-accent rounded-lg text-sm"><i class='bx bx-cog text-lg mr-3'></i> Administration</a></li>
+                <?php else: ?>
+                <li><a href="/compte" class="flex items-center w-full px-3 py-2 text-textColor hover:bg-accent/10 hover:text-accent rounded-lg text-sm"><i class='bx bx-user-circle text-lg mr-3'></i> Mon profil</a></li>
+                <li><a href="/compte?tab=orders" class="flex items-center w-full px-3 py-2 text-textColor hover:bg-accent/10 hover:text-accent rounded-lg text-sm"><i class='bx bx-package text-lg mr-3'></i> Mes commandes</a></li>
                 <?php endif; ?>
             </ul>
         </div>

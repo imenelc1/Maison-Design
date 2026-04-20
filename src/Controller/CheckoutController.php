@@ -24,7 +24,7 @@ class CheckoutController extends Controller
     // GET /checkout
     public function show(): void
     {
-        $this->requireAuth();
+        $this->requireClient();
 
         if ($this->cartService->isEmpty()) {
             $this->redirect('/panier');
@@ -48,7 +48,7 @@ class CheckoutController extends Controller
     // POST /checkout
    public function process(): void
 {
-    $this->requireAuth();
+    $this->requireClient();
     error_log("=== SESSION DUMP ===");
 error_log("user_id: " . ($_SESSION['user_id'] ?? 'VIDE'));
 error_log("role: " . ($_SESSION['role'] ?? 'VIDE'));
@@ -105,7 +105,7 @@ error_log("email: " . ($_SESSION['email'] ?? 'VIDE'));
     // GET /confirmation/{id}
     public function confirmation(array $params = []): void
     {
-        $this->requireAuth();
+        $this->requireClient();
 
         $commandeId = (int)($params['id'] ?? 0);
         $commande   = $this->orderService->getCommande($commandeId);

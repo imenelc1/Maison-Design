@@ -19,6 +19,8 @@ class CartController extends Controller
     // GET /panier
     public function show(): void
     {
+        $this->requireClient();
+
         $items      = $this->cartService->getItems();
         $sousTotal  = $this->cartService->getSousTotal();
         $livraison  = 1000.0;
@@ -36,6 +38,8 @@ class CartController extends Controller
     // POST /panier/ajouter
     public function ajouter(): void
     {
+        $this->requireClient();
+
         $id       = (int)$this->request->post('produitId', 0);
         $quantite = (int)$this->request->post('quantite', 1);
 
@@ -52,6 +56,8 @@ class CartController extends Controller
     // POST /panier/supprimer
     public function supprimer(): void
     {
+        $this->requireClient();
+
         $id = (int)$this->request->post('produitId', 0);
         $this->cartService->supprimer($id);
         $this->redirect('/panier');
@@ -60,6 +66,8 @@ class CartController extends Controller
     // POST /panier/modifier
     public function modifier(): void
     {
+        $this->requireClient();
+
         $id    = (int)$this->request->post('produitId', 0);
         $delta = (int)$this->request->post('delta', 0);
         $this->cartService->modifierQuantite($id, $delta);
@@ -69,6 +77,8 @@ class CartController extends Controller
     // GET /panier/vider
     public function vider(): void
     {
+        $this->requireClient();
+
         $this->cartService->vider();
         $this->redirect('/panier');
     }
@@ -76,6 +86,20 @@ class CartController extends Controller
     // POST /api/cart/add — AJAX
     public function ajouterApi(): void
     {
+        if (!$this->request->isLoggedIn()) {
+            $this->json([
+                'success' => false,
+                'message' => 'Veuillez vous connecter',
+            ], 401);
+        }
+
+        if ($this->request->getUserRole() === 'admin') {
+            $this->json([
+                'success' => false,
+                'message' => 'Un administrateur ne peut pas utiliser le panier',
+            ], 403);
+        }
+
         $id       = (int)$this->request->post('produitId', 0);
         $quantite = (int)$this->request->post('quantite', 1);
 
@@ -97,6 +121,13 @@ class CartController extends Controller
     // POST /api/cart/count — AJAX
     public function count(): void
     {
+        if ($this->request->getUserRole() === 'admin') {
+            $this->json([
+                'success' => true,
+                'count'   => 0,
+            ]);
+        }
+
         $this->json([
             'success' => true,
             'count'   => $this->cartService->getNombreArticles(),

@@ -29,7 +29,7 @@ class AuthService
     {
         $this->userRepository->delete($id);
     }
-    }
+    
 
     /**
      * Tente de connecter un utilisateur

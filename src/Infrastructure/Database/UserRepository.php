@@ -134,10 +134,64 @@ class UserRepository implements UserRepositoryInterface
 
     public function delete(int $id): void
     {
-        $stmt = $this->pdo->prepare("
-            DELETE FROM client WHERE IdClient = ?
-        ");
-        $stmt->execute([$id]);
+        $this->pdo->beginTransaction();
+
+        try {
+            $commandeIdsStmt = $this->pdo->prepare("
+                SELECT IdCommande
+                FROM commande
+                WHERE IdClient = ?
+            ");
+            $commandeIdsStmt->execute([$id]);
+            $commandeIds = $commandeIdsStmt->fetchAll(PDO::FETCH_COLUMN);
+
+            if (!empty($commandeIds)) {
+                $placeholders = implode(', ', array_fill(0, count($commandeIds), '?'));
+
+                $deleteLivraisons = $this->pdo->prepare("
+                    DELETE FROM livraison
+                    WHERE IdComm IN ($placeholders)
+                ");
+                $deleteLivraisons->execute($commandeIds);
+
+                $deletePaniers = $this->pdo->prepare("
+                    DELETE FROM panier
+                    WHERE IdCom IN ($placeholders)
+                ");
+                $deletePaniers->execute($commandeIds);
+
+                $deleteCommandes = $this->pdo->prepare("
+                    DELETE FROM commande
+                    WHERE IdCommande IN ($placeholders)
+                ");
+                $deleteCommandes->execute($commandeIds);
+            }
+
+            $deleteFavoris = $this->pdo->prepare("
+                DELETE FROM favoris
+                WHERE IdClient = ?
+            ");
+            $deleteFavoris->execute([$id]);
+
+            $stmt = $this->pdo->prepare("
+                DELETE FROM client WHERE IdClient = ?
+            ");
+            $stmt->execute([$id]);
+
+            if ($stmt->rowCount() === 0) {
+                throw new \RuntimeException("Client introuvable");
+            }
+
+            $this->pdo->commit();
+        } catch (\Throwable $e) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+
+            throw new \RuntimeException(
+                "Impossible de supprimer le client: " . $e->getMessage()
+            );
+        }
     }
 
     public function findAll(): array

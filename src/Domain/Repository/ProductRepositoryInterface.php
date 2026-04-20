@@ -14,7 +14,9 @@ interface ProductRepositoryInterface
 
     public function findByCategorie(string $categorie): array;
 
-    public function save(Product $product): void;
+    public function save(Product $product): int;
+
+    public function saveImage(int $productId, string $imagePath): void;
 
     public function delete(int $id): void;
 
