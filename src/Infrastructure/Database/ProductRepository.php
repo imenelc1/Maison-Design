@@ -175,26 +175,33 @@ class ProductRepository implements ProductRepositoryInterface
         }
     }
 
-    private function hydrate(array $row): Product
-    {
-        $image = $row['image'] ?? '';
+   private function hydrate(array $row): Product
+{
+    $image = $row['image'] ?? '';
 
-        if (!empty($image) && strpos($image, 'images/') !== 0) {
+    if (!empty($image)) {
+        // Normaliser le chemin
+        if (strpos($image, 'images/') !== 0) {
             $image = 'images/' . basename($image);
         }
-
-        if (empty($image)) {
+        
+        // Vérifier si le fichier existe vraiment
+        $fullPath = ROOT_PATH . '/public/' . $image;
+        if (!file_exists($fullPath)) {
             $image = 'images/placeholder.jpeg';
         }
-
-        return new Product(
-            (int)$row['id'],
-            $row['nom'],
-            $row['description'] ?? '',
-            (float)$row['prix'],
-            (int)$row['stock'],
-            $row['categorie'] ?? '',
-            $image
-        );
+    } else {
+        $image = 'images/placeholder.jpeg';
     }
+
+    return new Product(
+        (int)$row['id'],
+        $row['nom'],
+        $row['description'] ?? '',
+        (float)$row['prix'],
+        (int)$row['stock'],
+        $row['categorie'] ?? '',
+        $image
+    );
+}
 }
