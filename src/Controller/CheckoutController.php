@@ -46,46 +46,57 @@ class CheckoutController extends Controller
     }
 
     // POST /checkout
-    public function process(): void
-    {
-        $this->requireAuth();
+   public function process(): void
+{
+    $this->requireAuth();
 
-        if ($this->cartService->isEmpty()) {
-            $this->redirect('/panier');
-            return;
-        }
-
-        $adresse = $this->request->getString('adresse_livraison');
-        $terms   = $this->request->post('terms');
-
-        if (empty($adresse)) {
-            $this->setFlash('error', "L'adresse de livraison est obligatoire");
-            $this->redirect('/checkout');
-            return;
-        }
-
-        if ($terms !== 'on') {
-            $this->setFlash('error', 'Vous devez accepter les conditions');
-            $this->redirect('/checkout');
-            return;
-        }
-
-        try {
-            $commandeId = $this->orderService->creerCommande(
-                $this->request->getUserId(),
-                $this->cartService->getItems()
-            );
-
-            // Vider le panier après commande réussie
-            $this->cartService->vider();
-
-            $this->redirect('/confirmation/' . $commandeId);
-
-        } catch (\RuntimeException $e) {
-            $this->setFlash('error', $e->getMessage());
-            $this->redirect('/checkout');
-        }
+    if ($this->cartService->isEmpty()) {
+        $this->redirect('/panier');
+        return;
     }
+
+    $adresse = $this->request->getString('adresse_livraison');
+    $terms   = $this->request->post('terms');
+
+    if (empty($adresse)) {
+        $this->setFlash('error', "L'adresse de livraison est obligatoire");
+        $this->redirect('/checkout');
+        return;
+    }
+
+    if ($terms !== 'on') {
+        $this->setFlash('error', 'Vous devez accepter les conditions');
+        $this->redirect('/checkout');
+        return;
+    }
+
+    try {
+        $userId = $this->request->getUserId();
+        $items  = $this->cartService->getItems();
+
+        error_log("=== Checkout process ===");
+        error_log("userId: " . $userId);
+        error_log("items count: " . count($items));
+
+        $commandeId = $this->orderService->creerCommande(
+            $userId,
+            $items
+        );
+
+        // Insérer la livraison
+        $this->orderService->ajouterLivraison($commandeId, $adresse);
+
+        // Vider le panier
+        $this->cartService->vider();
+
+        $this->redirect('/confirmation/' . $commandeId);
+
+    } catch (\RuntimeException $e) {
+        error_log("Erreur checkout: " . $e->getMessage());
+        $this->setFlash('error', $e->getMessage());
+        $this->redirect('/checkout');
+    }
+}
 
     // GET /confirmation/{id}
     public function confirmation(array $params = []): void

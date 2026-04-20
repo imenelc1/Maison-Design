@@ -53,7 +53,7 @@
 
                     <a href="/produit/<?php echo $produit->getId(); ?>" class="block">
                         <div class="h-48 overflow-hidden">
-                            <img src="/<?php echo htmlspecialchars($produit->getImage()); ?>"
+                            <img src="/<?php echo str_replace('%2F', '/', rawurlencode($produit->getImage())); ?>"
                                  alt="<?php echo htmlspecialchars($produit->getNom()); ?>"
                                  class="w-full h-full object-cover hover:scale-105 transition-transform"
                                  onerror="this.src='/images/placeholder.jpeg'">
@@ -103,6 +103,7 @@
                 <?php endforeach; ?>
             <?php endif; ?>
         </div>
+        
     </div>
 </div>
 
@@ -156,7 +157,7 @@ function renderProducts(products) {
         <div class="bg-white rounded-xl overflow-hidden shadow-md hover:-translate-y-1 transition-transform">
             <a href="/produit/${p.IdProduit}" class="block">
                 <div class="h-48 overflow-hidden">
-                    <img src="/${p.image}" alt="${p.NomProduit}"
+                    <img src="/${encodeURIComponent(p.image).replace(/%2F/g, '/')}" alt="${p.NomProduit}"
                          class="w-full h-full object-cover hover:scale-105 transition-transform"
                          onerror="this.src='/images/placeholder.jpeg'">
                 </div>

@@ -15,4 +15,6 @@ interface OrderRepositoryInterface
     public function save(Order $order): int;
 
     public function updateStatus(int $id, string $status): void;
+
+    public function saveLivraison(int $commandeId, string $adresse): void;
 }

@@ -41,48 +41,49 @@ class OrderService
      * Crée une nouvelle commande depuis le panier
      */
     public function creerCommande(
-        int $userId,
-        array $items,
-        float $fraisLivraison = 1000.0
-    ): int {
-        // Vérifier le stock de chaque produit avant de créer la commande
-        foreach ($items as $item) {
-            $product = $this->productRepository->findById((int)$item['id']);
+    int $userId,
+    array $items,
+    float $fraisLivraison = 1000.0
+): int {
+    // Debug — vérifie le userId
+    error_log("=== creerCommande appelé ===");
+    error_log("userId: " . $userId);
+    error_log("items: " . json_encode($items));
 
-            if ($product === null) {
-                throw new \RuntimeException(
-                    "Le produit {$item['nom']} n'existe plus"
-                );
-            }
+    foreach ($items as $item) {
+        $product = $this->productRepository->findById((int)$item['id']);
 
-            if ($product->getStock() < $item['quantite']) {
-                throw new \RuntimeException(
-                    "Stock insuffisant pour {$product->getNom()}. 
-                     Disponible: {$product->getStock()}"
-                );
-            }
+        if ($product === null) {
+            throw new \RuntimeException(
+                "Le produit {$item['nom']} n'existe plus"
+            );
         }
 
-        // Calculer le total
-        $sousTotal = 0.0;
-        foreach ($items as $item) {
-            $sousTotal += $item['prix'] * $item['quantite'];
+        if ($product->getStock() < $item['quantite']) {
+            throw new \RuntimeException(
+                "Stock insuffisant pour {$product->getNom()}. 
+                 Disponible: {$product->getStock()}"
+            );
         }
-        $total = $sousTotal + $fraisLivraison;
-
-        // Créer l'objet Order
-        $order = new Order(
-            0, // id généré par la DB
-            $userId,
-            $total,
-            'en attente',
-            date('Y-m-d H:i:s'),
-            $items
-        );
-
-        // Sauvegarder et retourner l'ID
-        return $this->orderRepository->save($order);
     }
+
+    $sousTotal = 0.0;
+    foreach ($items as $item) {
+        $sousTotal += $item['prix'] * $item['quantite'];
+    }
+    $total = $sousTotal + $fraisLivraison;
+
+    $order = new Order(
+        0,
+        $userId,
+        $total,
+        'en attente',
+        date('Y-m-d H:i:s'),
+        $items
+    );
+
+    return $this->orderRepository->save($order);
+}
 
     /**
      * Change le statut d'une commande
@@ -97,4 +98,8 @@ class OrderService
 
         $this->orderRepository->updateStatus($id, $statut);
     }
+    public function ajouterLivraison(int $commandeId, string $adresse): void
+{
+    $this->orderRepository->saveLivraison($commandeId, $adresse);
+}
 }
