@@ -102,4 +102,12 @@ class OrderService
 {
     $this->orderRepository->saveLivraison($commandeId, $adresse);
 }
+
+    /**
+     * Récupère toutes les commandes pour admin
+     */
+    public function getAllOrders(): array
+    {
+        return $this->orderRepository->findAllWithClient();
+    }
 }

@@ -133,4 +133,21 @@ class OrderRepository implements OrderRepositoryInterface
     ");
     $stmt->execute([$adresse, $commandeId]);
 }
+
+    public function findAllWithClient(): array
+    {
+        $stmt = $this->pdo->prepare("
+            SELECT 
+                c.IdCommande as id,
+                CONCAT(cl.NomClient, ' ', cl.PrenomClient) as client,
+                c.DateCommande as date, 
+                c.Status as statut,
+                c.TotalPrix as total
+            FROM commande c 
+            JOIN client cl ON c.IdClient = cl.IdClient 
+            ORDER BY c.DateCommande DESC
+        ");
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

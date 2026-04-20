@@ -50,7 +50,9 @@ return function(Router $router): void {
     $router->post('/api/admin/produits/modifier',  AdminController::class, 'apiModifierProduit');
     $router->post('/api/admin/produits/supprimer', AdminController::class, 'apiSupprimerProduit');
     $router->post('/api/admin/commandes/statut',   AdminController::class, 'apiChangerStatut');
-    $router->post('/api/admin/clients/supprimer',  AdminController::class, 'apiSupprimerClient');
+$router->post('/api/admin/clients/supprimer',  AdminController::class, 'apiSupprimerClient');
+    $router->post('/api/admin/commandes', AdminController::class, 'apiCommandes');
+    $router->post('/api/admin/clients',   AdminController::class, 'apiClients');
 
     // API panier
     $router->post('/api/cart/add',   CartController::class, 'ajouterApi');

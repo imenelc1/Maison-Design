@@ -29,7 +29,7 @@
 
 <script>
 async function loadClients() {
-    const res  = await fetch('/php/clients.php');
+    const res  = await fetch('/api/admin/clients', { method: 'POST' });
     const data = await res.json();
 
     if (!data.success) return;

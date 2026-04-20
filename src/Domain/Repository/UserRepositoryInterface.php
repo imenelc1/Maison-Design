@@ -15,4 +15,9 @@ interface UserRepositoryInterface
     public function save(User $user): void;
 
     public function delete(int $id): void;
+
+    /**
+     * Récupère tous les clients
+     */
+    public function findAll(): array;
 }

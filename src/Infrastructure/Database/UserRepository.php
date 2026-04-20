@@ -140,6 +140,23 @@ class UserRepository implements UserRepositoryInterface
         $stmt->execute([$id]);
     }
 
+    public function findAll(): array
+    {
+        $stmt = $this->pdo->query("
+            SELECT 
+                IdClient as id,
+                NomClient as nom,
+                PrenomClient as prenom,
+                Email as email,
+                NumTel as telephone,
+                Adresse as adresse,
+                DateInscription as dateInscription
+            FROM client 
+            ORDER BY DateInscription DESC
+        ");
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     // Transforme un tableau DB en objet User
     private function hydrate(array $row, string $role): User
     {

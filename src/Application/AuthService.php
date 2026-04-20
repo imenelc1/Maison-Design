@@ -18,6 +18,20 @@ class AuthService
     }
 
     /**
+     * Récupère tous les clients pour admin
+     */
+    public function getAllClients(): array
+    {
+        return $this->userRepository->findAll();
+    }
+
+    public function deleteClient(int $id): void
+    {
+        $this->userRepository->delete($id);
+    }
+    }
+
+    /**
      * Tente de connecter un utilisateur
      * Retourne le User si succès, null si échec
      */

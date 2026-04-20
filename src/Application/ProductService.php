@@ -75,4 +75,14 @@ class ProductService
 
         $this->productRepository->updateStock($id, $quantite);
     }
+
+    public function supprimerProduit(int $id): void
+    {
+        $this->productRepository->delete($id);
+    }
+
+    public function saveProduct(Product $product): void
+    {
+        $this->productRepository->save($product);
+    }
 }

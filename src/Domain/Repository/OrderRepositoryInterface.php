@@ -17,4 +17,9 @@ interface OrderRepositoryInterface
     public function updateStatus(int $id, string $status): void;
 
     public function saveLivraison(int $commandeId, string $adresse): void;
+
+    /**
+     * Récupère toutes les commandes avec info client pour admin
+     */
+    public function findAllWithClient(): array;
 }
