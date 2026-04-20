@@ -105,20 +105,29 @@ class AuthController extends Controller
         }
 
         $user = $this->authService->register(
-            $email, $password, $nom, $prenom, $telephone, $adresse
-        );
+    $email, $password, $nom, $prenom, $telephone, $adresse
+);
 
-        // Connecter automatiquement après inscription
-        $_SESSION['user_id']   = $user->getId();
-        $_SESSION['role']      = $user->getRole();
-        $_SESSION['nom']       = $user->getNom();
-        $_SESSION['prenom']    = $user->getPrenom();
-        $_SESSION['email']     = $user->getEmail();
-        $_SESSION['telephone'] = $user->getTelephone();
-        $_SESSION['adresse']   = $user->getAdresse();
+// Récupérer le vrai ID depuis la DB après inscription
+$userFromDb = $this->authService->findByEmail($email);
 
-        $this->setFlash('success', 'Inscription réussie ! Bienvenue ' . $user->getPrenom());
-        $this->redirect('/');
+if ($userFromDb === null) {
+    $this->setFlash('error', 'Erreur lors de la création du compte');
+    $this->redirect('/inscription');
+    return;
+}
+
+// Connecter avec le vrai ID
+$_SESSION['user_id']   = $userFromDb->getId();
+$_SESSION['role']      = $userFromDb->getRole();
+$_SESSION['nom']       = $userFromDb->getNom();
+$_SESSION['prenom']    = $userFromDb->getPrenom();
+$_SESSION['email']     = $userFromDb->getEmail();
+$_SESSION['telephone'] = $userFromDb->getTelephone();
+$_SESSION['adresse']   = $userFromDb->getAdresse();
+
+$this->setFlash('success', 'Inscription réussie ! Bienvenue ' . $userFromDb->getPrenom());
+$this->redirect('/');
     }
 
     // GET /deconnexion

@@ -49,6 +49,10 @@ class CheckoutController extends Controller
    public function process(): void
 {
     $this->requireAuth();
+    error_log("=== SESSION DUMP ===");
+error_log("user_id: " . ($_SESSION['user_id'] ?? 'VIDE'));
+error_log("role: " . ($_SESSION['role'] ?? 'VIDE'));
+error_log("email: " . ($_SESSION['email'] ?? 'VIDE'));
 
     if ($this->cartService->isEmpty()) {
         $this->redirect('/panier');

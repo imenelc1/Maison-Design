@@ -78,4 +78,8 @@ class AuthService
     {
         return $this->userRepository->findByEmail($email) !== null;
     }
+    public function findByEmail(string $email): ?User
+{
+    return $this->userRepository->findByEmail($email);
+}
 }

@@ -74,18 +74,19 @@ class Request
     }
 
     // Vérifier si l'utilisateur est connecté
-    public function isLoggedIn(): bool
-    {
-        return isset($_SESSION['user_id']);
-    }
+   public function isLoggedIn(): bool
+{
+    return isset($_SESSION['user_id']) && (int)$_SESSION['user_id'] > 0;
+}
 
     // Récupérer l'ID de l'utilisateur connecté
     public function getUserId(): ?int
-    {
-        return isset($_SESSION['user_id']) 
-            ? (int)$_SESSION['user_id'] 
-            : null;
-    }
+{
+    // Lire directement $_SESSION au moment de l'appel
+    return isset($_SESSION['user_id']) && $_SESSION['user_id'] > 0
+        ? (int)$_SESSION['user_id']
+        : null;
+}
 
     // Récupérer le rôle de l'utilisateur connecté
     public function getUserRole(): string
