@@ -1,0 +1,33 @@
+/* 🎨 COLORS CUSTOM (remplace tailwind.config) */
+
+/* Backgrounds */
+.bg-primary { background-color: #EEE7DE; }
+.bg-secondary { background-color: #D6C9B6; }
+.bg-background { background-color: #F5F5F5; }
+.bg-accent { background-color: #8E9675; }
+
+/* Text */
+.text-textColor { color: #3D3D3D; }
+.text-textColorLight { color: #F5F5F5; }
+
+/* Hover */
+.hover\:bg-accent:hover { background-color: #8E9675; }
+.hover\:bg-primary:hover { background-color: #EEE7DE; }
+.hover\:text-white:hover { color: #ffffff; }
+
+/* Borders */
+.border-secondary { border-color: #D6C9B6; }
+
+/* Opacity variants (approx Tailwind style) */
+.bg-accent\/80 { background-color: rgba(142, 150, 117, 0.8); }
+.bg-primary\/80 { background-color: rgba(238, 231, 222, 0.8); }
+
+/* Text colors basic */
+.text-white { color: #ffffff; }
+
+/* Buttons / utilities */
+.bg-gray-300 { background-color: #d1d5db; }
+.text-gray-500 { color: #6b7280; }
+.bg-red-500 { background-color: #ef4444; }
+.text-green-600 { color: #16a34a; }
+.text-red-600 { color: #dc2626; }
