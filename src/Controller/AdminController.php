@@ -61,6 +61,7 @@ class AdminController extends Controller
             'data' => array_map(fn($p) => [
                 'id' => $p->getId(),
                 'nom' => $p->getNom(),
+                'description' => $p->getDescription(),
                 'categorie' => $p->getCategorie(),
                 'prix' => $p->getPrix(),
                 'stock' => $p->getStock(),
@@ -189,8 +190,43 @@ class AdminController extends Controller
         $categorie = $this->request->getString('categorie');
 
         try {
+            if ($id <= 0) {
+                throw new \RuntimeException('Produit invalide');
+            }
+
+            $existingProduct = $this->productService->getProduit($id);
+            if ($existingProduct === null) {
+                throw new \RuntimeException('Produit introuvable');
+            }
+
             $product = new Product($id, $nom, $description, $prix, $stock, $categorie);
             $this->productService->saveProduct($product);
+
+            if (isset($_FILES['image']) && (int)($_FILES['image']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
+                $imagePath = $this->uploadProductImage($_FILES['image']);
+
+                try {
+                    $this->productService->saveProductImage($id, $imagePath);
+
+                    $existingImage = $existingProduct->getImage();
+                    $existingFullPath = ROOT_PATH . '/public/' . $existingImage;
+                    if (
+                        $existingImage !== ''
+                        && $existingImage !== 'images/placeholder.jpeg'
+                        && is_file($existingFullPath)
+                    ) {
+                        unlink($existingFullPath);
+                    }
+                } catch (\Throwable $e) {
+                    $fullPath = ROOT_PATH . '/public/' . $imagePath;
+                    if (is_file($fullPath)) {
+                        unlink($fullPath);
+                    }
+
+                    throw $e;
+                }
+            }
+
             $this->json(['success' => true, 'message' => 'Produit modifie']);
         } catch (\RuntimeException $e) {
             $this->json(['success' => false, 'message' => $e->getMessage()], 400);

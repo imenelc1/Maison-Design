@@ -107,22 +107,22 @@ class ProductRepository implements ProductRepositoryInterface
 
     public function save(Product $product): int
     {
+        $categorieStmt = $this->pdo->prepare("
+            SELECT IdCategorie
+            FROM categorie
+            WHERE LOWER(TRIM(NomCategorie)) = LOWER(TRIM(?))
+            LIMIT 1
+        ");
+        $categorieStmt->execute([$product->getCategorie()]);
+        $categorieId = $categorieStmt->fetchColumn();
+
+        if ($categorieId === false) {
+            throw new \RuntimeException(
+                "Categorie introuvable : {$product->getCategorie()}"
+            );
+        }
+
         if ($product->getId() === 0) {
-            $categorieStmt = $this->pdo->prepare("
-                SELECT IdCategorie
-                FROM categorie
-                WHERE LOWER(TRIM(NomCategorie)) = LOWER(TRIM(?))
-                LIMIT 1
-            ");
-            $categorieStmt->execute([$product->getCategorie()]);
-            $categorieId = $categorieStmt->fetchColumn();
-
-            if ($categorieId === false) {
-                throw new \RuntimeException(
-                    "Categorie introuvable : {$product->getCategorie()}"
-                );
-            }
-
             $stmt = $this->pdo->prepare("
                 INSERT INTO produit
                     (NomProduit, Description, Prix, Stock, IdCat, DateAjout)
@@ -144,7 +144,8 @@ class ProductRepository implements ProductRepositoryInterface
                     NomProduit  = ?,
                     Description = ?,
                     Prix        = ?,
-                    Stock       = ?
+                    Stock       = ?,
+                    IdCat       = ?
                 WHERE IdProduit = ?
             ");
 
@@ -153,6 +154,7 @@ class ProductRepository implements ProductRepositoryInterface
                 $product->getDescription(),
                 $product->getPrix(),
                 $product->getStock(),
+                (int)$categorieId,
                 $product->getId(),
             ]);
 
@@ -162,6 +164,11 @@ class ProductRepository implements ProductRepositoryInterface
 
     public function saveImage(int $productId, string $imagePath): void
     {
+        $deleteStmt = $this->pdo->prepare("
+            DELETE FROM imageprod WHERE IdProduit = ?
+        ");
+        $deleteStmt->execute([$productId]);
+
         $stmt = $this->pdo->prepare("
             INSERT INTO imageprod (IdProduit, URL)
             VALUES (?, ?)

@@ -61,7 +61,7 @@ $terms   = $this->request->post('terms');
 
 $v = new \App\Core\Validator();
 $v->required($adresse, 'adresse de livraison')
-  ->minLength($adresse, 10, 'adresse de livraison');
+  ->minLength($adresse, 3, 'adresse de livraison');
 
 if (!$v->isValid()) {
     $this->setFlash('error', $v->getFirstError());

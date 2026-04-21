@@ -101,12 +101,61 @@ const modal = document.getElementById('product-modal');
 const form = document.getElementById('product-form');
 const formMessage = document.getElementById('product-form-message');
 const categoriesList = document.getElementById('categories-list');
+const modalTitle = modal.querySelector('h2');
+const submitButton = form.querySelector('button[type="submit"]');
+const imageHint = document.querySelector('label[for="image"] + input + p');
 let cachedProducts = [];
+let editingProductId = null;
+
+const hiddenIdInput = document.createElement('input');
+hiddenIdInput.type = 'hidden';
+hiddenIdInput.name = 'id';
+hiddenIdInput.id = 'product-id';
+form.appendChild(hiddenIdInput);
+
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
 
 function openProductModal() {
     form.reset();
+    editingProductId = null;
+    hiddenIdInput.value = '';
     formMessage.className = 'hidden text-sm';
     formMessage.textContent = '';
+    modalTitle.textContent = 'Ajouter un produit';
+    submitButton.textContent = 'Enregistrer';
+    imageHint.textContent = 'Formats acceptes: JPG, PNG, WEBP, GIF.';
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function openEditProductModal(productId) {
+    const product = cachedProducts.find((item) => Number(item.id) === Number(productId));
+    if (!product) {
+        return;
+    }
+
+    form.reset();
+    editingProductId = Number(product.id);
+    hiddenIdInput.value = String(product.id);
+    formMessage.className = 'hidden text-sm';
+    formMessage.textContent = '';
+    modalTitle.textContent = 'Modifier le produit';
+    submitButton.textContent = 'Mettre a jour';
+    imageHint.textContent = 'Laissez vide pour conserver l image actuelle.';
+
+    document.getElementById('nom').value = product.nom || '';
+    document.getElementById('categorie').value = product.categorie || '';
+    document.getElementById('prix').value = product.prix || '';
+    document.getElementById('stock').value = product.stock || 0;
+    document.getElementById('description').value = product.description || '';
+
     modal.classList.remove('hidden');
     modal.classList.add('flex');
 }
@@ -137,42 +186,41 @@ async function loadProducts() {
             <td class="px-6 py-4">${p.id}</td>
             <td class="px-6 py-4">
                 <div class="flex items-center gap-3">
-                    <img src="/${p.image}" class="w-10 h-10 object-cover rounded-md"
+                    <img src="/${escapeHtml(p.image)}" class="w-10 h-10 object-cover rounded-md"
                          onerror="this.style.display='none'">
-                    <span>${p.nom}</span>
+                    <span>${escapeHtml(p.nom)}</span>
                 </div>
             </td>
-            <td class="px-6 py-4 hidden md:table-cell">${p.categorie}</td>
-            <td class="px-6 py-4">${p.prix} DA</td>
+            <td class="px-6 py-4 hidden md:table-cell">${escapeHtml(p.categorie)}</td>
+            <td class="px-6 py-4">${escapeHtml(p.prix)} DA</td>
             <td class="px-6 py-4 hidden md:table-cell">
                 <span class="${p.stock > 0 ? 'text-green-600' : 'text-red-600'}">${p.stock}</span>
             </td>
             <td class="px-6 py-4">
-                <button onclick="deleteProduct(${p.id})"
-                        class="px-3 py-1 bg-red-100 text-red-600 rounded-full text-sm hover:bg-red-200">
-                    Supprimer
-                </button>
+                <div class="flex items-center gap-2">
+                    <button type="button"
+                            onclick="openEditProductModal(${p.id})"
+                            class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200"
+                            title="Modifier">
+                        <i class='bx bx-edit-alt text-lg'></i>
+                    </button>
+                    <button onclick="deleteProduct(${p.id})"
+                            class="px-3 py-1 bg-red-100 text-red-600 rounded-full text-sm hover:bg-red-200">
+                        Supprimer
+                    </button>
+                </div>
             </td>
         </tr>
     `).join('');
 }
 
-async function deleteProduct(id) {
-    if (!confirm('Supprimer ce produit ?')) return;
-    const res  = await fetch('/api/admin/produits/supprimer', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: `id=${id}`
-    });
-    const data = await res.json();
-    if (data.success) loadProducts();
-}
-
-form.addEventListener('submit', async function (event) {
-    event.preventDefault();
-
+async function submitProductForm() {
     const body = new FormData(form);
-    const res = await fetch('/api/admin/produits/ajouter', {
+    const endpoint = editingProductId
+        ? '/api/admin/produits/modifier'
+        : '/api/admin/produits/ajouter';
+
+    const res = await fetch(endpoint, {
         method: 'POST',
         body
     });
@@ -187,7 +235,26 @@ form.addEventListener('submit', async function (event) {
         await loadProducts();
         setTimeout(closeProductModal, 500);
     }
+}
+
+window.openEditProductModal = openEditProductModal;
+window.deleteProduct = deleteProduct;
+
+form.addEventListener('submit', async function (event) {
+    event.preventDefault();
+    await submitProductForm();
 });
+
+async function deleteProduct(id) {
+    if (!confirm('Supprimer ce produit ?')) return;
+    const res  = await fetch('/api/admin/produits/supprimer', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: `id=${id}`
+    });
+    const data = await res.json();
+    if (data.success) loadProducts();
+}
 
 document.getElementById('add-product-btn').addEventListener('click', openProductModal);
 document.getElementById('close-product-modal').addEventListener('click', closeProductModal);
