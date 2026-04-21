@@ -52,10 +52,7 @@ class OrderRepository implements OrderRepositoryInterface
 
    public function save(Order $order): int
 {
-    error_log("=== OrderRepository::save ===");
-    error_log("userId: " . $order->getUserId());
-    error_log("total: " . $order->getTotalPrix());
-
+  
     // Vérifier que le client existe
     $checkClient = $this->pdo->prepare("SELECT IdClient FROM client WHERE IdClient = ?");
     $checkClient->execute([$order->getUserId()]);

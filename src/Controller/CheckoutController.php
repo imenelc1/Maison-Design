@@ -49,38 +49,38 @@ class CheckoutController extends Controller
    public function process(): void
 {
     $this->requireClient();
-    error_log("=== SESSION DUMP ===");
-error_log("user_id: " . ($_SESSION['user_id'] ?? 'VIDE'));
-error_log("role: " . ($_SESSION['role'] ?? 'VIDE'));
-error_log("email: " . ($_SESSION['email'] ?? 'VIDE'));
+
 
     if ($this->cartService->isEmpty()) {
         $this->redirect('/panier');
         return;
     }
 
-    $adresse = $this->request->getString('adresse_livraison');
-    $terms   = $this->request->post('terms');
+   $adresse = $this->request->getString('adresse_livraison');
+$terms   = $this->request->post('terms');
 
-    if (empty($adresse)) {
-        $this->setFlash('error', "L'adresse de livraison est obligatoire");
-        $this->redirect('/checkout');
-        return;
-    }
+$v = new \App\Core\Validator();
+$v->required($adresse, 'adresse de livraison')
+  ->minLength($adresse, 10, 'adresse de livraison');
 
-    if ($terms !== 'on') {
-        $this->setFlash('error', 'Vous devez accepter les conditions');
-        $this->redirect('/checkout');
-        return;
-    }
+if (!$v->isValid()) {
+    $this->setFlash('error', $v->getFirstError());
+    $this->redirect('/checkout');
+    return;
+}
+
+if ($terms !== 'on') {
+    $this->setFlash('error', 'Vous devez accepter les conditions');
+    $this->redirect('/checkout');
+    return;
+}
 
     try {
+        $this->requireCsrf();
         $userId = $this->request->getUserId();
         $items  = $this->cartService->getItems();
 
-        error_log("=== Checkout process ===");
-        error_log("userId: " . $userId);
-        error_log("items count: " . count($items));
+      
 
         $commandeId = $this->orderService->creerCommande(
             $userId,

@@ -38,6 +38,7 @@ class CartController extends Controller
     // POST /panier/ajouter
     public function ajouter(): void
     {
+        $this->requireCsrf();
         $this->requireClient();
 
         $id       = (int)$this->request->post('produitId', 0);
@@ -56,6 +57,7 @@ class CartController extends Controller
     // POST /panier/supprimer
     public function supprimer(): void
     {
+        $this->requireCsrf();
         $this->requireClient();
 
         $id = (int)$this->request->post('produitId', 0);
@@ -66,6 +68,7 @@ class CartController extends Controller
     // POST /panier/modifier
     public function modifier(): void
     {
+        $this->requireCsrf();
         $this->requireClient();
 
         $id    = (int)$this->request->post('produitId', 0);

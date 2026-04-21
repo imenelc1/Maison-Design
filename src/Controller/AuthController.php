@@ -34,36 +34,120 @@ class AuthController extends Controller
     }
 
     // POST /connexion
-    public function login(): void
-    {
-        $email    = $this->request->getString('email');
-        $password = $this->request->post('password', '');
+    // POST /connexion
+public function login(): void
+{
+    $this->requireCsrf();
 
-        if (empty($email) || empty($password)) {
-            $this->setFlash('error', 'Veuillez remplir tous les champs');
-            $this->redirect('/connexion');
-            return;
-        }
+    $email    = $this->request->getString('email');
+    $password = $this->request->post('password', '');
 
-        $user = $this->authService->login($email, $password);
+    $v = new \App\Core\Validator();
+    $v->required($email, 'email')
+      ->email($email)
+      ->required($password, 'mot de passe');
 
-        if ($user === null) {
-            $this->setFlash('error', 'Email ou mot de passe incorrect');
-            $this->redirect('/connexion');
-            return;
-        }
-
-        // Connexion réussie — stocker en session
-        $_SESSION['user_id']    = $user->getId();
-        $_SESSION['role']       = $user->getRole();
-        $_SESSION['nom']        = $user->getNom();
-        $_SESSION['prenom']     = $user->getPrenom();
-        $_SESSION['email']      = $user->getEmail();
-        $_SESSION['telephone']  = $user->getTelephone();
-        $_SESSION['adresse']    = $user->getAdresse();
-
-        $this->redirect($user->isAdmin() ? '/admin' : '/');
+    if (!$v->isValid()) {
+        $this->setFlash('error', $v->getFirstError());
+        $this->redirect('/connexion');
+        return;
     }
+
+    $user = $this->authService->login($email, $password);
+
+    if ($user === null) {
+        $this->setFlash('error', 'Email ou mot de passe incorrect');
+        $this->redirect('/connexion');
+        return;
+    }
+
+    $_SESSION['user_id']   = $user->getId();
+    $_SESSION['role']      = $user->getRole();
+    $_SESSION['nom']       = $user->getNom();
+    $_SESSION['prenom']    = $user->getPrenom();
+    $_SESSION['email']     = $user->getEmail();
+    $_SESSION['telephone'] = $user->getTelephone();
+    $_SESSION['adresse']   = $user->getAdresse();
+
+    $this->redirect($user->isAdmin() ? '/admin' : '/');
+}
+
+// POST /inscription
+public function register(): void
+{
+    $this->requireCsrf();
+
+    $email           = $this->request->getString('email');
+    $password        = $this->request->post('password', '');
+    $confirmPassword = $this->request->post('confirm-password', '');
+    $nom             = $this->request->getString('nom');
+    $prenom          = $this->request->getString('prenom');
+    $telephone       = $this->request->getString('numtel');
+    $adresse         = $this->request->getString('adresse');
+
+    $v = new \App\Core\Validator();
+    $v->required($nom, 'nom')
+      ->maxLength($nom, 50, 'nom')
+      ->required($prenom, 'prénom')
+      ->maxLength($prenom, 50, 'prénom')
+      ->required($email, 'email')
+      ->email($email)
+      ->required($password, 'mot de passe')
+      ->minLength($password, 6, 'mot de passe')
+      ->matches($password, $confirmPassword, 'confirmation')
+      ->required($telephone, 'téléphone')
+      ->phone($telephone)
+      ->required($adresse, 'adresse')
+      ->minLength($adresse, 3, 'adresse');
+
+  if (!$v->isValid()) {
+    $_SESSION['form_old'] = [
+        'nom'       => $nom,
+        'prenom'    => $prenom,
+        'email'     => $email,
+        'numtel'    => $telephone,
+        'adresse'   => $adresse,
+    ];
+    $this->setFlash('error', $v->getFirstError());
+    $this->redirect('/inscription');
+    return;
+}
+
+if ($this->authService->emailExiste($email)) {
+    $_SESSION['form_old'] = [
+        'nom'       => $nom,
+        'prenom'    => $prenom,
+        'email'     => $email,
+        'numtel'    => $telephone,
+        'adresse'   => $adresse,
+    ];
+    $this->setFlash('error', 'Cette adresse email est déjà utilisée');
+    $this->redirect('/inscription');
+    return;
+}
+    $user = $this->authService->register(
+        $email, $password, $nom, $prenom, $telephone, $adresse
+    );
+
+    $userFromDb = $this->authService->findByEmail($email);
+
+    if ($userFromDb === null) {
+        $this->setFlash('error', 'Erreur lors de la création du compte');
+        $this->redirect('/inscription');
+        return;
+    }
+
+    $_SESSION['user_id']   = $userFromDb->getId();
+    $_SESSION['role']      = $userFromDb->getRole();
+    $_SESSION['nom']       = $userFromDb->getNom();
+    $_SESSION['prenom']    = $userFromDb->getPrenom();
+    $_SESSION['email']     = $userFromDb->getEmail();
+    $_SESSION['telephone'] = $userFromDb->getTelephone();
+    $_SESSION['adresse']   = $userFromDb->getAdresse();
+
+    $this->setFlash('success', 'Inscription réussie ! Bienvenue ' . $userFromDb->getPrenom());
+    $this->redirect('/');
+}
 
     // GET /inscription
     public function showRegister(): void
@@ -77,63 +161,7 @@ class AuthController extends Controller
         ]);
     }
 
-    // POST /inscription
-    public function register(): void
-    {
-        $email           = $this->request->getString('email');
-        $password        = $this->request->post('password', '');
-        $confirmPassword = $this->request->post('confirm-password', '');
-        $nom             = $this->request->getString('nom');
-        $prenom          = $this->request->getString('prenom');
-        $telephone       = $this->request->getString('numtel');
-        $adresse         = $this->request->getString('adresse');
-
-        // Validations
-        if (empty($email) || empty($password) || empty($nom) || empty($prenom)) {
-            $this->setFlash('error', 'Veuillez remplir tous les champs');
-            $this->redirect('/inscription');
-            return;
-        }
-
-        if ($password !== $confirmPassword) {
-            $this->setFlash('error', 'Les mots de passe ne correspondent pas');
-            $this->redirect('/inscription');
-            return;
-        }
-
-        if ($this->authService->emailExiste($email)) {
-            $this->setFlash('error', 'Cette adresse email est déjà utilisée');
-            $this->redirect('/inscription');
-            return;
-        }
-
-        $user = $this->authService->register(
-    $email, $password, $nom, $prenom, $telephone, $adresse
-);
-
-// Récupérer le vrai ID depuis la DB après inscription
-$userFromDb = $this->authService->findByEmail($email);
-
-if ($userFromDb === null) {
-    $this->setFlash('error', 'Erreur lors de la création du compte');
-    $this->redirect('/inscription');
-    return;
-}
-
-// Connecter avec le vrai ID
-$_SESSION['user_id']   = $userFromDb->getId();
-$_SESSION['role']      = $userFromDb->getRole();
-$_SESSION['nom']       = $userFromDb->getNom();
-$_SESSION['prenom']    = $userFromDb->getPrenom();
-$_SESSION['email']     = $userFromDb->getEmail();
-$_SESSION['telephone'] = $userFromDb->getTelephone();
-$_SESSION['adresse']   = $userFromDb->getAdresse();
-
-$this->setFlash('success', 'Inscription réussie ! Bienvenue ' . $userFromDb->getPrenom());
-$this->redirect('/');
-    }
-
-    // GET /deconnexion
+       // GET /deconnexion
     public function logout(): void
     {
         session_destroy();

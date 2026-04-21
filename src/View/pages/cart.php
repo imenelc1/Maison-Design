@@ -36,6 +36,7 @@
                                     <!-- Quantité -->
                                     <div class="flex items-center gap-2">
                                         <form method="POST" action="/panier/modifier">
+                                            <?php echo csrf_field(); ?>
                                             <input type="hidden" name="produitId" value="<?php echo $item['id']; ?>">
                                             <input type="hidden" name="delta" value="-1">
                                             <button class="w-6 h-6 bg-gray-100 rounded flex items-center justify-center hover:bg-accent hover:text-white">
@@ -44,6 +45,7 @@
                                         </form>
                                         <span class="w-8 text-center"><?php echo $item['quantite']; ?></span>
                                         <form method="POST" action="/panier/modifier">
+                                            <?php echo csrf_field(); ?>
                                             <input type="hidden" name="produitId" value="<?php echo $item['id']; ?>">
                                             <input type="hidden" name="delta" value="1">
                                             <button class="w-6 h-6 bg-gray-100 rounded flex items-center justify-center hover:bg-accent hover:text-white">
@@ -57,6 +59,7 @@
                                 </div>
                             </div>
                             <form method="POST" action="/panier/supprimer">
+                                <?php echo csrf_field(); ?>
                                 <input type="hidden" name="produitId" value="<?php echo $item['id']; ?>">
                                 <button class="text-gray-400 hover:text-red-500 p-2">
                                     <i class='bx bx-trash text-xl'></i>

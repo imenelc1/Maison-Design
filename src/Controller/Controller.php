@@ -88,6 +88,15 @@ abstract class Controller
             $this->redirect('/admin');
         }
     }
+    protected function requireCsrf(): void
+{
+    if (!$this->request->verifyCsrf()) {
+        $this->setFlash('error', 'Token de sécurité invalide. Réessayez.');
+        // Retourner en arrière
+        $referer = $_SERVER['HTTP_REFERER'] ?? '/';
+        $this->redirect($referer);
+    }
+}
 
     /**
      * Stocker un message flash

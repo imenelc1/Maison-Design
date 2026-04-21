@@ -113,4 +113,21 @@ class Request
 
         return (int)$value;
     }
+    // Générer ou récupérer le token CSRF
+public function getCsrfToken(): string
+{
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION['csrf_token'];
+}
+
+// Vérifier le token CSRF soumis
+public function verifyCsrf(): bool
+{
+    $token = $this->post('_csrf_token', '');
+    return !empty($token) 
+        && isset($_SESSION['csrf_token'])
+        && hash_equals($_SESSION['csrf_token'], $token);
+}
 }

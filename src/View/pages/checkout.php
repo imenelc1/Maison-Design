@@ -52,6 +52,7 @@
                 <h2 class="text-2xl text-accent mb-4">Confirmer</h2>
 
                 <form method="POST" action="/checkout" class="space-y-6">
+                    <?php echo csrf_field(); ?>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             Adresse de livraison *

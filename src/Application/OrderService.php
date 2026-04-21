@@ -45,10 +45,7 @@ class OrderService
     array $items,
     float $fraisLivraison = 1000.0
 ): int {
-    // Debug — vérifie le userId
-    error_log("=== creerCommande appelé ===");
-    error_log("userId: " . $userId);
-    error_log("items: " . json_encode($items));
+
 
     foreach ($items as $item) {
         $product = $this->productRepository->findById((int)$item['id']);

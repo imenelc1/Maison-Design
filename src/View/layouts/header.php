@@ -1,4 +1,11 @@
 <?php
+function csrf_field(): string {
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+    return '<input type="hidden" name="_csrf_token" value="' 
+           . htmlspecialchars($_SESSION['csrf_token']) . '">';
+}
 $nombreArticles = 0;
 if (isset($_SESSION['panier'])) {
     foreach ($_SESSION['panier'] as $item) {
