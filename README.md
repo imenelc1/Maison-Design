@@ -1,4 +1,4 @@
-# Maison Design 🪑
+# Maison Design 
 
 E-commerce de meubles et décoration algérien.  
 Projet de portfolio développé en PHP 8.3 avec Clean Architecture.
@@ -23,12 +23,12 @@ src/
 
 ## Fonctionnalités
 
-- 🛍️ Catalogue produits avec filtres par catégorie (AJAX)
-- 🛒 Panier en session
-- 📦 Commandes avec livraison
-- 👤 Espace client (profil + historique commandes)
-- 🔐 Authentification sécurisée (CSRF + validation)
-- ⚙️ Panel admin (produits, commandes, clients)
+-  Catalogue produits avec filtres par catégorie (AJAX)
+-  Panier en session
+-  Commandes avec livraison
+-  Espace client (profil + historique commandes)
+-  Authentification sécurisée (CSRF + validation)
+-  Panel admin (produits, commandes, clients)
 
 ## Installation
 
@@ -61,5 +61,5 @@ php -S localhost:8000 -t public/
 
 ```
 Email    : admin.pass@maison-design.com
-Password : admin123
+Password : adminpass
 ```

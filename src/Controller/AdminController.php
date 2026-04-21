@@ -243,4 +243,36 @@ class AdminController extends Controller
 
         return 'images/' . $fileName;
     }
+    public function apiCommandeItems(): void
+{
+    $this->requireAdmin();
+
+    $id = (int)$this->request->get('id', 0);
+
+    $stmt = (function() use ($id) {
+        // On accède au PDO via le productRepository — on utilise OrderRepository
+        return $id;
+    })();
+
+    // Récupérer via PDO directement
+    try {
+        $pdo = \App\Infrastructure\Database\PDOConnection::getInstance()->getConnection();
+        $stmt = $pdo->prepare("
+            SELECT 
+                p.NomProduit as nom,
+                pa.Qtt as quantite,
+                p.Prix as prix,
+                (pa.Qtt * p.Prix) as total
+            FROM panier pa
+            JOIN produit p ON pa.IdProd = p.IdProduit
+            WHERE pa.IdCom = ?
+        ");
+        $stmt->execute([$id]);
+        $items = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $this->json(['success' => true, 'items' => $items]);
+    } catch (\Exception $e) {
+        $this->json(['success' => false, 'items' => []]);
+    }
+}
 }

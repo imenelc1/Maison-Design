@@ -53,6 +53,7 @@ return function(Router $router): void {
 $router->post('/api/admin/clients/supprimer',  AdminController::class, 'apiSupprimerClient');
     $router->post('/api/admin/commandes', AdminController::class, 'apiCommandes');
     $router->post('/api/admin/clients',   AdminController::class, 'apiClients');
+    $router->post('/api/admin/commande-items', AdminController::class, 'apiCommandeItems');
 
     // API panier
     $router->post('/api/cart/add',   CartController::class, 'ajouterApi');
